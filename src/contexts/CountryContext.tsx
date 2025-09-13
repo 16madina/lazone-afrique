@@ -141,6 +141,7 @@ interface CountryContextType {
   setSelectedCountry: (country: Country) => void;
   countries: Country[];
   formatPrice: (priceInUSD: number) => string;
+  formatLocalPrice: (priceInLocalCurrency: number) => string;
   convertPrice: (priceInUSD: number, targetCountry?: Country) => number;
 }
 
@@ -268,11 +269,22 @@ export const CountryProvider: React.FC<CountryProviderProps> = ({ children }) =>
     return `${formattedNumber} ${currency.symbol}`;
   };
 
+  // Format price that's already in local currency
+  const formatLocalPrice = (priceInLocalCurrency: number): string => {
+    const currency = selectedCountry.currency;
+    
+    // Format number with spaces for readability
+    const formattedNumber = priceInLocalCurrency.toLocaleString('fr-FR');
+    
+    return `${formattedNumber} ${currency.symbol}`;
+  };
+
   const value: CountryContextType = {
     selectedCountry,
     setSelectedCountry: handleCountryChange,
     countries: africanCountries,
     formatPrice,
+    formatLocalPrice,
     convertPrice
   };
 
