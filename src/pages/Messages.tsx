@@ -243,10 +243,24 @@ const Messages = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => {
+                      console.log('Appel vocal');
+                      // Ici on peut ajouter la logique d'appel
+                    }}
+                  >
                     <Phone className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="icon">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => {
+                      console.log('Appel vidéo');
+                      // Ici on peut ajouter la logique d'appel vidéo
+                    }}
+                  >
                     <Video className="w-4 h-4" />
                   </Button>
                   <Button variant="ghost" size="icon">
@@ -268,7 +282,7 @@ const Messages = () => {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 p-4 overflow-y-auto space-y-4">
+            <div className="flex-1 p-4 pb-8 overflow-y-auto space-y-4">
               {messages.map((msg, index) => (
                 <div
                   key={msg.id}
@@ -329,7 +343,19 @@ const Messages = () => {
       {/* Message Input - Always visible */}
       <div className="p-4 border-t border-border bg-background/95 backdrop-blur-sm fixed bottom-16 md:bottom-0 left-0 right-0 md:sticky z-[60]">
         <div className="flex items-end gap-3 max-w-full">
-          <Button variant="ghost" size="icon" className="mb-1 flex-shrink-0">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="mb-1 flex-shrink-0"
+            onClick={() => {
+              console.log('Ouvrir sélecteur de fichier');
+              // Ici on peut ajouter l'ouverture d'un input file
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = 'image/*,document/*';
+              input.click();
+            }}
+          >
             <Paperclip className="w-5 h-5 text-muted-foreground" />
           </Button>
           
@@ -351,6 +377,13 @@ const Messages = () => {
               variant="ghost" 
               size="icon" 
               className="absolute right-2 top-1/2 transform -translate-y-1/2"
+              onClick={() => {
+                console.log('Ouvrir sélecteur d\'emoji');
+                // Ici on peut ajouter un emoji picker
+                const emojis = ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😬', '🙄', '😯', '😦', '😧', '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐', '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕', '🤑', '🤠', '😈', '👿', '👹', '👺', '🤡', '💩', '👻', '💀', '☠️', '👽', '👾', '🤖', '🎃', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾'];
+                const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+                setMessage(prev => prev + randomEmoji);
+              }}
             >
               <Smile className="w-4 h-4 text-muted-foreground" />
             </Button>
