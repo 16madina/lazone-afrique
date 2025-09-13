@@ -7,11 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Search, MessageCircle, Phone, Video, MoreVertical, Send, Smile, Paperclip } from "lucide-react";
+import { Search, MessageCircle, Phone, Video, MoreVertical, Send, Smile, Paperclip, Check, CheckCheck } from "lucide-react";
 
 const Messages = () => {
   const [selectedChat, setSelectedChat] = useState<string | null>("1");
   const [message, setMessage] = useState("");
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
   const conversations = [
     {
@@ -61,33 +62,52 @@ const Messages = () => {
       id: "1",
       sender: "other",
       text: "Bonjour, je suis intéressé par votre villa à Cocody",
-      time: "14:25"
+      time: "14:25",
+      read: true
     },
     {
       id: "2", 
       sender: "me",
       text: "Bonjour ! Merci pour votre intérêt. La villa est effectivement disponible.",
-      time: "14:26"
+      time: "14:26",
+      read: true,
+      delivered: true
     },
     {
       id: "3",
       sender: "other", 
       text: "Serait-il possible d'organiser une visite cette semaine ?",
-      time: "14:28"
+      time: "14:28",
+      read: true
     },
     {
       id: "4",
       sender: "me",
       text: "Bien sûr ! Je suis disponible mercredi ou vendredi après-midi. Quelle heure vous conviendrait le mieux ?",
-      time: "14:29"
+      time: "14:29",
+      read: true,
+      delivered: true
     },
     {
       id: "5",
       sender: "other",
       text: "Mercredi 15h serait parfait. La villa est toujours disponible ?",
-      time: "14:30"
+      time: "14:30",
+      read: false
     }
   ];
+
+  const handleSendMessage = () => {
+    if (message.trim()) {
+      // Here you would typically add the message to your state/database
+      console.log("Sending message:", message);
+      setMessage("");
+    }
+  };
+
+  const filteredConversations = showUnreadOnly 
+    ? conversations.filter(conv => conv.unread > 0)
+    : conversations;
 
   const selectedConversation = conversations.find(c => c.id === selectedChat);
 
@@ -110,15 +130,31 @@ const Messages = () => {
 
             {/* Filter Tabs */}
             <div className="flex gap-2">
-              <Button variant="default" size="sm">Tous</Button>
-              <Button variant="outline" size="sm">Non lus</Button>
+              <Button 
+                variant={!showUnreadOnly ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setShowUnreadOnly(false)}
+              >
+                Tous
+              </Button>
+              <Button 
+                variant={showUnreadOnly ? "default" : "outline"} 
+                size="sm"
+                onClick={() => setShowUnreadOnly(true)}
+              >
+                Non lus {conversations.filter(c => c.unread > 0).length > 0 && (
+                  <Badge className="ml-1 bg-destructive text-destructive-foreground w-5 h-5 p-0 flex items-center justify-center text-xs">
+                    {conversations.filter(c => c.unread > 0).length}
+                  </Badge>
+                )}
+              </Button>
               <Button variant="outline" size="sm">Favoris</Button>
             </div>
           </div>
 
           {/* Conversations */}
           <div className="overflow-y-auto">
-            {conversations.map((conversation, index) => (
+            {filteredConversations.map((conversation, index) => (
               <div
                 key={conversation.id}
                 onClick={() => setSelectedChat(conversation.id)}
@@ -250,22 +286,35 @@ const Messages = () => {
                     }
                   `}>
                     <p className="text-sm">{msg.text}</p>
-                    <p className={`
-                      text-xs mt-1 
-                      ${msg.sender === 'me' ? 'text-primary-foreground/70' : 'text-muted-foreground'}
-                    `}>
-                      {msg.time}
-                    </p>
+                    <div className="flex items-center justify-between mt-1">
+                      <p className={`
+                        text-xs 
+                        ${msg.sender === 'me' ? 'text-primary-foreground/70' : 'text-muted-foreground'}
+                      `}>
+                        {msg.time}
+                      </p>
+                      {msg.sender === 'me' && (
+                        <div className="ml-2">
+                          {msg.read ? (
+                            <CheckCheck className="w-3 h-3 text-accent" />
+                          ) : msg.delivered ? (
+                            <CheckCheck className="w-3 h-3 text-primary-foreground/50" />
+                          ) : (
+                            <Check className="w-3 h-3 text-primary-foreground/50" />
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Message Input */}
-            <div className="p-4 border-t border-border bg-background/95 backdrop-blur-sm">
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon">
-                  <Paperclip className="w-4 h-4" />
+            <div className="p-4 border-t border-border bg-background sticky bottom-0">
+              <div className="flex items-end gap-3">
+                <Button variant="ghost" size="icon" className="mb-1">
+                  <Paperclip className="w-5 h-5 text-muted-foreground" />
                 </Button>
                 
                 <div className="flex-1 relative">
@@ -273,20 +322,29 @@ const Messages = () => {
                     placeholder="Tapez votre message..."
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    className="pr-10"
+                    className="pr-12 py-3 rounded-full border-2 resize-none"
                     onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        setMessage("");
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
                       }
                     }}
                   />
-                  <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 transform -translate-y-1/2">
-                    <Smile className="w-4 h-4" />
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                  >
+                    <Smile className="w-4 h-4 text-muted-foreground" />
                   </Button>
                 </div>
 
-                <Button className="bg-gradient-primary" disabled={!message.trim()}>
-                  <Send className="w-4 h-4" />
+                <Button 
+                  onClick={handleSendMessage}
+                  disabled={!message.trim()}
+                  className="rounded-full w-12 h-12 p-0 bg-gradient-primary hover:bg-gradient-primary/90 disabled:opacity-50"
+                >
+                  <Send className="w-5 h-5" />
                 </Button>
               </div>
             </div>
