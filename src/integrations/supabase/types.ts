@@ -65,6 +65,13 @@ export type Database = {
             referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_conversation_participants_profiles"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       conversations: {
@@ -92,6 +99,13 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "conversations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_conversations_listings"
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "listings"
