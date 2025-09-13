@@ -1,15 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import PropertyFilters from "@/components/PropertyFilters";
 import PropertyCard from "@/components/PropertyCard";
 import BottomNavigation from "@/components/BottomNavigation";
 import { useCountry } from "@/contexts/CountryContext";
-import { getPropertiesByCountry } from "@/data/mockProperties";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpDown, Grid3X3, List, Globe } from "lucide-react";
+
+interface Listing {
+  id: string;
+  title: string;
+  price: number;
+  city: string;
+  country_code: string;
+  lat: number;
+  lng: number;
+  image?: string;
+  status: string;
+}
 
 // Import property images
 import apartmentImage from "@/assets/property-apartment.jpg";
@@ -19,10 +31,36 @@ import landImage from "@/assets/property-land.jpg";
 const Index = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("date");
+  const [properties, setProperties] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
   const { selectedCountry, formatPrice } = useCountry();
 
-  // Get properties for selected country
-  const properties = getPropertiesByCountry(selectedCountry.code);
+  // Fetch properties for selected country from Supabase
+  useEffect(() => {
+    const fetchProperties = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('listings')
+          .select('*')
+          .eq('country_code', selectedCountry.code.toUpperCase())
+          .eq('status', 'published')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Erreur lors du chargement des propriétés:', error);
+        } else {
+          setProperties(data || []);
+        }
+      } catch (err) {
+        console.error('Erreur:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProperties();
+  }, [selectedCountry.code]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -93,14 +131,44 @@ const Index = () => {
         </div>
 
         {/* Properties Grid */}
-        {properties.length > 0 ? (
+        {loading ? (
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, index) => (
+              <div key={index} className="animate-pulse">
+                <div className="bg-muted h-48 rounded-t-lg"></div>
+                <div className="p-4 space-y-3">
+                  <div className="h-4 bg-muted rounded w-3/4"></div>
+                  <div className="h-4 bg-muted rounded w-1/2"></div>
+                  <div className="h-4 bg-muted rounded w-1/4"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : properties.length > 0 ? (
           <div className={`grid gap-6 ${
             viewMode === "grid" 
               ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" 
               : "grid-cols-1"
           }`}>
             {properties.map((property) => (
-              <PropertyCard key={property.id} {...property} />
+              <PropertyCard 
+                key={property.id} 
+                id={property.id}
+                title={property.title}
+                priceUSD={property.price}
+                location={`${property.city}, ${getCountryName(property.country_code)}`}
+                type="sale"
+                propertyType="house"
+                image={property.image || "/placeholder.svg"}
+                surface={120}
+                agent={{
+                  name: "Agent Immobilier",
+                  type: "agency",
+                  rating: 4.5,
+                  verified: true
+                }}
+                features={["Moderne", "Bien situé"]}
+              />
             ))}
           </div>
         ) : (
@@ -121,7 +189,7 @@ const Index = () => {
         )}
 
         {/* Load More */}
-        {properties.length > 0 && (
+        {!loading && properties.length > 0 && (
           <div className="text-center">
             <Button variant="outline" size="lg">
               Voir plus de propriétés en {selectedCountry.name}
@@ -133,6 +201,24 @@ const Index = () => {
       <BottomNavigation />
     </div>
   );
+};
+
+// Helper function to get country name
+const getCountryName = (countryCode: string) => {
+  const countries: { [key: string]: string } = {
+    'CI': 'Côte d\'Ivoire',
+    'SN': 'Sénégal',
+    'ML': 'Mali',
+    'BF': 'Burkina Faso',
+    'GH': 'Ghana',
+    'NG': 'Nigeria',
+    'MA': 'Maroc',
+    'TN': 'Tunisie',
+    'DZ': 'Algérie',
+    'KE': 'Kenya',
+    'ZA': 'Afrique du Sud'
+  };
+  return countries[countryCode] || countryCode;
 };
 
 export default Index;
