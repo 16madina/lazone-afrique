@@ -150,6 +150,8 @@ const Map = () => {
 
         {/* Leaflet Map */}
         <MapContainer 
+          center={[0, 20]}
+          zoom={3}
           bounds={africaBounds}
           className="w-full h-full z-0"
           scrollWheelZoom={true}
@@ -165,42 +167,39 @@ const Map = () => {
               position={[listing.lat, listing.lng]}
               icon={createCustomIcon(listing.price)}
             >
-              <Popup className="custom-popup">
-                <Card className="border-0 shadow-none min-w-[250px]">
-                  <CardContent className="p-3">
-                    <div className="space-y-3">
-                      <div className="flex gap-3">
-                        {listing.image && (
-                          <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
-                            <img 
-                              src={listing.image} 
-                              alt={listing.title}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                e.currentTarget.parentElement!.innerHTML = '<div class="w-6 h-6 text-primary"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>';
-                              }}
-                            />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm truncate">{listing.title}</h4>
-                          <p className="text-primary font-bold text-sm">{formatPrice(listing.price)}</p>
-                          <p className="text-muted-foreground text-xs">{listing.city}</p>
+              <Popup>
+                <div className="min-w-[250px] p-2">
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      {listing.image && (
+                        <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+                          <img 
+                            src={listing.image} 
+                            alt={listing.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.parentElement!.innerHTML = '<div class="w-6 h-6 text-blue-600">🏠</div>';
+                            }}
+                          />
                         </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-sm truncate">{listing.title}</h4>
+                        <p className="text-blue-600 font-bold text-sm">{formatPrice(listing.price)}</p>
+                        <p className="text-gray-600 text-xs">{listing.city}</p>
                       </div>
-                      
-                      <Button 
-                        size="sm" 
-                        className="w-full"
-                        onClick={() => navigate(`/listing/${listing.id}`)}
-                      >
-                        <ExternalLink className="w-3 h-3 mr-1" />
-                        Voir l'annonce
-                      </Button>
                     </div>
-                  </CardContent>
-                </Card>
+                    
+                    <button 
+                      className="w-full bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"
+                      onClick={() => navigate(`/listing/${listing.id}`)}
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      Voir l'annonce
+                    </button>
+                  </div>
+                </div>
               </Popup>
             </Marker>
           ))}
