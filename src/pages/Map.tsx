@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapPin, Search, Filter, Locate, Layers, Navigation } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { MapAfrica } from "@/components/MapAfrica";
+import Header from "@/components/Header";
+import BottomNavigation from "@/components/BottomNavigation";
 
 interface Listing {
   id: string;
@@ -18,31 +19,53 @@ interface Listing {
 }
 
 
-// Simple header without context
-const SimpleHeader = () => (
-  <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur border-b border-border">
-    <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-      <div className="flex items-center space-x-2">
-        <div className="w-8 h-8 bg-teal-700 rounded-lg flex items-center justify-center">
-          <span className="text-white font-bold text-lg">L</span>
-        </div>
-        <span className="font-bold text-xl text-teal-700">LaZone</span>
-      </div>
-    </div>
-  </header>
-);
+// Composant Map léger qui charge MapAfrica de manière asynchrone pour éviter les conflits de contexte
+const LazyMapAfrica = ({ listings }: { listings: Listing[] }) => {
+  const [MapComponent, setMapComponent] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-// Simple bottom nav without context
-const SimpleBottomNav = () => (
-  <nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-40">
-    <div className="flex justify-around items-center h-16 px-4">
-      <div className="text-center">
-        <MapPin className="w-5 h-5 mx-auto text-primary" />
-        <span className="text-xs mt-1 text-primary">Carte</span>
+  useEffect(() => {
+    const loadMapComponent = async () => {
+      try {
+        // Charge MapAfrica de manière asynchrone pour éviter les conflits de contexte
+        const { MapAfrica } = await import("@/components/MapAfrica");
+        setMapComponent(() => MapAfrica);
+        setLoading(false);
+      } catch (error) {
+        console.error("Erreur lors du chargement de la carte:", error);
+        setLoading(false);
+      }
+    };
+    
+    loadMapComponent();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <MapPin className="w-16 h-16 mx-auto text-primary mb-4 animate-pulse" />
+          <h3 className="text-lg font-semibold">Chargement de la carte...</h3>
+          <p className="text-muted-foreground">{listings.length} propriétés trouvées</p>
+        </div>
       </div>
-    </div>
-  </nav>
-);
+    );
+  }
+
+  if (!MapComponent) {
+    return (
+      <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <MapPin className="w-16 h-16 mx-auto text-destructive mb-4" />
+          <h3 className="text-lg font-semibold">Erreur de chargement</h3>
+          <p className="text-muted-foreground">Impossible de charger la carte</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <MapComponent listings={listings} />;
+};
 
 const Map = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -79,7 +102,7 @@ const Map = () => {
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      <SimpleHeader />
+      <Header />
       
       <main className="flex-1 relative animate-fade-in overflow-hidden">
         {/* Search Bar */}
@@ -131,7 +154,7 @@ const Map = () => {
 
         {/* Map Africa avec les marqueurs de prix */}
         <div className="w-full h-full">
-          <MapAfrica listings={listings} />
+          <LazyMapAfrica listings={listings} />
         </div>
 
         {/* Listings Counter */}
@@ -156,7 +179,7 @@ const Map = () => {
         </div>
       </main>
 
-      <SimpleBottomNav />
+      <BottomNavigation />
     </div>
   );
 };
