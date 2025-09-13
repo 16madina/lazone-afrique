@@ -72,7 +72,7 @@ export const useRealTimeMessages = () => {
               avatar_url
             )
           ),
-          listings (
+          listings!conversations_property_id_fkey (
             title
           )
         `)
