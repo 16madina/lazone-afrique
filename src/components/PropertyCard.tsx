@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCountry } from "@/contexts/CountryContext";
 import { useNavigate } from "react-router-dom";
-import { MapPin, Heart, Bed, Bath, Square, Phone, MessageCircle, Star } from "lucide-react";
+import { MapPin, Heart, Bed, Bath, Square, Phone, MessageCircle, Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState } from "react";
 
 interface PropertyCardProps {
   id: string;
@@ -47,16 +48,35 @@ const PropertyCard = ({
 }: PropertyCardProps) => {
   const { formatLocalPrice, selectedCountry } = useCountry();
   const navigate = useNavigate();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Fonction pour obtenir la première image disponible
-  const getDisplayImage = () => {
+  // Fonction pour obtenir toutes les images disponibles
+  const getAllImages = () => {
+    const images: string[] = [];
     if (photos && Array.isArray(photos) && photos.length > 0) {
-      return photos[0];
+      images.push(...photos);
     }
-    if (image) {
-      return image;
+    if (image && !images.includes(image)) {
+      images.push(image);
     }
-    return "/placeholder.svg";
+    return images.length > 0 ? images : ["/placeholder.svg"];
+  };
+
+  const allImages = getAllImages();
+
+  const nextImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+  };
+
+  const goToImage = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentImageIndex(index);
   };
 
   const handleCardClick = () => {
@@ -99,16 +119,60 @@ const PropertyCard = ({
       className="group hover:shadow-warm transition-all duration-300 hover:-translate-y-1 overflow-hidden bg-gradient-card cursor-pointer"
       onClick={handleCardClick}
     >
-      {/* Image */}
+      {/* Image Carousel */}
       <div className="relative aspect-[4/3] overflow-hidden">
-        <img 
-          src={getDisplayImage()} 
-          alt={title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
+        <div className="relative w-full h-full">
+          <img 
+            src={allImages[currentImageIndex]} 
+            alt={`${title} - Image ${currentImageIndex + 1}`}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+          
+          {/* Navigation arrows - only show if multiple images */}
+          {allImages.length > 1 && (
+            <>
+              <Button
+                size="icon"
+                variant="secondary"
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-background/80 hover:bg-background/90 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10"
+                onClick={prevImage}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="secondary"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-background/80 hover:bg-background/90 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10"
+                onClick={nextImage}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+              
+              {/* Image indicators */}
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+                {allImages.map((_, index) => (
+                  <button
+                    key={index}
+                    className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                      index === currentImageIndex 
+                        ? 'bg-white scale-110' 
+                        : 'bg-white/60 hover:bg-white/80'
+                    }`}
+                    onClick={(e) => goToImage(index, e)}
+                  />
+                ))}
+              </div>
+              
+              {/* Image counter */}
+              <div className="absolute top-3 left-3 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-medium z-10">
+                {currentImageIndex + 1}/{allImages.length}
+              </div>
+            </>
+          )}
+        </div>
         
         {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
+        <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">
           <Badge className={typeColors[type]}>{typeLabels[type]}</Badge>
           {isSponsored && (
             <Badge variant="secondary" className="bg-african-gold text-foreground">
@@ -123,8 +187,9 @@ const PropertyCard = ({
           variant="ghost" 
           className={`absolute top-3 right-3 w-8 h-8 rounded-full bg-background/80 hover:bg-background ${
             isFavorite ? 'text-destructive' : 'text-muted-foreground'
-          }`}
+          } z-20`}
           onClick={(e) => e.stopPropagation()}
+          style={{ marginTop: isSponsored ? '4.5rem' : '0' }}
         >
           <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
         </Button>
