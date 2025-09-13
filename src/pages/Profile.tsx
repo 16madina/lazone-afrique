@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Button } from "@/components/ui/button";
@@ -10,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 import { 
   User, 
   Settings, 
@@ -27,36 +30,123 @@ import {
   Eye,
   Phone,
   Mail,
-  MapPin
+  MapPin,
+  Building2,
+  Users
 } from "lucide-react";
 
 const Profile = () => {
+  const { user, profile, signOut, loading, updateProfile } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [contactForm, setContactForm] = useState({
+    full_name: '',
+    phone: '',
+    company_name: '',
+    license_number: ''
+  });
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
+
+  // Initialize form when profile loads
+  useEffect(() => {
+    if (profile) {
+      setContactForm({
+        full_name: profile.full_name || '',
+        phone: profile.phone || '',
+        company_name: profile.company_name || '',
+        license_number: profile.license_number || ''
+      });
+    }
+  }, [profile]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  const handleUpdateProfile = async () => {
+    setIsUpdating(true);
+    const { error } = await updateProfile(contactForm);
+    
+    if (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le profil",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Succès",
+        description: "Profil mis à jour avec succès",
+      });
+    }
+    
+    setIsUpdating(false);
+  };
+
+  const getUserInitials = () => {
+    if (profile?.full_name) {
+      return profile.full_name
+        .split(' ')
+        .map(name => name[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+    }
+    return 'U';
+  };
+
+  const getUserTypeLabel = () => {
+    switch (profile?.user_type) {
+      case 'proprietaire':
+        return 'Propriétaire';
+      case 'demarcheur':
+        return 'Démarcheur';
+      case 'agence':
+        return 'Agence';
+      default:
+        return '';
+    }
+  };
+
+  const getUserTypeIcon = () => {
+    switch (profile?.user_type) {
+      case 'proprietaire':
+        return User;
+      case 'demarcheur':
+        return Users;
+      case 'agence':
+        return Building2;
+      default:
+        return User;
+    }
+  };
 
   const userStats = [
-    { label: "Propriétés publiées", value: "12", icon: Home },
-    { label: "Favoris", value: "8", icon: Heart },
-    { label: "Notes moyennes", value: "4.8", icon: Star },
-    { label: "Vues profil", value: "245", icon: Eye }
+    { label: "Propriétés publiées", value: "0", icon: Home },
+    { label: "Favoris", value: "0", icon: Heart },
+    { label: "Notes moyennes", value: "0", icon: Star },
+    { label: "Vues profil", value: "0", icon: Eye }
   ];
 
-  const recentProperties = [
-    {
-      id: "1",
-      title: "Villa moderne Cocody",
-      price: "85M FCFA",
-      status: "Publié",
-      views: 24
-    },
-    {
-      id: "2", 
-      title: "Appartement Marcory",
-      price: "250K FCFA/mois",
-      status: "En attente",
-      views: 12
-    }
-  ];
+  if (loading || !user || !profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  const UserTypeIcon = getUserTypeIcon();
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -80,7 +170,7 @@ const Profile = () => {
                   <div className="relative">
                     <Avatar className="w-24 h-24">
                       <AvatarFallback className="bg-gradient-primary text-primary-foreground text-2xl">
-                        JD
+                        {getUserInitials()}
                       </AvatarFallback>
                     </Avatar>
                     <Button size="icon" variant="outline" className="absolute -bottom-2 -right-2 rounded-full w-8 h-8">
@@ -90,21 +180,25 @@ const Profile = () => {
 
                   <div className="flex-1 text-center md:text-left space-y-2">
                     <div className="flex items-center justify-center md:justify-start gap-2">
-                      <h2 className="text-2xl font-bold">Jean Dupont</h2>
+                      <h2 className="text-2xl font-bold">{profile.full_name || 'Utilisateur'}</h2>
                       <Badge className="bg-accent text-accent-foreground">
                         <Shield className="w-3 h-3 mr-1" />
                         Vérifié
                       </Badge>
                     </div>
-                    <p className="text-muted-foreground">Agent immobilier • Particulier</p>
+                    <p className="text-muted-foreground flex items-center gap-2 justify-center md:justify-start">
+                      <UserTypeIcon className="w-4 h-4" />
+                      {getUserTypeLabel()}
+                      {profile.company_name && ` • ${profile.company_name}`}
+                    </p>
                     <div className="flex items-center justify-center md:justify-start gap-4 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <MapPin className="w-4 h-4" />
-                        Abidjan, Côte d'Ivoire
+                        Côte d'Ivoire
                       </div>
                       <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 text-african-gold" />
-                        4.8/5 (24 avis)
+                        Nouveau membre
                       </div>
                     </div>
                   </div>
@@ -141,12 +235,21 @@ const Profile = () => {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
+                    <Label>Nom complet</Label>
+                    <Input 
+                      value={contactForm.full_name}
+                      onChange={(e) => setContactForm({ ...contactForm, full_name: e.target.value })}
+                      placeholder="Votre nom complet"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
                     <Label>Email</Label>
                     <div className="flex">
                       <div className="bg-muted px-3 py-2 border border-r-0 rounded-l-md">
                         <Mail className="w-4 h-4 text-muted-foreground" />
                       </div>
-                      <Input value="jean.dupont@email.com" className="rounded-l-none" readOnly />
+                      <Input value={profile.email} className="rounded-l-none" readOnly />
                     </div>
                   </div>
                   
@@ -156,13 +259,44 @@ const Profile = () => {
                       <div className="bg-muted px-3 py-2 border border-r-0 rounded-l-md">
                         <Phone className="w-4 h-4 text-muted-foreground" />
                       </div>
-                      <Input value="+225 01 02 03 04 05" className="rounded-l-none" />
+                      <Input 
+                        value={contactForm.phone}
+                        onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
+                        placeholder="+225 XX XX XX XX XX"
+                        className="rounded-l-none" 
+                      />
                     </div>
                   </div>
+
+                  {profile.user_type === 'agence' && (
+                    <div className="space-y-2">
+                      <Label>Nom de l'agence</Label>
+                      <Input 
+                        value={contactForm.company_name}
+                        onChange={(e) => setContactForm({ ...contactForm, company_name: e.target.value })}
+                        placeholder="Nom de votre agence"
+                      />
+                    </div>
+                  )}
+
+                  {profile.user_type !== 'proprietaire' && (
+                    <div className="space-y-2">
+                      <Label>Numéro de licence</Label>
+                      <Input 
+                        value={contactForm.license_number}
+                        onChange={(e) => setContactForm({ ...contactForm, license_number: e.target.value })}
+                        placeholder="Votre numéro de licence"
+                      />
+                    </div>
+                  )}
                 </div>
 
-                <Button variant="outline" className="w-full">
-                  Mettre à jour les informations
+                <Button 
+                  onClick={handleUpdateProfile} 
+                  className="w-full" 
+                  disabled={isUpdating}
+                >
+                  {isUpdating ? 'Mise à jour...' : 'Mettre à jour les informations'}
                 </Button>
               </CardContent>
             </Card>
@@ -172,41 +306,21 @@ const Profile = () => {
           <TabsContent value="properties" className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-semibold">Mes propriétés</h3>
-              <Button className="bg-gradient-primary">
+              <Button className="bg-gradient-primary" onClick={() => navigate('/add-property')}>
                 <Home className="w-4 h-4 mr-2" />
                 Nouvelle annonce
               </Button>
             </div>
 
-            <div className="space-y-4">
-              {recentProperties.map((property, index) => (
-                <Card key={property.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <h4 className="font-semibold">{property.title}</h4>
-                        <p className="text-primary font-bold">{property.price}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant={property.status === "Publié" ? "default" : "secondary"}>
-                            {property.status}
-                          </Badge>
-                          <span className="text-sm text-muted-foreground">
-                            {property.views} vues
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          <Eye className="w-3 h-3" />
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <Edit className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="text-center py-12 animate-fade-in">
+              <Home className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+              <h4 className="text-lg font-semibold mb-2">Aucune propriété</h4>
+              <p className="text-muted-foreground mb-4">
+                Commencez par publier votre première annonce
+              </p>
+              <Button onClick={() => navigate('/add-property')}>
+                Créer une annonce
+              </Button>
             </div>
           </TabsContent>
 
@@ -319,7 +433,7 @@ const Profile = () => {
                 
                 <Separator />
                 
-                <Button variant="destructive" className="w-full justify-start">
+                <Button variant="destructive" className="w-full justify-start" onClick={handleSignOut}>
                   <LogOut className="w-4 h-4 mr-2" />
                   Déconnexion
                 </Button>
