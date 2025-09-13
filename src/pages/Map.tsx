@@ -3,8 +3,40 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapPin, Search, Filter, Locate, Layers, Navigation } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { MapAfrica } from "@/components/MapAfrica";
-import 'leaflet/dist/leaflet.css';
+
+interface Listing {
+  id: string;
+  title: string;
+  price: number;
+  lat: number;
+  lng: number;
+  status: string;
+  image: string | null;
+  city: string;
+  country_code: string;
+}
+
+// Minimal test component without any external libraries
+const TestMapComponent = ({ listings }: { listings: Listing[] }) => {
+  console.log("TestMapComponent rendering with listings:", listings.length);
+  
+  return (
+    <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
+      <div className="text-center">
+        <MapPin className="w-16 h-16 mx-auto text-blue-500 mb-4" />
+        <h3 className="text-lg font-semibold">Test Map Component</h3>
+        <p className="text-gray-600">{listings.length} listings loaded</p>
+        <div className="mt-4 space-y-2">
+          {listings.slice(0, 3).map(listing => (
+            <div key={listing.id} className="text-sm bg-white p-2 rounded">
+              {listing.title} - {listing.city}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Simple header without context
 const SimpleHeader = () => (
@@ -32,22 +64,12 @@ const SimpleBottomNav = () => (
   </nav>
 );
 
-interface Listing {
-  id: string;
-  title: string;
-  price: number;
-  lat: number;
-  lng: number;
-  status: string;
-  image: string | null;
-  city: string;
-  country_code: string;
-}
-
 const Map = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [listings, setListings] = useState<Listing[]>([]);
+
+  console.log("Map component rendering, listings count:", listings.length);
 
   // Fetch listings from Supabase
   useEffect(() => {
@@ -127,9 +149,9 @@ const Map = () => {
           </Button>
         </div>
 
-        {/* Map Component */}
+        {/* Test Map Component instead of MapAfrica */}
         <div className="w-full h-full">
-          <MapAfrica listings={listings} />
+          <TestMapComponent listings={listings} />
         </div>
 
         {/* Listings Counter */}
