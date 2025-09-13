@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import React from "react";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -10,12 +10,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Camera, MapPin, Home, DollarSign, FileText, Image, Plus, X } from "lucide-react";
+import { Camera, MapPin, Home, DollarSign, FileText, Image, Plus, X, Video, Upload } from "lucide-react";
+import { useMediaUpload } from "@/hooks/useMediaUpload";
 
 const AddProperty = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
-  const [images, setImages] = useState<string[]>([]);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const { 
+    uploadedPhotos, 
+    uploadedVideo, 
+    uploading, 
+    uploadPhoto, 
+    uploadVideo, 
+    removePhoto, 
+    removeVideo 
+  } = useMediaUpload();
 
   const steps = [
     { number: 1, title: "Type de bien", icon: Home },
@@ -36,6 +47,30 @@ const AddProperty = () => {
         ? prev.filter(f => f !== feature)
         : [...prev, feature]
     );
+  };
+
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      Array.from(files).forEach(file => {
+        uploadPhoto(file);
+      });
+    }
+    // Reset input
+    if (photoInputRef.current) {
+      photoInputRef.current.value = '';
+    }
+  };
+
+  const handleVideoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      uploadVideo(file);
+    }
+    // Reset input
+    if (videoInputRef.current) {
+      videoInputRef.current.value = '';
+    }
   };
 
   const nextStep = () => {
@@ -296,44 +331,152 @@ const AddProperty = () => {
               </div>
             )}
 
-            {/* Step 4: Photos */}
+            {/* Step 4: Photos & Vidéo */}
             {currentStep === 4 && (
               <div className="space-y-6 animate-fade-in">
                 <div className="text-center">
-                  <h4 className="font-semibold mb-2">Ajoutez des photos</h4>
+                  <h4 className="font-semibold mb-2">Ajoutez des photos et une vidéo</h4>
                   <p className="text-muted-foreground text-sm">
-                    Ajoutez jusqu'à 10 photos pour valoriser votre bien
+                    Ajoutez jusqu'à 20 photos et 1 vidéo pour valoriser votre bien
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {/* Upload Button */}
-                  <div className="aspect-square border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center hover:border-primary transition-colors cursor-pointer group">
-                    <Camera className="w-8 h-8 text-muted-foreground group-hover:text-primary mb-2" />
-                    <span className="text-sm text-muted-foreground group-hover:text-primary">
-                      Ajouter photo
-                    </span>
+                {/* Photos Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h5 className="font-medium flex items-center gap-2">
+                      <Camera className="w-4 h-4" />
+                      Photos ({uploadedPhotos.length}/20)
+                    </h5>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => photoInputRef.current?.click()}
+                      disabled={uploading || uploadedPhotos.length >= 20}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Ajouter photos
+                    </Button>
+                  </div>
+                  
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handlePhotoUpload}
+                    className="hidden"
+                  />
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {/* Upload Button */}
+                    <div 
+                      className="aspect-square border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center hover:border-primary transition-colors cursor-pointer group"
+                      onClick={() => photoInputRef.current?.click()}
+                    >
+                      <Camera className="w-8 h-8 text-muted-foreground group-hover:text-primary mb-2" />
+                      <span className="text-xs text-center text-muted-foreground group-hover:text-primary">
+                        Ajouter<br />photo
+                      </span>
+                    </div>
+
+                    {/* Uploaded Photos */}
+                    {uploadedPhotos.map((photo) => (
+                      <div key={photo.id} className="aspect-square bg-muted rounded-lg relative group overflow-hidden">
+                        <img 
+                          src={photo.url} 
+                          alt="Property photo" 
+                          className="w-full h-full object-cover" 
+                        />
+                        <Button
+                          size="icon"
+                          variant="destructive"
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6"
+                          onClick={() => removePhoto(photo.id)}
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
                   </div>
 
-                  {/* Placeholder Images */}
-                  {images.map((image, index) => (
-                    <div key={index} className="aspect-square bg-muted rounded-lg relative group overflow-hidden">
-                      <img src={image} alt="" className="w-full h-full object-cover" />
+                  {uploadedPhotos.length === 0 && (
+                    <div className="text-center py-8 border-2 border-dashed border-border rounded-lg">
+                      <Image className="w-12 h-12 mx-auto text-muted-foreground mb-2" />
+                      <p className="text-muted-foreground text-sm">Aucune photo ajoutée</p>
+                    </div>
+                  )}
+                </div>
+
+                <Separator />
+
+                {/* Video Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h5 className="font-medium flex items-center gap-2">
+                      <Video className="w-4 h-4" />
+                      Vidéo {uploadedVideo ? "(1/1)" : "(0/1)"}
+                    </h5>
+                    {!uploadedVideo && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => videoInputRef.current?.click()}
+                        disabled={uploading}
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Ajouter vidéo
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <input
+                    ref={videoInputRef}
+                    type="file"
+                    accept="video/*"
+                    onChange={handleVideoUpload}
+                    className="hidden"
+                  />
+
+                  {uploadedVideo ? (
+                    <div className="aspect-video bg-muted rounded-lg relative group overflow-hidden">
+                      <video 
+                        src={uploadedVideo.url} 
+                        className="w-full h-full object-cover" 
+                        controls
+                        preload="metadata"
+                      />
                       <Button
                         size="icon"
                         variant="destructive"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8"
+                        onClick={removeVideo}
                       >
-                        <X className="w-3 h-3" />
+                        <X className="w-4 h-4" />
                       </Button>
                     </div>
-                  ))}
+                  ) : (
+                    <div 
+                      className="aspect-video border-2 border-dashed border-border rounded-lg flex flex-col items-center justify-center hover:border-primary transition-colors cursor-pointer group"
+                      onClick={() => videoInputRef.current?.click()}
+                    >
+                      <Video className="w-12 h-12 text-muted-foreground group-hover:text-primary mb-2" />
+                      <span className="text-sm text-muted-foreground group-hover:text-primary">
+                        Ajouter une vidéo
+                      </span>
+                      <span className="text-xs text-muted-foreground mt-1">
+                        MP4, MOV, AVI (max 50MB)
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                {images.length === 0 && (
-                  <div className="text-center py-8">
-                    <Image className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">Aucune photo ajoutée</p>
+                {uploading && (
+                  <div className="text-center py-4">
+                    <div className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                      Téléchargement en cours...
+                    </div>
                   </div>
                 )}
               </div>

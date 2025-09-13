@@ -23,11 +23,13 @@ export type Database = {
           image: string | null
           lat: number
           lng: number
+          photos: string[] | null
           price: number
           status: string
           title: string
           updated_at: string
           user_id: string | null
+          video_url: string | null
         }
         Insert: {
           city: string
@@ -37,11 +39,13 @@ export type Database = {
           image?: string | null
           lat: number
           lng: number
+          photos?: string[] | null
           price: number
           status?: string
           title: string
           updated_at?: string
           user_id?: string | null
+          video_url?: string | null
         }
         Update: {
           city?: string
@@ -51,11 +55,13 @@ export type Database = {
           image?: string | null
           lat?: number
           lng?: number
+          photos?: string[] | null
           price?: number
           status?: string
           title?: string
           updated_at?: string
           user_id?: string | null
+          video_url?: string | null
         }
         Relationships: []
       }
