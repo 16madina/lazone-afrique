@@ -110,10 +110,6 @@ const Header = () => {
             </Button>
           )}
 
-          {/* Mobile Menu */}
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="w-5 h-5" />
-          </Button>
         </div>
       </div>
     </header>

@@ -15,6 +15,8 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useFileUpload } from "@/hooks/useFileUpload";
+import AdminPanel from "@/components/AdminPanel";
 import { 
   User, 
   Settings, 
@@ -46,6 +48,8 @@ const Profile = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [userProperties, setUserProperties] = useState<any[]>([]);
   const [loadingProperties, setLoadingProperties] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const { uploadFile, uploading } = useFileUpload();
   const [contactForm, setContactForm] = useState({
     full_name: '',
     phone: '',
@@ -96,10 +100,28 @@ const Profile = () => {
     }
   };
 
+  // Check if user is admin
+  const checkAdminStatus = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('admin_roles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      
+      setIsAdmin(!!data && !error);
+    } catch (error) {
+      setIsAdmin(false);
+    }
+  };
+
   // Fetch properties when user is available
   useEffect(() => {
     if (user) {
       fetchUserProperties();
+      checkAdminStatus();
     }
   }, [user]);
 
@@ -126,6 +148,32 @@ const Profile = () => {
     }
     
     setIsUpdating(false);
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    try {
+      const { url } = await uploadFile(file, 'property-photos', `avatars/${user.id}`);
+      
+      const { error } = await updateProfile({ avatar_url: url });
+      
+      if (error) {
+        throw new Error(error);
+      }
+
+      toast({
+        title: 'Succès',
+        description: 'Photo de profil mise à jour'
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de télécharger la photo',
+        variant: 'destructive'
+      });
+    }
   };
 
   const getUserInitials = () => {
@@ -191,11 +239,12 @@ const Profile = () => {
       
       <main className="flex-1 container mx-auto px-4 py-6 pb-20 animate-fade-in">
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-5' : 'grid-cols-4'}`}>
             <TabsTrigger value="profile">Profil</TabsTrigger>
             <TabsTrigger value="properties">Mes biens</TabsTrigger>
             <TabsTrigger value="favorites">Favoris</TabsTrigger>
             <TabsTrigger value="settings">Paramètres</TabsTrigger>
+            {isAdmin && <TabsTrigger value="admin">Admin</TabsTrigger>}
           </TabsList>
 
           {/* Profile Tab */}
@@ -206,13 +255,40 @@ const Profile = () => {
                 <div className="flex flex-col md:flex-row items-center gap-6">
                   <div className="relative">
                     <Avatar className="w-24 h-24">
-                      <AvatarFallback className="bg-gradient-primary text-primary-foreground text-2xl">
-                        {getUserInitials()}
-                      </AvatarFallback>
+                      {profile?.avatar_url ? (
+                        <img 
+                          src={profile.avatar_url} 
+                          alt="Avatar" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <AvatarFallback className="bg-gradient-primary text-primary-foreground text-2xl">
+                          {getUserInitials()}
+                        </AvatarFallback>
+                      )}
                     </Avatar>
-                    <Button size="icon" variant="outline" className="absolute -bottom-2 -right-2 rounded-full w-8 h-8">
-                      <Camera className="w-4 h-4" />
-                    </Button>
+                    <div className="absolute -bottom-2 -right-2">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarUpload}
+                        className="hidden"
+                        id="avatar-upload"
+                      />
+                      <label htmlFor="avatar-upload">
+                        <Button 
+                          size="icon" 
+                          variant="outline" 
+                          className="rounded-full w-8 h-8 cursor-pointer"
+                          disabled={uploading}
+                          asChild
+                        >
+                          <div>
+                            <Camera className="w-4 h-4" />
+                          </div>
+                        </Button>
+                      </label>
+                    </div>
                   </div>
 
                   <div className="flex-1 text-center md:text-left space-y-2">
@@ -535,6 +611,13 @@ const Profile = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Admin Tab - Only visible to administrators */}
+          {isAdmin && (
+            <TabsContent value="admin">
+              <AdminPanel />
+            </TabsContent>
+          )}
         </Tabs>
       </main>
 

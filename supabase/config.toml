@@ -1,1 +1,10 @@
 project_id = "ldlytdqspngpvfwtpula"
+
+[auth]
+enabled = true
+
+[functions.get-mapbox-token]
+verify_jwt = false
+
+[functions.admin-actions]
+verify_jwt = true
