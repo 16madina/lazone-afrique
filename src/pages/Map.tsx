@@ -85,9 +85,9 @@ const Map = () => {
   const createCustomIcon = (price: number) => {
     const formattedPrice = formatPrice(price);
     return new DivIcon({
-      className: 'custom-marker',
+      className: 'custom-div-icon',
       html: `
-        <div class="bg-primary text-primary-foreground px-2 py-1 rounded-lg shadow-lg font-semibold text-xs whitespace-nowrap border-2 border-background">
+        <div style="background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; border: 2px solid hsl(var(--background)); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
           ${formattedPrice}
         </div>
       `,
@@ -152,7 +152,6 @@ const Map = () => {
         <MapContainer 
           center={[0, 20]}
           zoom={3}
-          bounds={africaBounds}
           className="w-full h-full z-0"
           scrollWheelZoom={true}
         >
