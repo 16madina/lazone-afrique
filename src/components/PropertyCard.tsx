@@ -1,12 +1,13 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useCountry } from "@/contexts/CountryContext";
 import { MapPin, Heart, Bed, Bath, Square, Phone, MessageCircle, Star } from "lucide-react";
 
 interface PropertyCardProps {
   id: string;
   title: string;
-  price: string;
+  priceUSD: number; // Price in USD for conversion
   location: string;
   type: "sale" | "rent" | "commercial";
   propertyType: "apartment" | "house" | "villa" | "land" | "commercial";
@@ -27,7 +28,7 @@ interface PropertyCardProps {
 
 const PropertyCard = ({ 
   title, 
-  price, 
+  priceUSD, 
   location, 
   type, 
   propertyType, 
@@ -40,6 +41,7 @@ const PropertyCard = ({
   isSponsored = false,
   isFavorite = false
 }: PropertyCardProps) => {
+  const { formatPrice, selectedCountry } = useCountry();
   const typeColors = {
     sale: "bg-accent text-accent-foreground",
     rent: "bg-primary text-primary-foreground", 
@@ -105,10 +107,20 @@ const PropertyCard = ({
             {title}
           </h3>
           <div className="flex items-center justify-between">
-            <p className="text-2xl font-bold text-primary">{price}</p>
-            <span className="text-sm text-muted-foreground">
-              {propertyTypeLabels[propertyType]}
-            </span>
+            <div className="flex items-center gap-2">
+              <p className="text-2xl font-bold text-primary">{formatPrice(priceUSD)}</p>
+              {type === "rent" && (
+                <span className="text-sm text-muted-foreground">/mois</span>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-sm text-muted-foreground">
+                {propertyTypeLabels[propertyType]}
+              </span>
+              <Badge variant="outline" className="text-xs">
+                {selectedCountry.currency.code}
+              </Badge>
+            </div>
           </div>
         </div>
 

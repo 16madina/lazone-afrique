@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Bell, User, Menu, Search, MapPin, Globe } from "lucide-react";
+import CountrySelector from "@/components/CountrySelector";
+import { Bell, User, Menu } from "lucide-react";
 
 const Header = () => {
   const [notifications, setNotifications] = useState(3);
@@ -20,22 +20,8 @@ const Header = () => {
           </span>
         </div>
 
-        {/* Country Selector - Desktop */}
-        <div className="hidden md:flex items-center space-x-4">
-          <Select defaultValue="ci">
-            <SelectTrigger className="w-[180px]">
-              <Globe className="w-4 h-4 mr-2" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ci">🇨🇮 Côte d'Ivoire</SelectItem>
-              <SelectItem value="sn">🇸🇳 Sénégal</SelectItem>
-              <SelectItem value="ma">🇲🇦 Maroc</SelectItem>
-              <SelectItem value="ng">🇳🇬 Nigeria</SelectItem>
-              <SelectItem value="gh">🇬🇭 Ghana</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Country Selector */}
+        <CountrySelector />
 
         {/* Actions */}
         <div className="flex items-center space-x-3">

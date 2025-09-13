@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCountry } from "@/contexts/CountryContext";
 import { Search, MapPin, Filter } from "lucide-react";
 import heroImage from "@/assets/hero-african-villa.jpg";
 
@@ -9,6 +10,7 @@ const HeroSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [propertyType, setPropertyType] = useState("");
   const [location, setLocation] = useState("");
+  const { selectedCountry } = useCountry();
 
   return (
     <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden">
@@ -30,11 +32,11 @@ const HeroSection = () => {
               <span className="block bg-gradient-to-r from-african-gold to-primary bg-clip-text text-transparent">
                 Maison Idéale
               </span>
-              en Afrique
+              en {selectedCountry.name}
             </h1>
             <p className="text-lg md:text-xl text-primary-foreground/90 max-w-2xl mx-auto">
-              La première plateforme immobilière dédiée au marché africain. 
-              Achetez, vendez ou louez en toute confiance.
+              Découvrez les meilleures opportunités immobilières en {selectedCountry.name}. 
+              Prix en {selectedCountry.currency.name} ({selectedCountry.currency.symbol}).
             </p>
           </div>
 
@@ -50,10 +52,11 @@ const HeroSection = () => {
                     <SelectValue placeholder="Ville ou quartier" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="abidjan">Abidjan</SelectItem>
-                    <SelectItem value="bouake">Bouaké</SelectItem>
-                    <SelectItem value="yamoussoukro">Yamoussoukro</SelectItem>
-                    <SelectItem value="san-pedro">San-Pédro</SelectItem>
+                    {selectedCountry.cities.map((city) => (
+                      <SelectItem key={city} value={city.toLowerCase()}>
+                        {city}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -98,11 +101,11 @@ const HeroSection = () => {
 
             {/* Quick Filters */}
             <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border">
-              <span className="text-sm text-muted-foreground">Recherches populaires:</span>
-              <Button variant="outline" size="sm" className="text-xs">Villa Abidjan</Button>
+              <span className="text-sm text-muted-foreground">Recherches populaires en {selectedCountry.name}:</span>
+              <Button variant="outline" size="sm" className="text-xs">Villa {selectedCountry.cities[0]}</Button>
               <Button variant="outline" size="sm" className="text-xs">Appartement 2 chambres</Button>
               <Button variant="outline" size="sm" className="text-xs">Terrain constructible</Button>
-              <Button variant="outline" size="sm" className="text-xs">Location Cocody</Button>
+              <Button variant="outline" size="sm" className="text-xs">Location {selectedCountry.cities[1] || selectedCountry.cities[0]}</Button>
             </div>
           </div>
 
