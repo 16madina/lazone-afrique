@@ -20,6 +20,7 @@ interface Listing {
   lat: number;
   lng: number;
   image?: string;
+  photos?: string[] | null;
   status: string;
 }
 
@@ -159,6 +160,7 @@ const Index = () => {
                 location={`${property.city}, ${getCountryName(property.country_code)}`}
                 type="sale"
                 propertyType="house"
+                photos={property.photos}
                 image={property.image || "/placeholder.svg"}
                 surface={120}
                 agent={{

@@ -12,7 +12,8 @@ interface PropertyCardProps {
   location: string;
   type: "sale" | "rent" | "commercial";
   propertyType: "apartment" | "house" | "villa" | "land" | "commercial";
-  image: string;
+  image?: string; // Maintenir pour compatibilité
+  photos?: string[] | null; // Nouveau champ pour les photos
   bedrooms?: number;
   bathrooms?: number;
   surface: number;
@@ -35,6 +36,7 @@ const PropertyCard = ({
   type, 
   propertyType, 
   image, 
+  photos,
   bedrooms, 
   bathrooms, 
   surface, 
@@ -45,6 +47,17 @@ const PropertyCard = ({
 }: PropertyCardProps) => {
   const { formatLocalPrice, selectedCountry } = useCountry();
   const navigate = useNavigate();
+
+  // Fonction pour obtenir la première image disponible
+  const getDisplayImage = () => {
+    if (photos && Array.isArray(photos) && photos.length > 0) {
+      return photos[0];
+    }
+    if (image) {
+      return image;
+    }
+    return "/placeholder.svg";
+  };
 
   const handleCardClick = () => {
     // Vérifier que l'ID est un UUID valide (format Supabase)
@@ -89,7 +102,7 @@ const PropertyCard = ({
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden">
         <img 
-          src={image} 
+          src={getDisplayImage()} 
           alt={title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
