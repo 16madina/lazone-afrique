@@ -22,6 +22,12 @@ interface Listing {
   image?: string;
   photos?: string[] | null;
   status: string;
+  user_id?: string;
+  profiles?: {
+    full_name?: string;
+    user_type?: string;
+    company_name?: string;
+  };
 }
 
 // Import property images
@@ -43,7 +49,20 @@ const Index = () => {
       try {
         const { data, error } = await supabase
           .from('listings')
-          .select('*')
+          .select(`
+            id,
+            title,
+            price,
+            city,
+            country_code,
+            lat,
+            lng,
+            image,
+            photos,
+            status,
+            user_id,
+            created_at
+          `)
           .eq('country_code', selectedCountry.code.toUpperCase())
           .eq('status', 'published')
           .order('created_at', { ascending: false });
@@ -51,7 +70,24 @@ const Index = () => {
         if (error) {
           console.error('Erreur lors du chargement des propriétés:', error);
         } else {
-          setProperties(data || []);
+          // Récupérer les profils pour chaque listing
+          const listingsWithProfiles = await Promise.all((data || []).map(async (listing) => {
+            if (listing.user_id) {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('full_name, user_type, company_name')
+                .eq('user_id', listing.user_id)
+                .single();
+              
+              return {
+                ...listing,
+                profiles: profile
+              };
+            }
+            return listing;
+          }));
+          
+          setProperties(listingsWithProfiles);
         }
       } catch (err) {
         console.error('Erreur:', err);
@@ -151,27 +187,34 @@ const Index = () => {
               ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" 
               : "grid-cols-1"
           }`}>
-            {properties.map((property) => (
-              <PropertyCard 
-                key={property.id} 
-                id={property.id}
-                title={property.title}
-                priceUSD={property.price}
-                location={`${property.city}, ${getCountryName(property.country_code)}`}
-                type="sale"
-                propertyType="house"
-                photos={property.photos}
-                image={property.image || "/placeholder.svg"}
-                surface={120}
-                agent={{
-                  name: "Agent Immobilier",
-                  type: "agency",
-                  rating: 4.5,
-                  verified: true
-                }}
-                features={["Moderne", "Bien situé"]}
-              />
-            ))}
+            {properties.map((property) => {
+              const profile = property.profiles;
+              const agentName = profile?.full_name || "Propriétaire";
+              const agentType = profile?.user_type === 'proprietaire' ? 'individual' : 
+                              profile?.user_type === 'agence' ? 'agency' : 'broker';
+              
+              return (
+                <PropertyCard 
+                  key={property.id} 
+                  id={property.id}
+                  title={property.title}
+                  priceUSD={property.price}
+                  location={`${property.city}, ${getCountryName(property.country_code)}`}
+                  type="sale"
+                  propertyType="house"
+                  photos={property.photos}
+                  image={property.image || "/placeholder.svg"}
+                  surface={120}
+                  agent={{
+                    name: agentName,
+                    type: agentType,
+                    rating: 4.5,
+                    verified: true
+                  }}
+                  features={["Moderne", "Bien situé"]}
+                />
+              );
+            })}
           </div>
         ) : (
           /* Empty State */
