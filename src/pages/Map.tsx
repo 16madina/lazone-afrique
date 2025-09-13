@@ -1,18 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { DivIcon, LatLngBounds } from 'leaflet';
+import { DivIcon } from 'leaflet';
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { MapPin, Search, Filter, Locate, Layers, Navigation, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCountry } from "@/contexts/CountryContext";
 import { useNavigate } from "react-router-dom";
 import 'leaflet/dist/leaflet.css';
-import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css';
-import 'leaflet-defaulticon-compatibility';
 
 interface Listing {
   id: string;
@@ -26,15 +23,54 @@ interface Listing {
   country_code: string;
 }
 
+// Simple map component to isolate context issues  
+const MapView = ({ listings, formatPrice, navigate }: {
+  listings: Listing[];
+  formatPrice: (price: number) => string;
+  navigate: (path: string) => void;
+}) => {
+  return (
+    <MapContainer 
+      center={[0, 20]}
+      zoom={3}
+      scrollWheelZoom={true}
+      style={{ height: '100%', width: '100%' }}
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      
+      {listings.map((listing) => (
+        <Marker
+          key={listing.id}
+          position={[listing.lat, listing.lng]}
+        >
+          <Popup>
+            <div className="p-2 min-w-[200px]">
+              <h4 className="font-semibold text-sm">{listing.title}</h4>
+              <p className="text-primary font-bold text-sm">{formatPrice(listing.price)}</p>
+              <p className="text-muted-foreground text-xs">{listing.city}</p>
+              <button 
+                className="mt-2 w-full bg-primary text-primary-foreground px-3 py-1 rounded text-sm hover:bg-primary/90 transition-colors"
+                onClick={() => navigate(`/listing/${listing.id}`)}
+              >
+                Voir l'annonce
+              </button>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+    </MapContainer>
+  );
+};
+
 const Map = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [listings, setListings] = useState<Listing[]>([]);
   const { selectedCountry, formatPrice } = useCountry();
   const navigate = useNavigate();
-
-  // Africa bounds: [south, west, north, east]
-  const africaBounds = new LatLngBounds([-40, -20], [55, 50]);
 
   // Fetch listings from Supabase
   useEffect(() => {
@@ -81,21 +117,6 @@ const Map = () => {
     } catch (error) {
       console.error('Error:', error);
     }
-  };
-
-  // Create custom marker icon with price
-  const createCustomIcon = (price: number) => {
-    const formattedPrice = formatPrice(price);
-    return new DivIcon({
-      className: 'custom-div-icon',
-      html: `
-        <div style="background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; border: 2px solid hsl(var(--background)); box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          ${formattedPrice}
-        </div>
-      `,
-      iconSize: [80, 30],
-      iconAnchor: [40, 30],
-    });
   };
 
   return (
@@ -152,61 +173,11 @@ const Map = () => {
 
         {/* Leaflet Map */}
         <div className="w-full h-full">
-          <MapContainer 
-            center={[0, 20]}
-            zoom={3}
-            className="w-full h-full z-0"
-            scrollWheelZoom={true}
-            style={{ height: '100%', width: '100%' }}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            
-            {listings.map((listing) => (
-              <Marker
-                key={listing.id}
-                position={[listing.lat, listing.lng]}
-                icon={createCustomIcon(listing.price)}
-              >
-                <Popup maxWidth={300} minWidth={250}>
-                  <div className="p-2">
-                    <div className="space-y-3">
-                      <div className="flex gap-3">
-                        {listing.image && (
-                          <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
-                            <img 
-                              src={listing.image} 
-                              alt={listing.title}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                e.currentTarget.parentElement!.innerHTML = '<div class="w-6 h-6 text-blue-600">🏠</div>';
-                              }}
-                            />
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm truncate">{listing.title}</h4>
-                          <p className="text-blue-600 font-bold text-sm">{formatPrice(listing.price)}</p>
-                          <p className="text-gray-600 text-xs">{listing.city}</p>
-                        </div>
-                      </div>
-                      
-                      <button 
-                        className="w-full bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"
-                        onClick={() => navigate(`/listing/${listing.id}`)}
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                        Voir l'annonce
-                      </button>
-                    </div>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+          <MapView 
+            listings={listings}
+            formatPrice={formatPrice}
+            navigate={navigate}
+          />
         </div>
 
         {/* Listings Counter */}
