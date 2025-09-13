@@ -4,7 +4,7 @@ import BottomNavigation from "@/components/BottomNavigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -61,6 +61,12 @@ const Messages = () => {
              'Utilisateur';
     }
     return 'Conversation';
+  };
+
+  // Get avatar image URL for conversation
+  const getConversationAvatarUrl = (conversation: any) => {
+    const otherParticipant = conversation.participants.find((p: any) => p.user_id !== user?.id);
+    return otherParticipant?.profile?.avatar_url;
   };
 
   // Get avatar initials for conversation
@@ -179,6 +185,10 @@ const Messages = () => {
                   <div className="flex items-center gap-3">
                     <div className="relative">
                       <Avatar className="w-12 h-12">
+                        <AvatarImage 
+                          src={getConversationAvatarUrl(conversation)} 
+                          alt={getConversationDisplayName(conversation)}
+                        />
                         <AvatarFallback className="bg-gradient-primary text-primary-foreground">
                           {getConversationAvatar(conversation)}
                         </AvatarFallback>
@@ -241,6 +251,10 @@ const Messages = () => {
                   
                   <div className="relative">
                     <Avatar className="w-10 h-10">
+                      <AvatarImage 
+                        src={getConversationAvatarUrl(selectedConversation)} 
+                        alt={getConversationDisplayName(selectedConversation)}
+                      />
                       <AvatarFallback className="bg-gradient-primary text-primary-foreground">
                         {getConversationAvatar(selectedConversation)}
                       </AvatarFallback>
