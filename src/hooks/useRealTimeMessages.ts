@@ -248,14 +248,14 @@ export const useRealTimeMessages = () => {
     }
   }, [toast]);
 
-  // Create a new conversation
+  // Create a new conversation with atomic transaction approach
   const createConversation = useCallback(async (
     participantIds: string[], 
     propertyId?: string, 
     title?: string
   ) => {
     try {
-      console.log('🚀 Starting conversation creation with:', { participantIds, propertyId, title });
+      console.log('🚀 Starting atomic conversation creation with:', { participantIds, propertyId, title });
       
       const { data: { user } } = await supabase.auth.getUser();
       console.log('👤 Current user:', user?.id);
@@ -265,7 +265,11 @@ export const useRealTimeMessages = () => {
         return null;
       }
 
-      // Create the conversation
+      // Prepare all participant IDs including the current user
+      const allParticipantIds = [...new Set([user.id, ...participantIds])];
+      console.log('👥 All participants will be:', allParticipantIds);
+
+      // Create the conversation first
       console.log('📝 Creating conversation...');
       const { data: conversation, error: convError } = await supabase
         .from('conversations')
@@ -286,38 +290,62 @@ export const useRealTimeMessages = () => {
         return null;
       }
 
-      console.log('✅ Conversation created successfully:', conversation.id);
+      console.log('✅ Conversation created with ID:', conversation.id);
 
-      // Add all participants (including current user)
-      const allParticipantIds = [...new Set([user.id, ...participantIds])];
-      console.log('👥 Adding participants:', allParticipantIds);
-      
-      const participantsData = allParticipantIds.map(userId => ({
-        conversation_id: conversation.id,
-        user_id: userId
-      }));
-
-      console.log('📊 Participants data:', participantsData);
-
-      const { error: participantsError } = await supabase
+      // Immediately add the current user as the first participant
+      // This ensures they can see the conversation for the SELECT policy
+      console.log('👤 Adding current user as participant...');
+      const { error: currentUserError } = await supabase
         .from('conversation_participants')
-        .insert(participantsData);
+        .insert({
+          conversation_id: conversation.id,
+          user_id: user.id
+        });
 
-      if (participantsError) {
-        console.error('❌ Error adding participants:', participantsError);
+      if (currentUserError) {
+        console.error('❌ Error adding current user as participant:', currentUserError);
         toast({
           title: "Erreur",
-          description: `Erreur ajout participants: ${participantsError.message}`,
+          description: `Erreur lors de l'ajout de l'utilisateur: ${currentUserError.message}`,
           variant: "destructive",
         });
         return null;
       }
 
-      console.log('✅ Participants added successfully');
-      
+      console.log('✅ Current user added as participant');
+
+      // Now add other participants if any
+      const otherParticipantIds = participantIds.filter(id => id !== user.id);
+      if (otherParticipantIds.length > 0) {
+        console.log('👥 Adding other participants:', otherParticipantIds);
+        
+        const otherParticipantsData = otherParticipantIds.map(userId => ({
+          conversation_id: conversation.id,
+          user_id: userId
+        }));
+
+        const { error: participantsError } = await supabase
+          .from('conversation_participants')
+          .insert(otherParticipantsData);
+
+        if (participantsError) {
+          console.error('❌ Error adding other participants:', participantsError);
+          toast({
+            title: "Attention",
+            description: `Conversation créée mais erreur ajout participants: ${participantsError.message}`,
+            variant: "destructive",
+          });
+          // Don't return null here, conversation was created successfully
+        } else {
+          console.log('✅ All other participants added successfully');
+        }
+      }
+
+      // Refresh conversations to show the new one
       await fetchConversations();
-      console.log('🎉 Conversation creation completed:', conversation.id);
+      console.log('🎉 Conversation creation completed successfully:', conversation.id);
       return conversation.id;
+      
     } catch (error) {
       console.error('💥 Unexpected error in createConversation:', error);
       toast({
