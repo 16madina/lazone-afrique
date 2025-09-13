@@ -103,8 +103,24 @@ const Profile = () => {
 
   // Check if user is admin
   const checkAdminStatus = async () => {
-    if (!user) return;
+    if (!user || !profile) return;
     
+    // Automatically grant admin to the app owner
+    if (profile.email === 'lazoneclient@gmail.com') {
+      setIsAdmin(true);
+      
+      // Ensure they're in the admin_roles table
+      try {
+        await supabase
+          .from('admin_roles')
+          .upsert({ user_id: user.id }, { onConflict: 'user_id' });
+      } catch (error) {
+        console.error('Error adding to admin_roles:', error);
+      }
+      return;
+    }
+    
+    // Check admin status for other users
     try {
       const { data, error } = await supabase
         .from('admin_roles')
@@ -120,11 +136,11 @@ const Profile = () => {
 
   // Fetch properties when user is available
   useEffect(() => {
-    if (user) {
+    if (user && profile) {
       fetchUserProperties();
       checkAdminStatus();
     }
-  }, [user]);
+  }, [user, profile]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -621,16 +637,10 @@ const Profile = () => {
             </Card>
           </TabsContent>
 
-          {/* Admin Tab - Only visible to administrators */}
-          {isAdmin ? (
-            <TabsContent value="admin">
-              <AdminPanel />
-            </TabsContent>
-          ) : (
-            <TabsContent value="admin">
-              <AdminSetup />
-            </TabsContent>
-          )}
+          {/* Admin Tab */}
+          <TabsContent value="admin">
+            {isAdmin ? <AdminPanel /> : <AdminSetup />}
+          </TabsContent>
         </Tabs>
       </main>
 
