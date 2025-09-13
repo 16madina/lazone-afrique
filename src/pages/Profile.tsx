@@ -155,23 +155,31 @@ const Profile = () => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
+    console.log('Starting avatar upload for user:', user.id);
+    console.log('File:', file.name, file.size, file.type);
+
     try {
       const { url } = await uploadFile(file, 'avatars', `${user.id}/avatar`);
+      
+      console.log('Upload successful, URL:', url);
       
       const { error } = await updateProfile({ avatar_url: url });
       
       if (error) {
+        console.error('Profile update error:', error);
         throw new Error(error);
       }
 
+      console.log('Profile updated successfully');
       toast({
         title: 'Succès',
         description: 'Photo de profil mise à jour'
       });
     } catch (error: any) {
+      console.error('Avatar upload error:', error);
       toast({
         title: 'Erreur',
-        description: 'Impossible de télécharger la photo',
+        description: `Impossible de télécharger la photo: ${error.message}`,
         variant: 'destructive'
       });
     }

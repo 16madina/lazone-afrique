@@ -10,21 +10,30 @@ export const useFileUpload = () => {
       const fileExt = file.name.split('.').pop();
       const fileName = path || `${Date.now()}-${Math.random()}.${fileExt}`;
       
+      console.log('Uploading file to bucket:', bucket, 'path:', fileName);
+      
       const { data, error } = await supabase.storage
         .from(bucket)
-        .upload(fileName, file);
+        .upload(fileName, file, {
+          upsert: true
+        });
 
       if (error) {
+        console.error('Storage upload error:', error);
         throw error;
       }
+
+      console.log('Upload data:', data);
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from(bucket)
         .getPublicUrl(fileName);
 
+      console.log('Public URL:', publicUrl);
       return { url: publicUrl, path: fileName };
     } catch (error: any) {
+      console.error('Upload file error:', error);
       throw new Error(error.message);
     } finally {
       setUploading(false);
