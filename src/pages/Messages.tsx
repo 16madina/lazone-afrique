@@ -1,0 +1,315 @@
+import { useState } from "react";
+import Header from "@/components/Header";
+import BottomNavigation from "@/components/BottomNavigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Search, MessageCircle, Phone, Video, MoreVertical, Send, Smile, Paperclip } from "lucide-react";
+
+const Messages = () => {
+  const [selectedChat, setSelectedChat] = useState<string | null>("1");
+  const [message, setMessage] = useState("");
+
+  const conversations = [
+    {
+      id: "1",
+      name: "Kouadio Immobilier",
+      lastMessage: "La villa est toujours disponible",
+      time: "14:30",
+      unread: 2,
+      avatar: "KI",
+      online: true,
+      property: "Villa Cocody"
+    },
+    {
+      id: "2", 
+      name: "Marie Adjoua",
+      lastMessage: "Merci pour votre intérêt",
+      time: "Hier",
+      unread: 0,
+      avatar: "MA",
+      online: false,
+      property: "Maison Marcory"
+    },
+    {
+      id: "3",
+      name: "Fofana Properties",
+      lastMessage: "Le prix est négociable",
+      time: "Lun",
+      unread: 1,
+      avatar: "FP", 
+      online: true,
+      property: "Terrain Bingerville"
+    },
+    {
+      id: "4",
+      name: "Urban Living",
+      lastMessage: "Visite programmée demain",
+      time: "Dim",
+      unread: 0,
+      avatar: "UL",
+      online: false,
+      property: "Studio Plateau"
+    }
+  ];
+
+  const messages = [
+    {
+      id: "1",
+      sender: "other",
+      text: "Bonjour, je suis intéressé par votre villa à Cocody",
+      time: "14:25"
+    },
+    {
+      id: "2", 
+      sender: "me",
+      text: "Bonjour ! Merci pour votre intérêt. La villa est effectivement disponible.",
+      time: "14:26"
+    },
+    {
+      id: "3",
+      sender: "other", 
+      text: "Serait-il possible d'organiser une visite cette semaine ?",
+      time: "14:28"
+    },
+    {
+      id: "4",
+      sender: "me",
+      text: "Bien sûr ! Je suis disponible mercredi ou vendredi après-midi. Quelle heure vous conviendrait le mieux ?",
+      time: "14:29"
+    },
+    {
+      id: "5",
+      sender: "other",
+      text: "Mercredi 15h serait parfait. La villa est toujours disponible ?",
+      time: "14:30"
+    }
+  ];
+
+  const selectedConversation = conversations.find(c => c.id === selectedChat);
+
+  return (
+    <div className="flex flex-col min-h-screen bg-background">
+      <Header />
+      
+      <main className="flex-1 flex animate-fade-in">
+        {/* Conversations List */}
+        <div className={`
+          ${selectedChat ? 'hidden md:block' : 'block'} 
+          w-full md:w-80 border-r border-border bg-background
+        `}>
+          <div className="p-4 space-y-4">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input placeholder="Rechercher une conversation..." className="pl-10" />
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="flex gap-2">
+              <Button variant="default" size="sm">Tous</Button>
+              <Button variant="outline" size="sm">Non lus</Button>
+              <Button variant="outline" size="sm">Favoris</Button>
+            </div>
+          </div>
+
+          {/* Conversations */}
+          <div className="overflow-y-auto">
+            {conversations.map((conversation, index) => (
+              <div
+                key={conversation.id}
+                onClick={() => setSelectedChat(conversation.id)}
+                className={`
+                  p-4 border-b border-border cursor-pointer transition-colors hover:bg-muted/50
+                  ${selectedChat === conversation.id ? 'bg-primary/5 border-r-2 border-r-primary' : ''}
+                  animate-fade-in
+                `}
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="relative">
+                    <Avatar className="w-12 h-12">
+                      <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+                        {conversation.avatar}
+                      </AvatarFallback>
+                    </Avatar>
+                    {conversation.online && (
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-accent rounded-full border-2 border-background" />
+                    )}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="font-semibold text-sm truncate">{conversation.name}</h4>
+                      <span className="text-xs text-muted-foreground">{conversation.time}</span>
+                    </div>
+                    
+                    <p className="text-sm text-muted-foreground truncate mb-1">
+                      {conversation.lastMessage}
+                    </p>
+                    
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className="text-xs">
+                        {conversation.property}
+                      </Badge>
+                      {conversation.unread > 0 && (
+                        <Badge className="bg-destructive text-destructive-foreground w-5 h-5 p-0 flex items-center justify-center text-xs">
+                          {conversation.unread}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Chat Area */}
+        {selectedChat && selectedConversation ? (
+          <div className={`
+            ${selectedChat ? 'flex' : 'hidden md:flex'} 
+            flex-col flex-1
+          `}>
+            {/* Chat Header */}
+            <div className="p-4 border-b border-border bg-background/95 backdrop-blur-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setSelectedChat(null)}
+                    className="md:hidden"
+                  >
+                    ←
+                  </Button>
+                  
+                  <div className="relative">
+                    <Avatar className="w-10 h-10">
+                      <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+                        {selectedConversation.avatar}
+                      </AvatarFallback>
+                    </Avatar>
+                    {selectedConversation.online && (
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-accent rounded-full border-2 border-background" />
+                    )}
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold">{selectedConversation.name}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedConversation.online ? 'En ligne' : 'Hors ligne'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon">
+                    <Phone className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon">
+                    <Video className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon">
+                    <MoreVertical className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Property Context */}
+              <Card className="mt-3 animate-slide-up">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <MessageCircle className="w-4 h-4 text-primary" />
+                    <span>Discussion à propos de: </span>
+                    <Badge variant="outline">{selectedConversation.property}</Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 p-4 overflow-y-auto space-y-4">
+              {messages.map((msg, index) => (
+                <div
+                  key={msg.id}
+                  className={`
+                    flex animate-fade-in
+                    ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}
+                  `}
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className={`
+                    max-w-[70%] px-4 py-2 rounded-2xl
+                    ${msg.sender === 'me' 
+                      ? 'bg-gradient-primary text-primary-foreground rounded-br-md' 
+                      : 'bg-muted text-foreground rounded-bl-md'
+                    }
+                  `}>
+                    <p className="text-sm">{msg.text}</p>
+                    <p className={`
+                      text-xs mt-1 
+                      ${msg.sender === 'me' ? 'text-primary-foreground/70' : 'text-muted-foreground'}
+                    `}>
+                      {msg.time}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Message Input */}
+            <div className="p-4 border-t border-border bg-background/95 backdrop-blur-sm">
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="icon">
+                  <Paperclip className="w-4 h-4" />
+                </Button>
+                
+                <div className="flex-1 relative">
+                  <Input
+                    placeholder="Tapez votre message..."
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    className="pr-10"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        setMessage("");
+                      }
+                    }}
+                  />
+                  <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 transform -translate-y-1/2">
+                    <Smile className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                <Button className="bg-gradient-primary" disabled={!message.trim()}>
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Empty State */
+          <div className="hidden md:flex flex-1 items-center justify-center">
+            <div className="text-center space-y-4 animate-fade-in">
+              <MessageCircle className="w-16 h-16 mx-auto text-muted-foreground" />
+              <div className="space-y-2">
+                <h3 className="text-xl font-semibold">Sélectionnez une conversation</h3>
+                <p className="text-muted-foreground">
+                  Choisissez une conversation pour commencer à discuter
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+
+      <BottomNavigation />
+    </div>
+  );
+};
+
+export default Messages;
