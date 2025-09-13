@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, Search, Filter, Locate, Layers, Navigation, ExternalLink } from "lucide-react";
+import { MapPin, Search, Filter, Locate, Layers, Navigation } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { MapAfrica } from "@/components/MapAfrica";
 import 'leaflet/dist/leaflet.css';
 
 interface Listing {
@@ -25,12 +24,6 @@ const Map = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [listings, setListings] = useState<Listing[]>([]);
-  const navigate = useNavigate();
-
-  // Simple price formatter without context
-  const formatPrice = (price: number) => {
-    return `${price.toLocaleString('fr-FR')} XOF`;
-  };
 
   // Fetch listings from Supabase
   useEffect(() => {
@@ -110,40 +103,9 @@ const Map = () => {
           </Button>
         </div>
 
-        {/* Leaflet Map */}
+        {/* Map Component */}
         <div className="w-full h-full">
-          <MapContainer 
-            center={[5.36, -4.01]} // Côte d'Ivoire coordinates
-            zoom={6}
-            scrollWheelZoom={true}
-            style={{ height: '100%', width: '100%' }}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            
-            {listings.map((listing) => (
-              <Marker
-                key={listing.id}
-                position={[listing.lat, listing.lng]}
-              >
-                <Popup>
-                  <div className="p-2 min-w-[200px]">
-                    <h4 className="font-semibold text-sm">{listing.title}</h4>
-                    <p className="text-primary font-bold text-sm">{formatPrice(listing.price)}</p>
-                    <p className="text-muted-foreground text-xs">{listing.city}</p>
-                    <button 
-                      className="mt-2 w-full bg-primary text-primary-foreground px-3 py-1 rounded text-sm hover:bg-primary/90 transition-colors"
-                      onClick={() => navigate(`/listing/${listing.id}`)}
-                    >
-                      Voir l'annonce
-                    </button>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+          <MapAfrica listings={listings} />
         </div>
 
         {/* Listings Counter */}
