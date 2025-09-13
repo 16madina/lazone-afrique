@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import AdminPanel from "@/components/AdminPanel";
+import AdminSetup from "@/components/AdminSetup";
 import { 
   User, 
   Settings, 
@@ -155,7 +156,7 @@ const Profile = () => {
     if (!file || !user) return;
 
     try {
-      const { url } = await uploadFile(file, 'property-photos', `avatars/${user.id}`);
+      const { url } = await uploadFile(file, 'avatars', `${user.id}/avatar`);
       
       const { error } = await updateProfile({ avatar_url: url });
       
@@ -239,12 +240,12 @@ const Profile = () => {
       
       <main className="flex-1 container mx-auto px-4 py-6 pb-20 animate-fade-in">
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-5' : 'grid-cols-4'}`}>
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="profile">Profil</TabsTrigger>
             <TabsTrigger value="properties">Mes biens</TabsTrigger>
             <TabsTrigger value="favorites">Favoris</TabsTrigger>
             <TabsTrigger value="settings">Paramètres</TabsTrigger>
-            {isAdmin && <TabsTrigger value="admin">Admin</TabsTrigger>}
+            <TabsTrigger value="admin">Admin</TabsTrigger>
           </TabsList>
 
           {/* Profile Tab */}
@@ -613,9 +614,13 @@ const Profile = () => {
           </TabsContent>
 
           {/* Admin Tab - Only visible to administrators */}
-          {isAdmin && (
+          {isAdmin ? (
             <TabsContent value="admin">
               <AdminPanel />
+            </TabsContent>
+          ) : (
+            <TabsContent value="admin">
+              <AdminSetup />
             </TabsContent>
           )}
         </Tabs>
