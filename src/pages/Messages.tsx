@@ -9,12 +9,23 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Search, MessageCircle, Phone, Video, MoreVertical, Send, Smile, Paperclip, Check, CheckCheck } from "lucide-react";
+import { useRealTimeMessages } from "@/hooks/useRealTimeMessages";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Messages = () => {
-  const [selectedChat, setSelectedChat] = useState<string | null>("1");
   const [message, setMessage] = useState("");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const { user } = useAuth();
+
+  const {
+    conversations,
+    messages,
+    selectedConversationId,
+    setSelectedConversationId,
+    loading,
+    sendMessage
+  } = useRealTimeMessages();
 
   // Emojis populaires organisés par catégories
   const emojiCategories = {
@@ -24,201 +35,196 @@ const Messages = () => {
     "Objets": ['🔥', '💯', '💫', '⭐', '✨', '🎉', '🎊', '🏠', '💝', '🎁', '🎈', '🎂', '🥳', '🚀', '💎', '⚡'],
   };
 
-  const conversations = [
-    {
-      id: "1",
-      name: "Kouadio Immobilier",
-      lastMessage: "La villa est toujours disponible",
-      time: "14:30",
-      unread: 2,
-      avatar: "KI",
-      online: true,
-      property: "Villa Cocody"
-    },
-    {
-      id: "2", 
-      name: "Marie Adjoua",
-      lastMessage: "Merci pour votre intérêt",
-      time: "Hier",
-      unread: 0,
-      avatar: "MA",
-      online: false,
-      property: "Maison Marcory"
-    },
-    {
-      id: "3",
-      name: "Fofana Properties",
-      lastMessage: "Le prix est négociable",
-      time: "Lun",
-      unread: 1,
-      avatar: "FP", 
-      online: true,
-      property: "Terrain Bingerville"
-    },
-    {
-      id: "4",
-      name: "Urban Living",
-      lastMessage: "Visite programmée demain",
-      time: "Dim",
-      unread: 0,
-      avatar: "UL",
-      online: false,
-      property: "Studio Plateau"
-    }
-  ];
-
-  const messages = [
-    {
-      id: "1",
-      sender: "other",
-      text: "Bonjour, je suis intéressé par votre villa à Cocody",
-      time: "14:25",
-      read: true
-    },
-    {
-      id: "2", 
-      sender: "me",
-      text: "Bonjour ! Merci pour votre intérêt. La villa est effectivement disponible.",
-      time: "14:26",
-      read: true,
-      delivered: true
-    },
-    {
-      id: "3",
-      sender: "other", 
-      text: "Serait-il possible d'organiser une visite cette semaine ?",
-      time: "14:28",
-      read: true
-    },
-    {
-      id: "4",
-      sender: "me",
-      text: "Bien sûr ! Je suis disponible mercredi ou vendredi après-midi. Quelle heure vous conviendrait le mieux ?",
-      time: "14:29",
-      read: true,
-      delivered: true
-    },
-    {
-      id: "5",
-      sender: "other",
-      text: "Mercredi 15h serait parfait. La villa est toujours disponible ?",
-      time: "14:30",
-      read: false
-    }
-  ];
-
-  const handleSendMessage = () => {
-    if (message.trim()) {
-      // Here you would typically add the message to your state/database
-      console.log("Sending message:", message);
-      setMessage("");
-    }
+  const handleSendMessage = async () => {
+    if (!message.trim() || !selectedConversationId) return;
+    
+    await sendMessage(selectedConversationId, message);
+    setMessage("");
   };
 
+  // Filter conversations based on unread filter
   const filteredConversations = showUnreadOnly 
-    ? conversations.filter(conv => conv.unread > 0)
+    ? conversations.filter(conv => conv.unread_count > 0)
     : conversations;
 
-  const selectedConversation = conversations.find(c => c.id === selectedChat);
+  // Get selected conversation
+  const selectedConversation = conversations.find(conv => conv.id === selectedConversationId);
+
+  // Get display name for conversation participant (not current user)
+  const getConversationDisplayName = (conversation: any) => {
+    if (conversation.title) return conversation.title;
+    
+    const otherParticipant = conversation.participants.find((p: any) => p.user_id !== user?.id);
+    if (otherParticipant?.profile) {
+      return otherParticipant.profile.full_name || 
+             `${otherParticipant.profile.first_name || ''} ${otherParticipant.profile.last_name || ''}`.trim() ||
+             'Utilisateur';
+    }
+    return 'Conversation';
+  };
+
+  // Get avatar initials for conversation
+  const getConversationAvatar = (conversation: any) => {
+    const displayName = getConversationDisplayName(conversation);
+    const words = displayName.split(' ');
+    if (words.length >= 2) {
+      return `${words[0][0]}${words[1][0]}`.toUpperCase();
+    }
+    return displayName.substring(0, 2).toUpperCase();
+  };
+
+  // Format message time
+  const formatMessageTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Check if message is from current user
+  const isMyMessage = (senderId: string) => senderId === user?.id;
+
+  // Check if participant is online (mock for now)
+  const isParticipantOnline = (conversation: any) => {
+    // For now, randomly return true/false. In a real app, you'd track this properly
+    return Math.random() > 0.5;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col h-screen bg-background">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Chargement des conversations...</p>
+          </div>
+        </div>
+        <BottomNavigation />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex flex-col h-screen bg-background">
+        <Header />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <MessageCircle className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-xl font-semibold mb-2">Connexion requise</h3>
+            <p className="text-muted-foreground">Vous devez être connecté pour accéder aux messages.</p>
+          </div>
+        </div>
+        <BottomNavigation />
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background">
       <Header />
       
-      <main className="flex-1 flex animate-fade-in">
+      <main className="flex flex-1 overflow-hidden">
         {/* Conversations List */}
         <div className={`
-          ${selectedChat ? 'hidden md:block' : 'block'} 
-          w-full md:w-80 border-r border-border bg-background
+          ${selectedConversationId ? 'hidden md:flex' : 'flex'} 
+          flex-col w-full md:w-1/3 border-r border-border
         `}>
-          <div className="p-4 space-y-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Rechercher une conversation..." className="pl-10" />
+          {/* Search and Filters */}
+          <div className="p-4 border-b border-border">
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input 
+                placeholder="Rechercher une conversation..." 
+                className="pl-10"
+              />
             </div>
-
-            {/* Filter Tabs */}
+            
             <div className="flex gap-2">
               <Button 
-                variant={!showUnreadOnly ? "default" : "outline"} 
+                variant={!showUnreadOnly ? "default" : "outline"}
                 size="sm"
                 onClick={() => setShowUnreadOnly(false)}
               >
                 Tous
               </Button>
               <Button 
-                variant={showUnreadOnly ? "default" : "outline"} 
-                size="sm"
+                variant={showUnreadOnly ? "default" : "outline"}
+                size="sm" 
                 onClick={() => setShowUnreadOnly(true)}
               >
-                Non lus {conversations.filter(c => c.unread > 0).length > 0 && (
-                  <Badge className="ml-1 bg-destructive text-destructive-foreground w-5 h-5 p-0 flex items-center justify-center text-xs">
-                    {conversations.filter(c => c.unread > 0).length}
-                  </Badge>
-                )}
+                Non lus
               </Button>
-              <Button variant="outline" size="sm">Favoris</Button>
             </div>
           </div>
 
           {/* Conversations */}
-          <div className="overflow-y-auto">
-            {filteredConversations.map((conversation, index) => (
-              <div
-                key={conversation.id}
-                onClick={() => setSelectedChat(conversation.id)}
-                className={`
-                  p-4 border-b border-border cursor-pointer transition-colors hover:bg-muted/50
-                  ${selectedChat === conversation.id ? 'bg-primary/5 border-r-2 border-r-primary' : ''}
-                  animate-fade-in
-                `}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="relative">
-                    <Avatar className="w-12 h-12">
-                      <AvatarFallback className="bg-gradient-primary text-primary-foreground">
-                        {conversation.avatar}
-                      </AvatarFallback>
-                    </Avatar>
-                    {conversation.online && (
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-accent rounded-full border-2 border-background" />
-                    )}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <h4 className="font-semibold text-sm truncate">{conversation.name}</h4>
-                      <span className="text-xs text-muted-foreground">{conversation.time}</span>
-                    </div>
-                    
-                    <p className="text-sm text-muted-foreground truncate mb-1">
-                      {conversation.lastMessage}
-                    </p>
-                    
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="text-xs">
-                        {conversation.property}
-                      </Badge>
-                      {conversation.unread > 0 && (
-                        <Badge className="bg-destructive text-destructive-foreground w-5 h-5 p-0 flex items-center justify-center text-xs">
-                          {conversation.unread}
-                        </Badge>
+          <div className="flex-1 overflow-y-auto">
+            {filteredConversations.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                <MessageCircle className="w-12 h-12 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">
+                  {showUnreadOnly ? "Aucun message non lu" : "Aucune conversation"}
+                </p>
+              </div>
+            ) : (
+              filteredConversations.map((conversation) => (
+                <div
+                  key={conversation.id}
+                  onClick={() => setSelectedConversationId(conversation.id)}
+                  className={`
+                    p-4 border-b border-border cursor-pointer transition-colors hover:bg-muted/50
+                    ${selectedConversationId === conversation.id ? 'bg-muted' : ''}
+                  `}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <Avatar className="w-12 h-12">
+                        <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+                          {getConversationAvatar(conversation)}
+                        </AvatarFallback>
+                      </Avatar>
+                      {isParticipantOnline(conversation) && (
+                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-accent rounded-full border-2 border-background" />
                       )}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold truncate">
+                          {getConversationDisplayName(conversation)}
+                        </h3>
+                        <span className="text-xs text-muted-foreground ml-2">
+                          {formatMessageTime(conversation.updated_at)}
+                        </span>
+                      </div>
+
+                      <p className="text-sm text-muted-foreground truncate mt-1">
+                        {conversation.latest_message?.content || "Aucun message"}
+                      </p>
+
+                      <div className="flex items-center justify-between mt-2">
+                        <Badge variant="outline" className="text-xs">
+                          {conversation.property?.title || 'Conversation'}
+                        </Badge>
+                        {conversation.unread_count > 0 && (
+                          <Badge className="bg-primary text-primary-foreground">
+                            {conversation.unread_count}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
         {/* Chat Area */}
-        {selectedChat && selectedConversation ? (
+        {selectedConversationId && selectedConversation ? (
           <div className={`
-            ${selectedChat ? 'flex' : 'hidden md:flex'} 
-            flex-col flex-1 pb-20 md:pb-0
+            ${selectedConversationId ? 'flex' : 'hidden md:flex'} 
+            flex-col flex-1 pb-32 md:pb-8
           `}>
             {/* Chat Header */}
             <div className="p-4 border-b border-border bg-background/95 backdrop-blur-sm">
@@ -227,7 +233,7 @@ const Messages = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setSelectedChat(null)}
+                    onClick={() => setSelectedConversationId(null)}
                     className="md:hidden"
                   >
                     ←
@@ -236,18 +242,20 @@ const Messages = () => {
                   <div className="relative">
                     <Avatar className="w-10 h-10">
                       <AvatarFallback className="bg-gradient-primary text-primary-foreground">
-                        {selectedConversation.avatar}
+                        {getConversationAvatar(selectedConversation)}
                       </AvatarFallback>
                     </Avatar>
-                    {selectedConversation.online && (
+                    {isParticipantOnline(selectedConversation) && (
                       <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-accent rounded-full border-2 border-background" />
                     )}
                   </div>
 
                   <div>
-                    <h3 className="font-semibold">{selectedConversation.name}</h3>
+                    <h3 className="font-semibold">
+                      {getConversationDisplayName(selectedConversation)}
+                    </h3>
                     <p className="text-xs text-muted-foreground">
-                      {selectedConversation.online ? 'En ligne' : 'Hors ligne'}
+                      {isParticipantOnline(selectedConversation) ? 'En ligne' : 'Hors ligne'}
                     </p>
                   </div>
                 </div>
@@ -280,58 +288,62 @@ const Messages = () => {
               </div>
 
               {/* Property Context */}
-              <Card className="mt-3 animate-slide-up">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <MessageCircle className="w-4 h-4 text-primary" />
-                    <span>Discussion à propos de: </span>
-                    <Badge variant="outline">{selectedConversation.property}</Badge>
-                  </div>
-                </CardContent>
-              </Card>
+              {selectedConversation.property && (
+                <Card className="mt-3 animate-slide-up">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-2 text-sm">
+                      <MessageCircle className="w-4 h-4 text-primary" />
+                      <span>Discussion à propos de: </span>
+                      <Badge variant="outline">{selectedConversation.property.title}</Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* Messages */}
             <div className="flex-1 p-4 pb-32 md:pb-8 overflow-y-auto space-y-4">
-              {messages.map((msg, index) => (
-                <div
-                  key={msg.id}
-                  className={`
-                    flex animate-fade-in
-                    ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}
-                  `}
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <div className={`
-                    max-w-[70%] px-4 py-2 rounded-2xl
-                    ${msg.sender === 'me' 
-                      ? 'bg-gradient-primary text-primary-foreground rounded-br-md' 
-                      : 'bg-muted text-foreground rounded-bl-md'
-                    }
-                  `}>
-                    <p className="text-sm">{msg.text}</p>
-                    <div className="flex items-center justify-between mt-1">
-                      <p className={`
-                        text-xs 
-                        ${msg.sender === 'me' ? 'text-primary-foreground/70' : 'text-muted-foreground'}
-                      `}>
-                        {msg.time}
-                      </p>
-                      {msg.sender === 'me' && (
-                        <div className="ml-2">
-                          {msg.read ? (
-                            <CheckCheck className="w-3 h-3 text-accent" />
-                          ) : msg.delivered ? (
+              {messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center">
+                  <MessageCircle className="w-12 h-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">Aucun message dans cette conversation</p>
+                  <p className="text-sm text-muted-foreground">Envoyez le premier message !</p>
+                </div>
+              ) : (
+                messages.map((msg, index) => (
+                  <div
+                    key={msg.id}
+                    className={`
+                      flex animate-fade-in
+                      ${isMyMessage(msg.sender_id) ? 'justify-end' : 'justify-start'}
+                    `}
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <div className={`
+                      max-w-[70%] px-4 py-2 rounded-2xl
+                      ${isMyMessage(msg.sender_id)
+                        ? 'bg-gradient-primary text-primary-foreground rounded-br-md' 
+                        : 'bg-muted text-foreground rounded-bl-md'
+                      }
+                    `}>
+                      <p className="text-sm">{msg.content}</p>
+                      <div className="flex items-center justify-between mt-1">
+                        <p className={`
+                          text-xs 
+                          ${isMyMessage(msg.sender_id) ? 'text-primary-foreground/70' : 'text-muted-foreground'}
+                        `}>
+                          {formatMessageTime(msg.created_at)}
+                        </p>
+                        {isMyMessage(msg.sender_id) && (
+                          <div className="ml-2">
                             <CheckCheck className="w-3 h-3 text-primary-foreground/50" />
-                          ) : (
-                            <Check className="w-3 h-3 text-primary-foreground/50" />
-                          )}
-                        </div>
-                      )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         ) : (
