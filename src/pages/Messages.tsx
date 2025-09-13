@@ -7,12 +7,22 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Search, MessageCircle, Phone, Video, MoreVertical, Send, Smile, Paperclip, Check, CheckCheck } from "lucide-react";
 
 const Messages = () => {
   const [selectedChat, setSelectedChat] = useState<string | null>("1");
   const [message, setMessage] = useState("");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+
+  // Emojis populaires organisés par catégories
+  const emojiCategories = {
+    "Smileys": ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪'],
+    "Coeurs": ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟'],
+    "Gestes": ['👍', '👎', '👌', '🤌', '🤏', '✌️', '🤞', '🫰', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👋', '🤚', '🖐️', '✋', '🖖', '👏', '🙌'],
+    "Objets": ['🔥', '💯', '💫', '⭐', '✨', '🎉', '🎊', '🏠', '💝', '🎁', '🎈', '🎂', '🥳', '🚀', '💎', '⚡'],
+  };
 
   const conversations = [
     {
@@ -373,20 +383,42 @@ const Messages = () => {
                 }
               }}
             />
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="absolute right-2 top-1/2 transform -translate-y-1/2"
-              onClick={() => {
-                console.log('Ouvrir sélecteur d\'emoji');
-                // Ici on peut ajouter un emoji picker
-                const emojis = ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣', '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬', '🤯', '😳', '🥵', '🥶', '😱', '😨', '😰', '😥', '😓', '🤗', '🤔', '🤭', '🤫', '🤥', '😶', '😐', '😑', '😬', '🙄', '😯', '😦', '😧', '😮', '😲', '🥱', '😴', '🤤', '😪', '😵', '🤐', '🥴', '🤢', '🤮', '🤧', '😷', '🤒', '🤕', '🤑', '🤠', '😈', '👿', '👹', '👺', '🤡', '💩', '👻', '💀', '☠️', '👽', '👾', '🤖', '🎃', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾'];
-                const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-                setMessage(prev => prev + randomEmoji);
-              }}
-            >
-              <Smile className="w-4 h-4 text-muted-foreground" />
-            </Button>
+            <Popover open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2"
+                >
+                  <Smile className="w-4 h-4 text-muted-foreground" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-2" align="end">
+                <div className="space-y-3">
+                  {Object.entries(emojiCategories).map(([category, emojis]) => (
+                    <div key={category}>
+                      <h4 className="text-sm font-medium text-muted-foreground mb-2">{category}</h4>
+                      <div className="grid grid-cols-8 gap-1">
+                        {emojis.map((emoji, index) => (
+                          <Button
+                            key={`${category}-${index}`}
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 hover:bg-muted"
+                            onClick={() => {
+                              setMessage(prev => prev + emoji);
+                              setEmojiPickerOpen(false);
+                            }}
+                          >
+                            <span className="text-lg">{emoji}</span>
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <Button 
