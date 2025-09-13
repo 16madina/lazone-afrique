@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapPin, Search, Filter, Locate, Layers, Navigation } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { MapAfrica } from "@/components/MapAfrica";
 
 interface Listing {
   id: string;
@@ -16,27 +17,6 @@ interface Listing {
   country_code: string;
 }
 
-// Minimal test component without any external libraries
-const TestMapComponent = ({ listings }: { listings: Listing[] }) => {
-  console.log("TestMapComponent rendering with listings:", listings.length);
-  
-  return (
-    <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
-      <div className="text-center">
-        <MapPin className="w-16 h-16 mx-auto text-blue-500 mb-4" />
-        <h3 className="text-lg font-semibold">Test Map Component</h3>
-        <p className="text-gray-600">{listings.length} listings loaded</p>
-        <div className="mt-4 space-y-2">
-          {listings.slice(0, 3).map(listing => (
-            <div key={listing.id} className="text-sm bg-white p-2 rounded">
-              {listing.title} - {listing.city}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // Simple header without context
 const SimpleHeader = () => (
@@ -149,9 +129,9 @@ const Map = () => {
           </Button>
         </div>
 
-        {/* Test Map Component instead of MapAfrica */}
+        {/* Map Africa avec les marqueurs de prix */}
         <div className="w-full h-full">
-          <TestMapComponent listings={listings} />
+          <MapAfrica listings={listings} />
         </div>
 
         {/* Listings Counter */}
