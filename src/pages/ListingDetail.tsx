@@ -5,9 +5,12 @@ import BottomNavigation from "@/components/BottomNavigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, MapPin, Calendar, Phone, MessageCircle, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { useRealTimeMessages } from "@/hooks/useRealTimeMessages";
+import { ArrowLeft, MapPin, Calendar, Phone, MessageCircle, ChevronLeft, ChevronRight, Play, Send } from "lucide-react";
 import { toast } from "sonner";
 
 interface ListingData {
@@ -36,6 +39,11 @@ const ListingDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+  const [messageContent, setMessageContent] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
+  
+  const { createConversation, sendMessage } = useRealTimeMessages();
 
   // Check authentication
   useEffect(() => {
@@ -128,6 +136,41 @@ const ListingDetail = () => {
       'ZA': 'Afrique du Sud'
     };
     return countries[countryCode] || countryCode;
+  };
+
+  const handleSendMessage = async () => {
+    if (!messageContent.trim() || !listing?.user_id || !user) {
+      toast.error("Impossible d'envoyer le message");
+      return;
+    }
+
+    setSendingMessage(true);
+    try {
+      // Créer une conversation avec le vendeur
+      const conversationId = await createConversation(
+        [listing.user_id], 
+        listing.id, 
+        `À propos de: ${listing.title}`
+      );
+
+      if (conversationId) {
+        // Envoyer le message
+        await sendMessage(conversationId, messageContent);
+        toast.success("Message envoyé avec succès!");
+        setMessageContent('');
+        setMessageDialogOpen(false);
+        
+        // Rediriger vers la page des messages
+        navigate('/messages');
+      } else {
+        toast.error("Impossible de créer la conversation");
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi du message:', error);
+      toast.error("Erreur lors de l'envoi du message");
+    } finally {
+      setSendingMessage(false);
+    }
   };
 
   if (loading) {
@@ -333,10 +376,58 @@ const ListingDetail = () => {
                   <Phone className="w-4 h-4 mr-2" />
                   Appeler
                 </Button>
-                <Button variant="outline" className="flex-1">
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Envoyer un message
-                </Button>
+                <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="flex-1">
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Envoyer un message
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Contacter le vendeur</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          À propos de: <span className="font-medium">{listing.title}</span>
+                        </p>
+                        <Textarea
+                          placeholder="Bonjour, je suis intéressé(e) par votre annonce. Pouvez-vous me donner plus d'informations ?"
+                          value={messageContent}
+                          onChange={(e) => setMessageContent(e.target.value)}
+                          className="min-h-[100px]"
+                          maxLength={500}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {messageContent.length}/500 caractères
+                        </p>
+                      </div>
+                      <div className="flex gap-2 justify-end">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setMessageDialogOpen(false)}
+                          disabled={sendingMessage}
+                        >
+                          Annuler
+                        </Button>
+                        <Button 
+                          onClick={handleSendMessage}
+                          disabled={!messageContent.trim() || sendingMessage}
+                        >
+                          {sendingMessage ? (
+                            "Envoi..."
+                          ) : (
+                            <>
+                              <Send className="w-4 h-4 mr-2" />
+                              Envoyer
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
               <p className="text-sm text-muted-foreground mt-3">
                 Contactez directement le vendeur pour plus d'informations ou pour organiser une visite.
