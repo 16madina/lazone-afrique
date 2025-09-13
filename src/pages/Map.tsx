@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import { divIcon, LatLngBounds } from "leaflet";
-import { useNavigate } from "react-router-dom";
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { DivIcon, LatLngBounds } from 'leaflet';
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { MapPin, Search, Filter, Locate, Layers, Navigation, Eye } from "lucide-react";
+import { MapPin, Search, Filter, Locate, Layers, Navigation, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCountry } from "@/contexts/CountryContext";
-import "leaflet/dist/leaflet.css";
+import { useNavigate } from "react-router-dom";
+import 'leaflet/dist/leaflet.css';
 
 interface Listing {
   id: string;
@@ -17,26 +18,50 @@ interface Listing {
   price: number;
   lat: number;
   lng: number;
+  status: string;
+  image: string | null;
   city: string;
   country_code: string;
-  image: string | null;
 }
 
 const Map = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [listings, setListings] = useState<Listing[]>([]);
-  const [loading, setLoading] = useState(true);
-  
-  const navigate = useNavigate();
   const { selectedCountry, formatPrice } = useCountry();
+  const navigate = useNavigate();
 
   // Africa bounds: [south, west, north, east]
   const africaBounds = new LatLngBounds([-40, -20], [55, 50]);
 
+  // Fetch listings from Supabase
+  useEffect(() => {
+    fetchListings();
+    
+    // Setup realtime subscription
+    const channel = supabase
+      .channel('listings-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'listings'
+        },
+        () => {
+          console.log('Listings updated, refetching...');
+          fetchListings();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedCountry]);
+
   const fetchListings = async () => {
     try {
-      setLoading(true);
       const { data, error } = await supabase
         .from('listings')
         .select('*')
@@ -45,52 +70,27 @@ const Map = () => {
         .not('lat', 'is', null)
         .not('lng', 'is', null);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching listings:', error);
+        return;
+      }
+
       setListings(data || []);
     } catch (error) {
-      console.error('Error fetching listings:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error:', error);
     }
   };
 
-  useEffect(() => {
-    fetchListings();
-  }, [selectedCountry.code]);
-
-  // Real-time subscription
-  useEffect(() => {
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'listings',
-          filter: `country_code=eq.${selectedCountry.code}`
-        },
-        (payload) => {
-          console.log('Realtime update:', payload);
-          fetchListings(); // Refetch data on any change
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [selectedCountry.code]);
-
-  const createCustomPin = (listing: Listing) => {
-    const formattedPrice = formatPrice(listing.price);
-    return divIcon({
+  // Create custom marker icon with price
+  const createCustomIcon = (price: number) => {
+    const formattedPrice = formatPrice(price);
+    return new DivIcon({
+      className: 'custom-marker',
       html: `
-        <div class="bg-primary text-primary-foreground px-2 py-1 rounded-lg shadow-warm text-xs font-semibold whitespace-nowrap border-2 border-background">
+        <div class="bg-primary text-primary-foreground px-2 py-1 rounded-lg shadow-lg font-semibold text-xs whitespace-nowrap border-2 border-background">
           ${formattedPrice}
         </div>
       `,
-      className: 'custom-div-icon',
       iconSize: [80, 30],
       iconAnchor: [40, 30],
     });
@@ -149,10 +149,10 @@ const Map = () => {
         </div>
 
         {/* Leaflet Map */}
-        <MapContainer
+        <MapContainer 
           bounds={africaBounds}
           className="w-full h-full z-0"
-          style={{ height: '100%' }}
+          scrollWheelZoom={true}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -163,61 +163,66 @@ const Map = () => {
             <Marker
               key={listing.id}
               position={[listing.lat, listing.lng]}
-              icon={createCustomPin(listing)}
+              icon={createCustomIcon(listing.price)}
             >
               <Popup className="custom-popup">
-                <div className="w-64 p-2">
-                  <div className="flex gap-3 mb-3">
-                    <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
-                      {listing.image ? (
-                        <img 
-                          src={listing.image} 
-                          alt={listing.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <MapPin className="w-6 h-6 text-primary" />
-                      )}
+                <Card className="border-0 shadow-none min-w-[250px]">
+                  <CardContent className="p-3">
+                    <div className="space-y-3">
+                      <div className="flex gap-3">
+                        {listing.image && (
+                          <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                            <img 
+                              src={listing.image} 
+                              alt={listing.title}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.parentElement!.innerHTML = '<div class="w-6 h-6 text-primary"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>';
+                              }}
+                            />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-sm truncate">{listing.title}</h4>
+                          <p className="text-primary font-bold text-sm">{formatPrice(listing.price)}</p>
+                          <p className="text-muted-foreground text-xs">{listing.city}</p>
+                        </div>
+                      </div>
+                      
+                      <Button 
+                        size="sm" 
+                        className="w-full"
+                        onClick={() => navigate(`/listing/${listing.id}`)}
+                      >
+                        <ExternalLink className="w-3 h-3 mr-1" />
+                        Voir l'annonce
+                      </Button>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-sm truncate">{listing.title}</h4>
-                      <p className="text-primary font-bold text-sm">{formatPrice(listing.price)}</p>
-                      <p className="text-muted-foreground text-xs">{listing.city}</p>
-                    </div>
-                  </div>
-                  <Button 
-                    size="sm" 
-                    className="w-full"
-                    onClick={() => navigate(`/listing/${listing.id}`)}
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Voir l'annonce
-                  </Button>
-                </div>
+                  </CardContent>
+                </Card>
               </Popup>
             </Marker>
           ))}
         </MapContainer>
 
-        {loading && (
-          <div className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-20">
-            <div className="text-center space-y-2">
-              <MapPin className="w-8 h-8 mx-auto text-primary animate-pulse" />
-              <p className="text-muted-foreground">Chargement des annonces...</p>
-            </div>
+        {/* Listings Counter */}
+        <div className="absolute bottom-24 right-4 z-10 bg-background/95 backdrop-blur-sm rounded-lg p-3 shadow-card">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <MapPin className="w-4 h-4 text-primary" />
+            <span>{listings.length} annonce{listings.length !== 1 ? 's' : ''}</span>
           </div>
-        )}
+        </div>
 
-        {/* Stats Legend */}
+        {/* Legend */}
         <div className="absolute bottom-24 left-4 z-10 bg-background/95 backdrop-blur-sm rounded-lg p-3 shadow-card">
           <div className="space-y-2 text-sm">
             <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-primary" />
-              <span>{listings.length} annonces</span>
-            </div>
-            <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-primary rounded-full"></div>
-              <span>{selectedCountry.name}</span>
+              <span>Propriétés</span>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Prix en {selectedCountry.currency.symbol}
             </div>
           </div>
         </div>
