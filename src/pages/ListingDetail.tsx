@@ -139,13 +139,23 @@ const ListingDetail = () => {
   };
 
   const handleSendMessage = async () => {
+    console.log('🎯 Starting handleSendMessage');
+    console.log('📋 Current state:', { 
+      messageContent: messageContent.trim(), 
+      listingUserId: listing?.user_id, 
+      currentUser: user?.id,
+      listingId: listing?.id 
+    });
+    
     if (!messageContent.trim() || !listing?.user_id || !user) {
+      console.error('❌ Missing required data for message sending');
       toast.error("Impossible d'envoyer le message");
       return;
     }
 
     setSendingMessage(true);
     try {
+      console.log('🏗️ Creating conversation with seller...');
       // Créer une conversation avec le vendeur
       const conversationId = await createConversation(
         [listing.user_id], 
@@ -153,20 +163,26 @@ const ListingDetail = () => {
         `À propos de: ${listing.title}`
       );
 
+      console.log('💬 Conversation created, ID:', conversationId);
+
       if (conversationId) {
+        console.log('📤 Sending message...');
         // Envoyer le message
         await sendMessage(conversationId, messageContent);
+        console.log('✅ Message sent successfully');
         toast.success("Message envoyé avec succès!");
         setMessageContent('');
         setMessageDialogOpen(false);
         
         // Rediriger vers la page des messages
+        console.log('🔄 Redirecting to messages page');
         navigate('/messages');
       } else {
+        console.error('❌ Conversation creation failed - no ID returned');
         toast.error("Impossible de créer la conversation");
       }
     } catch (error) {
-      console.error('Erreur lors de l\'envoi du message:', error);
+      console.error('💥 Error in handleSendMessage:', error);
       toast.error("Erreur lors de l'envoi du message");
     } finally {
       setSendingMessage(false);

@@ -255,10 +255,18 @@ export const useRealTimeMessages = () => {
     title?: string
   ) => {
     try {
+      console.log('🚀 Starting conversation creation with:', { participantIds, propertyId, title });
+      
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      console.log('👤 Current user:', user?.id);
+      
+      if (!user) {
+        console.error('❌ No authenticated user found');
+        return null;
+      }
 
       // Create the conversation
+      console.log('📝 Creating conversation...');
       const { data: conversation, error: convError } = await supabase
         .from('conversations')
         .insert({
@@ -269,33 +277,52 @@ export const useRealTimeMessages = () => {
         .single();
 
       if (convError) {
-        console.error('Error creating conversation:', convError);
+        console.error('❌ Error creating conversation:', convError);
+        toast({
+          title: "Erreur",
+          description: `Erreur lors de la création: ${convError.message}`,
+          variant: "destructive",
+        });
         return null;
       }
 
+      console.log('✅ Conversation created successfully:', conversation.id);
+
       // Add all participants (including current user)
       const allParticipantIds = [...new Set([user.id, ...participantIds])];
+      console.log('👥 Adding participants:', allParticipantIds);
+      
       const participantsData = allParticipantIds.map(userId => ({
         conversation_id: conversation.id,
         user_id: userId
       }));
+
+      console.log('📊 Participants data:', participantsData);
 
       const { error: participantsError } = await supabase
         .from('conversation_participants')
         .insert(participantsData);
 
       if (participantsError) {
-        console.error('Error adding participants:', participantsError);
+        console.error('❌ Error adding participants:', participantsError);
+        toast({
+          title: "Erreur",
+          description: `Erreur ajout participants: ${participantsError.message}`,
+          variant: "destructive",
+        });
         return null;
       }
 
+      console.log('✅ Participants added successfully');
+      
       await fetchConversations();
+      console.log('🎉 Conversation creation completed:', conversation.id);
       return conversation.id;
     } catch (error) {
-      console.error('Error in createConversation:', error);
+      console.error('💥 Unexpected error in createConversation:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de créer la conversation",
+        description: "Erreur inattendue lors de la création",
         variant: "destructive",
       });
       return null;
