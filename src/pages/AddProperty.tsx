@@ -140,7 +140,7 @@ const AddProperty = () => {
           description: formData.description,
           price: parseFloat(formData.price),
           city: formData.city,
-          country_code: selectedCountry.code,
+          country_code: selectedCountry.code.toUpperCase(),
           user_id: user.id,
           lat: 5.3364, // Default coordinates for Abidjan - can be enhanced later
           lng: -4.0267,
