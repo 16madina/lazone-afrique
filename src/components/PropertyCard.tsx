@@ -47,7 +47,13 @@ const PropertyCard = ({
   const navigate = useNavigate();
 
   const handleCardClick = () => {
-    navigate(`/listing/${id}`);
+    // Vérifier que l'ID est un UUID valide (format Supabase)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(id)) {
+      navigate(`/listing/${id}`);
+    } else {
+      console.warn('ID invalide détecté:', id);
+    }
   };
   const typeColors = {
     sale: "bg-accent text-accent-foreground",
