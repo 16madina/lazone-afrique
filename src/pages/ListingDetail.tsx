@@ -7,16 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ArrowLeft, MapPin, Calendar, Phone, MessageCircle } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Phone, MessageCircle, ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { toast } from "sonner";
 
 interface ListingData {
   id: string;
   title: string;
+  description: string | null;
   price: number;
   lat: number;
   lng: number;
   image: string | null;
+  photos: string[] | null;
+  video_url: string | null;
   city: string;
   country_code: string;
   status: string;
@@ -32,6 +35,7 @@ const ListingDetail = () => {
   const [listing, setListing] = useState<ListingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Check authentication
   useEffect(() => {
@@ -86,6 +90,27 @@ const ListingDetail = () => {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const getAllImages = () => {
+    const images: string[] = [];
+    if (listing?.photos && Array.isArray(listing.photos)) {
+      images.push(...listing.photos);
+    }
+    if (listing?.image) {
+      images.push(listing.image);
+    }
+    return images.length > 0 ? images : ['https://via.placeholder.com/800x400?text=Pas+d%27image'];
+  };
+
+  const nextImage = () => {
+    const images = getAllImages();
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = () => {
+    const images = getAllImages();
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
   const getCountryName = (countryCode: string) => {
@@ -173,19 +198,82 @@ const ListingDetail = () => {
             Retour
           </Button>
 
-          {/* Image principale */}
+          {/* Galerie d'images */}
           <Card className="overflow-hidden">
             <div className="relative">
-              <img 
-                src={listing.image || 'https://via.placeholder.com/800x400?text=Pas+d%27image'} 
-                alt={listing.title}
-                className="w-full h-64 md:h-96 object-cover"
-              />
-              <div className="absolute top-4 right-4">
-                <Badge variant="secondary" className="bg-background/80">
-                  {listing.status === 'published' ? 'Publié' : listing.status}
-                </Badge>
-              </div>
+              {(() => {
+                const images = getAllImages();
+                return (
+                  <>
+                    <img 
+                      src={images[currentImageIndex]} 
+                      alt={`${listing.title} - Image ${currentImageIndex + 1}`}
+                      className="w-full h-64 md:h-96 object-cover"
+                    />
+                    
+                    {/* Badges et contrôles superposés */}
+                    <div className="absolute top-4 right-4">
+                      <Badge variant="secondary" className="bg-background/80">
+                        {listing.status === 'published' ? 'Publié' : listing.status}
+                      </Badge>
+                    </div>
+                    
+                    {images.length > 1 && (
+                      <>
+                        {/* Boutons de navigation */}
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background/90"
+                          onClick={prevImage}
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background/90"
+                          onClick={nextImage}
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </Button>
+                        
+                        {/* Indicateurs */}
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                          {images.map((_, index) => (
+                            <button
+                              key={index}
+                              className={`w-2 h-2 rounded-full transition-all ${
+                                index === currentImageIndex 
+                                  ? 'bg-white' 
+                                  : 'bg-white/50'
+                              }`}
+                              onClick={() => setCurrentImageIndex(index)}
+                            />
+                          ))}
+                        </div>
+                        
+                        {/* Compteur d'images */}
+                        <div className="absolute bottom-4 right-4 bg-background/80 px-2 py-1 rounded text-sm">
+                          {currentImageIndex + 1} / {images.length}
+                        </div>
+                      </>
+                    )}
+                    
+                    {/* Bouton vidéo si disponible */}
+                    {listing.video_url && (
+                      <Button
+                        variant="secondary"
+                        className="absolute top-4 left-4 bg-background/80 hover:bg-background/90"
+                        onClick={() => window.open(listing.video_url!, '_blank')}
+                      >
+                        <Play className="w-4 h-4 mr-2" />
+                        Voir la vidéo
+                      </Button>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </Card>
 
@@ -203,6 +291,12 @@ const ListingDetail = () => {
               <div className="text-3xl font-bold text-primary">
                 {formatPrice(listing.price)}
               </div>
+
+              {listing.description && (
+                <div className="prose prose-sm max-w-none">
+                  <p className="text-muted-foreground">{listing.description}</p>
+                </div>
+              )}
 
               <div className="flex items-center text-sm text-muted-foreground">
                 <Calendar className="w-4 h-4 mr-1" />

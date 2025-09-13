@@ -12,6 +12,7 @@ interface Listing {
   lng: number;
   status: string;
   image: string | null;
+  photos: string[] | null;
   city: string;
   country_code: string;
 }
@@ -131,6 +132,16 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
           .addTo(map.current!);
 
         // Créer le popup avec un design amélioré
+        const getListingImage = (listing: Listing) => {
+          if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
+            return listing.photos[0];
+          }
+          if (listing.image) {
+            return listing.image;
+          }
+          return 'https://via.placeholder.com/280x160?text=Pas+d%27image';
+        };
+
         const popup = new mapboxgl.Popup({ 
           offset: 25,
           closeButton: true,
@@ -141,7 +152,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
             <div style="padding: 0; max-width: 280px; font-family: system-ui, -apple-system, sans-serif;">
               <div style="position: relative;">
                 <img 
-                  src="${listing.image || 'https://via.placeholder.com/280x160?text=Pas+d%27image'}" 
+                  src="${getListingImage(listing)}" 
                   alt="${listing.title}"
                   style="width: 100%; height: 160px; object-fit: cover; border-radius: 8px 8px 0 0;"
                 />

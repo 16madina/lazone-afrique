@@ -15,6 +15,7 @@ interface Listing {
   lng: number;
   status: string;
   image: string | null;
+  photos: string[] | null;
   city: string;
   country_code: string;
 }
