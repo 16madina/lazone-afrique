@@ -208,7 +208,7 @@ const Messages = () => {
         {selectedChat && selectedConversation ? (
           <div className={`
             ${selectedChat ? 'flex' : 'hidden md:flex'} 
-            flex-col flex-1
+            flex-col flex-1 pb-20 md:pb-0
           `}>
             {/* Chat Header */}
             <div className="p-4 border-b border-border bg-background/95 backdrop-blur-sm">
@@ -309,49 +309,10 @@ const Messages = () => {
                 </div>
               ))}
             </div>
-
-            {/* Message Input */}
-            <div className="p-4 border-t border-border bg-background/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 md:relative md:bottom-auto md:left-auto md:right-auto z-50">
-              <div className="flex items-end gap-3 max-w-full">
-                <Button variant="ghost" size="icon" className="mb-1 flex-shrink-0">
-                  <Paperclip className="w-5 h-5 text-muted-foreground" />
-                </Button>
-                
-                <div className="flex-1 relative min-w-0">
-                  <Input
-                    placeholder="Tapez votre message..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="pr-12 py-3 rounded-full border-2 w-full"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage();
-                      }
-                    }}
-                  />
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                  >
-                    <Smile className="w-4 h-4 text-muted-foreground" />
-                  </Button>
-                </div>
-
-                <Button 
-                  onClick={handleSendMessage}
-                  disabled={!message.trim()}
-                  className="rounded-full w-12 h-12 p-0 bg-gradient-primary hover:bg-gradient-primary/90 disabled:opacity-50 flex-shrink-0"
-                >
-                  <Send className="w-5 h-5" />
-                </Button>
-              </div>
-            </div>
           </div>
         ) : (
           /* Empty State */
-          <div className="hidden md:flex flex-1 items-center justify-center">
+          <div className="hidden md:flex flex-1 items-center justify-center pb-20 md:pb-0">
             <div className="text-center space-y-4 animate-fade-in">
               <MessageCircle className="w-16 h-16 mx-auto text-muted-foreground" />
               <div className="space-y-2">
@@ -364,6 +325,46 @@ const Messages = () => {
           </div>
         )}
       </main>
+
+      {/* Message Input - Always visible */}
+      <div className="p-4 border-t border-border bg-background/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 md:sticky md:bottom-0 z-50">
+        <div className="flex items-end gap-3 max-w-full">
+          <Button variant="ghost" size="icon" className="mb-1 flex-shrink-0">
+            <Paperclip className="w-5 h-5 text-muted-foreground" />
+          </Button>
+          
+          <div className="flex-1 relative min-w-0">
+            <Input
+              placeholder={selectedConversation ? "Tapez votre message..." : "Sélectionnez une conversation pour commencer"}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              className="pr-12 py-3 rounded-full border-2 w-full"
+              disabled={!selectedConversation}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+            />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="absolute right-2 top-1/2 transform -translate-y-1/2"
+            >
+              <Smile className="w-4 h-4 text-muted-foreground" />
+            </Button>
+          </div>
+
+          <Button 
+            onClick={handleSendMessage}
+            disabled={!message.trim() || !selectedConversation}
+            className="rounded-full w-12 h-12 p-0 bg-gradient-primary hover:bg-gradient-primary/90 disabled:opacity-50 flex-shrink-0"
+          >
+            <Send className="w-5 h-5" />
+          </Button>
+        </div>
+      </div>
 
       <BottomNavigation />
     </div>
