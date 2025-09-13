@@ -1,45 +1,100 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { divIcon, LatLngBounds } from "leaflet";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Search, Filter, Locate, Layers, Navigation } from "lucide-react";
+import { MapPin, Search, Filter, Locate, Layers, Navigation, Eye } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useCountry } from "@/contexts/CountryContext";
+import "leaflet/dist/leaflet.css";
+
+interface Listing {
+  id: string;
+  title: string;
+  price: number;
+  lat: number;
+  lng: number;
+  city: string;
+  country_code: string;
+  image: string | null;
+}
 
 const Map = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [mapStyle, setMapStyle] = useState("standard");
   const [showFilters, setShowFilters] = useState(false);
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  const navigate = useNavigate();
+  const { selectedCountry, formatPrice } = useCountry();
 
-  // Mock properties data with coordinates
-  const properties = [
-    {
-      id: "1",
-      title: "Villa moderne Cocody",
-      price: "85M FCFA",
-      type: "sale",
-      coordinates: { lat: 5.3364, lng: -4.0267 },
-      image: "/placeholder.svg"
-    },
-    {
-      id: "2", 
-      title: "Appartement Marcory",
-      price: "250K FCFA/mois",
-      type: "rent",
-      coordinates: { lat: 5.2669, lng: -4.0131 },
-      image: "/placeholder.svg"
-    },
-    {
-      id: "3",
-      title: "Terrain Bingerville", 
-      price: "45M FCFA",
-      type: "sale",
-      coordinates: { lat: 5.3553, lng: -3.8947 },
-      image: "/placeholder.svg"
+  // Africa bounds: [south, west, north, east]
+  const africaBounds = new LatLngBounds([-40, -20], [55, 50]);
+
+  const fetchListings = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('status', 'published')
+        .eq('country_code', selectedCountry.code)
+        .not('lat', 'is', null)
+        .not('lng', 'is', null);
+
+      if (error) throw error;
+      setListings(data || []);
+    } catch (error) {
+      console.error('Error fetching listings:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchListings();
+  }, [selectedCountry.code]);
+
+  // Real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'listings',
+          filter: `country_code=eq.${selectedCountry.code}`
+        },
+        (payload) => {
+          console.log('Realtime update:', payload);
+          fetchListings(); // Refetch data on any change
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedCountry.code]);
+
+  const createCustomPin = (listing: Listing) => {
+    const formattedPrice = formatPrice(listing.price);
+    return divIcon({
+      html: `
+        <div class="bg-primary text-primary-foreground px-2 py-1 rounded-lg shadow-warm text-xs font-semibold whitespace-nowrap border-2 border-background">
+          ${formattedPrice}
+        </div>
+      `,
+      className: 'custom-div-icon',
+      iconSize: [80, 30],
+      iconAnchor: [40, 30],
+    });
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -93,96 +148,76 @@ const Map = () => {
           </Button>
         </div>
 
-        {/* Map Placeholder */}
-        <div className="w-full h-full bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center relative overflow-hidden">
-          {/* Grid Pattern */}
-          <div className="absolute inset-0 opacity-20">
-            <div className="grid grid-cols-8 grid-rows-6 h-full w-full">
-              {Array.from({ length: 48 }).map((_, i) => (
-                <div key={i} className="border border-border/20" />
-              ))}
-            </div>
-          </div>
-
-          {/* Mock Map Content */}
-          <div className="relative z-10 text-center space-y-4">
-            <MapPin className="w-16 h-16 mx-auto text-primary animate-bounce-in" />
-            <div className="space-y-2">
-              <h3 className="text-xl font-semibold">Carte Interactive</h3>
-              <p className="text-muted-foreground max-w-sm">
-                Explorez les propriétés disponibles sur la carte d'Abidjan
-              </p>
-            </div>
-
-            {/* Mock Property Pins */}
-            <div className="absolute inset-0 pointer-events-none">
-              {properties.map((property, index) => (
-                <div
-                  key={property.id}
-                  className={`
-                    absolute transform -translate-x-1/2 -translate-y-1/2 animate-bounce-in
-                    ${index === 0 ? 'top-1/3 left-1/3' : ''}
-                    ${index === 1 ? 'top-2/3 left-2/3' : ''}
-                    ${index === 2 ? 'top-1/2 right-1/4' : ''}
-                  `}
-                  style={{
-                    animationDelay: `${index * 0.2}s`
-                  }}
-                >
-                  <div className="bg-primary text-primary-foreground p-2 rounded-lg shadow-warm cursor-pointer hover:scale-110 transition-transform">
-                    <MapPin className="w-4 h-4" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Property Cards Overlay */}
-        <div className="absolute bottom-20 left-0 right-0 z-10 p-4">
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {properties.map((property) => (
-              <Card key={property.id} className="min-w-[280px] bg-background/95 backdrop-blur-sm animate-slide-up">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center">
-                      <MapPin className="w-6 h-6 text-primary" />
+        {/* Leaflet Map */}
+        <MapContainer
+          bounds={africaBounds}
+          className="w-full h-full z-0"
+          style={{ height: '100%' }}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          
+          {listings.map((listing) => (
+            <Marker
+              key={listing.id}
+              position={[listing.lat, listing.lng]}
+              icon={createCustomPin(listing)}
+            >
+              <Popup className="custom-popup">
+                <div className="w-64 p-2">
+                  <div className="flex gap-3 mb-3">
+                    <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+                      {listing.image ? (
+                        <img 
+                          src={listing.image} 
+                          alt={listing.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <MapPin className="w-6 h-6 text-primary" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-sm truncate">{property.title}</h4>
-                      <p className="text-primary font-bold text-sm">{property.price}</p>
-                      <Badge 
-                        variant="outline" 
-                        className={`text-xs mt-1 ${
-                          property.type === 'sale' 
-                            ? 'text-accent border-accent' 
-                            : 'text-primary border-primary'
-                        }`}
-                      >
-                        {property.type === 'sale' ? 'Vente' : 'Location'}
-                      </Badge>
+                      <h4 className="font-semibold text-sm truncate">{listing.title}</h4>
+                      <p className="text-primary font-bold text-sm">{formatPrice(listing.price)}</p>
+                      <p className="text-muted-foreground text-xs">{listing.city}</p>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+                  <Button 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => navigate(`/listing/${listing.id}`)}
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Voir l'annonce
+                  </Button>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
 
-        {/* Legend */}
+        {loading && (
+          <div className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-20">
+            <div className="text-center space-y-2">
+              <MapPin className="w-8 h-8 mx-auto text-primary animate-pulse" />
+              <p className="text-muted-foreground">Chargement des annonces...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Stats Legend */}
         <div className="absolute bottom-24 left-4 z-10 bg-background/95 backdrop-blur-sm rounded-lg p-3 shadow-card">
           <div className="space-y-2 text-sm">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-accent rounded-full"></div>
-              <span>Vente</span>
+              <MapPin className="w-4 h-4 text-primary" />
+              <span>{listings.length} annonces</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-primary rounded-full"></div>
-              <span>Location</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-secondary rounded-full"></div>
-              <span>Commercial</span>
+              <span>{selectedCountry.name}</span>
             </div>
           </div>
         </div>
