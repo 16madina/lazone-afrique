@@ -19,6 +19,7 @@ export type Database = {
           city: string
           country_code: string
           created_at: string
+          description: string | null
           id: string
           image: string | null
           lat: number
@@ -35,6 +36,7 @@ export type Database = {
           city: string
           country_code?: string
           created_at?: string
+          description?: string | null
           id?: string
           image?: string | null
           lat: number
@@ -51,6 +53,7 @@ export type Database = {
           city?: string
           country_code?: string
           created_at?: string
+          description?: string | null
           id?: string
           image?: string | null
           lat?: number
