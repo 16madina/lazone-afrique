@@ -327,7 +327,7 @@ const Messages = () => {
       </main>
 
       {/* Message Input - Always visible */}
-      <div className="p-4 border-t border-border bg-background/95 backdrop-blur-sm fixed bottom-0 left-0 right-0 md:sticky md:bottom-0 z-50">
+      <div className="p-4 border-t border-border bg-background/95 backdrop-blur-sm fixed bottom-16 md:bottom-0 left-0 right-0 md:sticky z-[60]">
         <div className="flex items-end gap-3 max-w-full">
           <Button variant="ghost" size="icon" className="mb-1 flex-shrink-0">
             <Paperclip className="w-5 h-5 text-muted-foreground" />
