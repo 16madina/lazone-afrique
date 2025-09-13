@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCountry } from "@/contexts/CountryContext";
+import { useNavigate } from "react-router-dom";
 import { MapPin, Heart, Bed, Bath, Square, Phone, MessageCircle, Star } from "lucide-react";
 
 interface PropertyCardProps {
@@ -27,6 +28,7 @@ interface PropertyCardProps {
 }
 
 const PropertyCard = ({ 
+  id,
   title, 
   priceUSD, 
   location, 
@@ -42,6 +44,11 @@ const PropertyCard = ({
   isFavorite = false
 }: PropertyCardProps) => {
   const { formatPrice, selectedCountry } = useCountry();
+  const navigate = useNavigate();
+
+  const handleCardClick = () => {
+    navigate(`/listing/${id}`);
+  };
   const typeColors = {
     sale: "bg-accent text-accent-foreground",
     rent: "bg-primary text-primary-foreground", 
@@ -69,7 +76,10 @@ const PropertyCard = ({
   };
 
   return (
-    <Card className="group hover:shadow-warm transition-all duration-300 hover:-translate-y-1 overflow-hidden bg-gradient-card">
+    <Card 
+      className="group hover:shadow-warm transition-all duration-300 hover:-translate-y-1 overflow-hidden bg-gradient-card cursor-pointer"
+      onClick={handleCardClick}
+    >
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden">
         <img 
@@ -95,6 +105,7 @@ const PropertyCard = ({
           className={`absolute top-3 right-3 w-8 h-8 rounded-full bg-background/80 hover:bg-background ${
             isFavorite ? 'text-destructive' : 'text-muted-foreground'
           }`}
+          onClick={(e) => e.stopPropagation()}
         >
           <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
         </Button>
@@ -204,10 +215,20 @@ const PropertyCard = ({
 
           {/* Contact Actions */}
           <div className="flex gap-1">
-            <Button size="sm" variant="outline" className="px-2">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="px-2"
+              onClick={(e) => e.stopPropagation()}
+            >
               <Phone className="w-3 h-3" />
             </Button>
-            <Button size="sm" variant="outline" className="px-2">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="px-2"
+              onClick={(e) => e.stopPropagation()}
+            >
               <MessageCircle className="w-3 h-3" />
             </Button>
           </div>
