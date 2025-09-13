@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, MapPin, Calendar, Phone, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -27,9 +28,19 @@ interface ListingData {
 const ListingDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [listing, setListing] = useState<ListingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Check authentication
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast.error("Vous devez vous connecter pour voir les détails d'une annonce");
+      navigate('/auth');
+      return;
+    }
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     const fetchListing = async () => {

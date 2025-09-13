@@ -162,15 +162,87 @@ export const CountryProvider: React.FC<CountryProviderProps> = ({ children }) =>
   // Default to Côte d'Ivoire
   const [selectedCountry, setSelectedCountry] = useState<Country>(africanCountries[0]);
 
-  // Load saved country from localStorage
+  // Detect user's country by geolocation
+  const detectUserCountry = async () => {
+    try {
+      if (!navigator.geolocation) {
+        console.log('Géolocalisation non supportée');
+        return;
+      }
+
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutes
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      
+      // Simple mapping of coordinates to African countries
+      const countryFromCoords = getCountryFromCoordinates(latitude, longitude);
+      if (countryFromCoords) {
+        const country = africanCountries.find(c => c.code === countryFromCoords);
+        if (country && !localStorage.getItem('selectedCountry')) {
+          setSelectedCountry(country);
+          localStorage.setItem('selectedCountry', country.code);
+          console.log(`Pays détecté automatiquement: ${country.name}`);
+        }
+      }
+    } catch (error) {
+      console.log('Impossible de détecter la localisation:', error);
+    }
+  };
+
+  // Simple function to map coordinates to country codes
+  const getCountryFromCoordinates = (lat: number, lng: number): string | null => {
+    // West Africa region
+    if (lat >= 4 && lat <= 15 && lng >= -17 && lng <= 3) {
+      if (lng >= -8.6 && lng <= -2.5 && lat >= 4.3 && lat <= 10.7) return 'ci'; // Côte d'Ivoire
+      if (lng >= -17 && lng <= -11.4 && lat >= 12.3 && lat <= 16.7) return 'sn'; // Sénégal  
+      if (lng >= -15 && lng <= -7.6 && lat >= 7.3 && lat <= 12.7) return 'gn'; // Guinée
+      if (lng >= -1 && lng <= 4 && lat >= 6 && lat <= 11.2) return 'gh'; // Ghana
+      if (lng >= 2.7 && lng <= 14.7 && lat >= 4.3 && lat <= 13.9) return 'ng'; // Nigeria
+      if (lng >= 8 && lng <= 16 && lat >= 1.7 && lat <= 13) return 'cm'; // Cameroun
+    }
+    
+    // North Africa
+    if (lat >= 15 && lat <= 37 && lng >= -17 && lng <= 37) {
+      if (lng >= -13 && lng <= -1 && lat >= 21 && lat <= 35.9) return 'ma'; // Maroc
+      if (lng >= 7.5 && lng <= 11.6 && lat >= 30.2 && lat <= 37.5) return 'tn'; // Tunisie
+      if (lng >= 25 && lng <= 36 && lat >= 22 && lat <= 31.7) return 'eg'; // Égypte
+    }
+    
+    // East Africa
+    if (lat >= -12 && lat <= 15 && lng >= 29 && lng <= 45) {
+      if (lng >= 33.9 && lng <= 41.9 && lat >= -1.5 && lat <= 5.0) return 'ke'; // Kenya
+      if (lng >= 29.3 && lng <= 35.0 && lat >= -11.7 && lat <= -0.95) return 'tz'; // Tanzanie
+      if (lng >= 29.6 && lng <= 35.0 && lat >= -1.5 && lat <= 4.2) return 'ug'; // Ouganda
+      if (lng >= 28.9 && lng <= 30.9 && lat >= -2.8 && lat <= -1.0) return 'rw'; // Rwanda
+      if (lng >= 32.9 && lng <= 48.0 && lat >= 3.4 && lat <= 15.0) return 'et'; // Éthiopie
+    }
+    
+    // Southern Africa
+    if (lat >= -35 && lat <= -15 && lng >= 16 && lng <= 33) {
+      if (lng >= 16.5 && lng <= 32.9 && lat >= -34.8 && lat <= -22.1) return 'za'; // Afrique du Sud
+    }
+    
+    return null;
+  };
+
+  // Load saved country from localStorage or detect automatically
   useEffect(() => {
     const savedCountryCode = localStorage.getItem('selectedCountry');
     if (savedCountryCode) {
       const country = africanCountries.find(c => c.code === savedCountryCode);
       if (country) {
         setSelectedCountry(country);
+        return;
       }
     }
+    
+    // Only auto-detect if no country was saved
+    detectUserCountry();
   }, []);
 
   // Save country to localStorage when changed
