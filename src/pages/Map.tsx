@@ -5,6 +5,7 @@ import { MapPin, Search, Filter, Locate, Layers, Navigation } from "lucide-react
 import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
+import MapboxMap from "@/components/MapboxMap";
 
 interface Listing {
   id: string;
@@ -19,53 +20,6 @@ interface Listing {
 }
 
 
-// Composant Map léger qui charge MapAfrica de manière asynchrone pour éviter les conflits de contexte
-const LazyMapAfrica = ({ listings }: { listings: Listing[] }) => {
-  const [MapComponent, setMapComponent] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadMapComponent = async () => {
-      try {
-        // Charge MapAfrica de manière asynchrone pour éviter les conflits de contexte
-        const { MapAfrica } = await import("@/components/MapAfrica");
-        setMapComponent(() => MapAfrica);
-        setLoading(false);
-      } catch (error) {
-        console.error("Erreur lors du chargement de la carte:", error);
-        setLoading(false);
-      }
-    };
-    
-    loadMapComponent();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
-        <div className="text-center">
-          <MapPin className="w-16 h-16 mx-auto text-primary mb-4 animate-pulse" />
-          <h3 className="text-lg font-semibold">Chargement de la carte...</h3>
-          <p className="text-muted-foreground">{listings.length} propriétés trouvées</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!MapComponent) {
-    return (
-      <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
-        <div className="text-center">
-          <MapPin className="w-16 h-16 mx-auto text-destructive mb-4" />
-          <h3 className="text-lg font-semibold">Erreur de chargement</h3>
-          <p className="text-muted-foreground">Impossible de charger la carte</p>
-        </div>
-      </div>
-    );
-  }
-
-  return <MapComponent listings={listings} />;
-};
 
 const Map = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -152,9 +106,9 @@ const Map = () => {
           </Button>
         </div>
 
-        {/* Map Africa avec les marqueurs de prix */}
+        {/* Carte Mapbox avec les marqueurs de prix */}
         <div className="w-full h-full">
-          <LazyMapAfrica listings={listings} />
+          <MapboxMap listings={listings} />
         </div>
 
         {/* Listings Counter */}
