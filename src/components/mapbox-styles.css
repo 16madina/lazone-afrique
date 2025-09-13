@@ -1,0 +1,68 @@
+/* Styles personnalisés pour les popups Mapbox */
+.mapboxgl-popup {
+  max-width: 300px !important;
+}
+
+.mapboxgl-popup-content {
+  padding: 0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+  border: none !important;
+}
+
+.mapboxgl-popup-close-button {
+  background: rgba(0, 0, 0, 0.5) !important;
+  color: white !important;
+  border-radius: 50% !important;
+  width: 28px !important;
+  height: 28px !important;
+  font-size: 16px !important;
+  font-weight: bold !important;
+  right: 8px !important;
+  top: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 2px solid white !important;
+}
+
+.mapboxgl-popup-close-button:hover {
+  background: rgba(0, 0, 0, 0.8) !important;
+  transform: scale(1.1) !important;
+}
+
+.mapboxgl-popup-tip {
+  border-top-color: white !important;
+}
+
+/* Animation d'apparition du popup */
+.mapboxgl-popup {
+  animation: popupFadeIn 0.3s ease-out;
+}
+
+@keyframes popupFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Styles pour les marqueurs de prix */
+.mapbox-price-marker {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.mapbox-price-marker:hover {
+  z-index: 1000 !important;
+}
+
+/* Responsive pour mobile */
+@media (max-width: 640px) {
+  .mapboxgl-popup-content {
+    max-width: 260px !important;
+  }
+}

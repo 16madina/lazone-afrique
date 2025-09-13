@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import './mapbox-styles.css';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Listing {
@@ -98,64 +99,136 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
           <div style="
             background: #0E7490;
             color: white;
-            padding: 6px 10px;
-            border-radius: 20px;
-            font-size: 12px;
+            padding: 8px 12px;
+            border-radius: 25px;
+            font-size: 13px;
             font-weight: 700;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 15px rgba(14,116,144,0.4);
             white-space: nowrap;
             cursor: pointer;
             border: 2px solid white;
+            transition: all 0.3s ease;
+            transform: scale(1);
           ">
             ${formatPrice(listing.price)} FCFA
           </div>
         `;
+
+        // Effet hover sur le marqueur
+        markerElement.addEventListener('mouseenter', () => {
+          markerElement.style.transform = 'scale(1.1)';
+          markerElement.style.boxShadow = '0 6px 20px rgba(14,116,144,0.6)';
+        });
+        
+        markerElement.addEventListener('mouseleave', () => {
+          markerElement.style.transform = 'scale(1)';
+          markerElement.style.boxShadow = '0 4px 15px rgba(14,116,144,0.4)';
+        });
 
         // Créer le marqueur
         const marker = new mapboxgl.Marker(markerElement)
           .setLngLat([listing.lng, listing.lat])
           .addTo(map.current!);
 
-        // Créer le popup
-        const popup = new mapboxgl.Popup({ offset: 25 })
+        // Créer le popup avec un design amélioré
+        const popup = new mapboxgl.Popup({ 
+          offset: 25,
+          closeButton: true,
+          closeOnClick: false,
+          className: 'custom-popup'
+        })
           .setHTML(`
-            <div style="padding: 10px; max-width: 250px;">
-              <div style="display: flex; gap: 10px; align-items: start;">
+            <div style="padding: 0; max-width: 280px; font-family: system-ui, -apple-system, sans-serif;">
+              <div style="position: relative;">
                 <img 
-                  src="${listing.image || 'https://via.placeholder.com/80x60?text=No+Image'}" 
+                  src="${listing.image || 'https://via.placeholder.com/280x160?text=Pas+d%27image'}" 
                   alt="${listing.title}"
-                  style="width: 80px; height: 60px; object-fit: cover; border-radius: 6px;"
+                  style="width: 100%; height: 160px; object-fit: cover; border-radius: 8px 8px 0 0;"
                 />
-                <div>
-                  <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px; line-height: 1.3;">
-                    ${listing.title}
-                  </div>
-                  <div style="color: #666; font-size: 12px; margin-bottom: 6px;">
-                    ${formatPrice(listing.price)} FCFA
-                  </div>
-                  <button 
-                    onclick="window.location.href='/listing/${listing.id}'"
-                    style="
-                      background: #0E7490;
-                      color: white;
-                      border: none;
-                      padding: 4px 8px;
-                      border-radius: 4px;
-                      font-size: 11px;
-                      cursor: pointer;
-                    "
-                  >
-                    Voir l'annonce
-                  </button>
+                <div style="
+                  position: absolute; 
+                  top: 8px; 
+                  right: 8px; 
+                  background: rgba(0,0,0,0.7); 
+                  color: white; 
+                  padding: 4px 8px; 
+                  border-radius: 12px; 
+                  font-size: 11px; 
+                  font-weight: 600;
+                ">
+                  ${listing.city}
                 </div>
+              </div>
+              
+              <div style="padding: 16px;">
+                <div style="
+                  font-weight: 600; 
+                  font-size: 16px; 
+                  margin-bottom: 8px; 
+                  line-height: 1.3;
+                  color: #1f2937;
+                ">
+                  ${listing.title}
+                </div>
+                
+                <div style="
+                  color: #0E7490; 
+                  font-size: 18px; 
+                  font-weight: 700; 
+                  margin-bottom: 12px;
+                ">
+                  ${formatPrice(listing.price)} FCFA
+                </div>
+                
+                <button 
+                  onclick="window.location.href='/listing/${listing.id}'"
+                  style="
+                    background: linear-gradient(135deg, #0E7490, #0891b2);
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    width: 100%;
+                    transition: all 0.3s ease;
+                  "
+                  onmouseover="this.style.background='linear-gradient(135deg, #0891b2, #06b6d4)'; this.style.transform='translateY(-1px)'"
+                  onmouseout="this.style.background='linear-gradient(135deg, #0E7490, #0891b2)'; this.style.transform='translateY(0px)'"
+                >
+                  📍 Voir les détails
+                </button>
               </div>
             </div>
           `);
 
-        // Attacher le popup au marqueur
-        markerElement.addEventListener('click', () => {
+        // Attacher le popup au marqueur avec animation
+        markerElement.addEventListener('click', (e) => {
+          e.stopPropagation();
+          
+          // Fermer tous les autres popups
+          document.querySelectorAll('.mapboxgl-popup').forEach(popup => {
+            if (popup.parentNode) {
+              popup.parentNode.removeChild(popup);
+            }
+          });
+          
+          // Ouvrir le nouveau popup
           popup.addTo(map.current!);
           popup.setLngLat([listing.lng, listing.lat]);
+          
+          // Animation du marqueur
+          markerElement.style.transform = 'scale(1.2)';
+          setTimeout(() => {
+            markerElement.style.transform = 'scale(1.1)';
+          }, 150);
+        });
+
+        // Fermer le popup quand on clique sur la carte
+        map.current?.on('click', () => {
+          popup.remove();
+          markerElement.style.transform = 'scale(1)';
         });
       });
     });
