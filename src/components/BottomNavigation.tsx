@@ -1,10 +1,15 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Home, Map, Plus, MessageCircle, User } from "lucide-react";
+import { useRealTimeMessages } from "@/hooks/useRealTimeMessages";
 
 const BottomNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { conversations } = useRealTimeMessages();
+
+  // Calculer le total des messages non lus
+  const totalUnreadCount = conversations.reduce((total, conv) => total + conv.unread_count, 0);
 
   const navItems = [
     {
@@ -30,7 +35,7 @@ const BottomNavigation = () => {
       icon: MessageCircle,
       label: "Messages",
       path: "/messages",
-      badge: 3
+      badge: totalUnreadCount > 0 ? totalUnreadCount : null
     },
     {
       icon: User,
