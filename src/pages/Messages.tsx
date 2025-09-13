@@ -292,7 +292,7 @@ const Messages = () => {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 p-4 pb-8 overflow-y-auto space-y-4">
+            <div className="flex-1 p-4 pb-32 md:pb-8 overflow-y-auto space-y-4">
               {messages.map((msg, index) => (
                 <div
                   key={msg.id}
