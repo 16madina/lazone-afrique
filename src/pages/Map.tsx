@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCountry } from "@/contexts/CountryContext";
 import { useNavigate } from "react-router-dom";
 import 'leaflet/dist/leaflet.css';
+import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css';
+import 'leaflet-defaulticon-compatibility';
 
 interface Listing {
   id: string;
@@ -97,10 +99,10 @@ const Map = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background">
       <Header />
       
-      <main className="flex-1 relative animate-fade-in">
+      <main className="flex-1 relative animate-fade-in overflow-hidden">
         {/* Search Bar */}
         <div className="absolute top-4 left-4 right-4 z-10">
           <div className="bg-background/95 backdrop-blur-sm rounded-xl p-4 shadow-card space-y-3">
@@ -149,60 +151,63 @@ const Map = () => {
         </div>
 
         {/* Leaflet Map */}
-        <MapContainer 
-          center={[0, 20]}
-          zoom={3}
-          className="w-full h-full z-0"
-          scrollWheelZoom={true}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          
-          {listings.map((listing) => (
-            <Marker
-              key={listing.id}
-              position={[listing.lat, listing.lng]}
-              icon={createCustomIcon(listing.price)}
-            >
-              <Popup>
-                <div className="min-w-[250px] p-2">
-                  <div className="space-y-3">
-                    <div className="flex gap-3">
-                      {listing.image && (
-                        <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
-                          <img 
-                            src={listing.image} 
-                            alt={listing.title}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              e.currentTarget.parentElement!.innerHTML = '<div class="w-6 h-6 text-blue-600">🏠</div>';
-                            }}
-                          />
+        <div className="w-full h-full">
+          <MapContainer 
+            center={[0, 20]}
+            zoom={3}
+            className="w-full h-full z-0"
+            scrollWheelZoom={true}
+            style={{ height: '100%', width: '100%' }}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            
+            {listings.map((listing) => (
+              <Marker
+                key={listing.id}
+                position={[listing.lat, listing.lng]}
+                icon={createCustomIcon(listing.price)}
+              >
+                <Popup maxWidth={300} minWidth={250}>
+                  <div className="p-2">
+                    <div className="space-y-3">
+                      <div className="flex gap-3">
+                        {listing.image && (
+                          <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+                            <img 
+                              src={listing.image} 
+                              alt={listing.title}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.parentElement!.innerHTML = '<div class="w-6 h-6 text-blue-600">🏠</div>';
+                              }}
+                            />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-sm truncate">{listing.title}</h4>
+                          <p className="text-blue-600 font-bold text-sm">{formatPrice(listing.price)}</p>
+                          <p className="text-gray-600 text-xs">{listing.city}</p>
                         </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-sm truncate">{listing.title}</h4>
-                        <p className="text-blue-600 font-bold text-sm">{formatPrice(listing.price)}</p>
-                        <p className="text-gray-600 text-xs">{listing.city}</p>
                       </div>
+                      
+                      <button 
+                        className="w-full bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"
+                        onClick={() => navigate(`/listing/${listing.id}`)}
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        Voir l'annonce
+                      </button>
                     </div>
-                    
-                    <button 
-                      className="w-full bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-1"
-                      onClick={() => navigate(`/listing/${listing.id}`)}
-                    >
-                      <ExternalLink className="w-3 h-3" />
-                      Voir l'annonce
-                    </button>
                   </div>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+        </div>
 
         {/* Listings Counter */}
         <div className="absolute bottom-24 right-4 z-10 bg-background/95 backdrop-blur-sm rounded-lg p-3 shadow-card">
