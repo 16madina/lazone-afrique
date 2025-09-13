@@ -306,6 +306,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_user_add_participant: {
+        Args: { target_conversation_id: string; target_user_id: string }
+        Returns: boolean
+      }
+      can_user_view_participants: {
+        Args: { target_conversation_id: string }
+        Returns: boolean
+      }
       is_admin: {
         Args: { user_uuid?: string }
         Returns: boolean
