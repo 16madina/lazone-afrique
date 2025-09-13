@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_roles: {
+        Row: {
+          created_at: string
+          granted_by: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       listings: {
         Row: {
           city: string
@@ -71,6 +92,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          banned: boolean | null
           city: string | null
           company_name: string | null
           country: string | null
@@ -89,6 +111,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          banned?: boolean | null
           city?: string | null
           company_name?: string | null
           country?: string | null
@@ -107,6 +130,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          banned?: boolean | null
           city?: string | null
           company_name?: string | null
           country?: string | null
@@ -125,12 +149,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_actions: {
+        Row: {
+          action_type: string
+          admin_id: string
+          created_at: string
+          id: string
+          message: string | null
+          reason: string | null
+          target_listing_id: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_id: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          reason?: string | null
+          target_listing_id?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_id?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          reason?: string | null
+          target_listing_id?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: { user_uuid?: string }
+        Returns: boolean
+      }
     }
     Enums: {
       user_type: "proprietaire" | "demarcheur" | "agence"
