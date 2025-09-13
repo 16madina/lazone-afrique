@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useCountry } from "@/contexts/CountryContext";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Button } from "@/components/ui/button";
@@ -42,6 +44,8 @@ const Profile = () => {
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [userProperties, setUserProperties] = useState<any[]>([]);
+  const [loadingProperties, setLoadingProperties] = useState(false);
   const [contactForm, setContactForm] = useState({
     full_name: '',
     phone: '',
@@ -67,6 +71,37 @@ const Profile = () => {
       });
     }
   }, [profile]);
+
+  // Fetch user properties
+  const fetchUserProperties = async () => {
+    if (!user) return;
+    
+    setLoadingProperties(true);
+    try {
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching properties:', error);
+      } else {
+        setUserProperties(data || []);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoadingProperties(false);
+    }
+  };
+
+  // Fetch properties when user is available
+  useEffect(() => {
+    if (user) {
+      fetchUserProperties();
+    }
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -131,8 +166,10 @@ const Profile = () => {
     }
   };
 
+  const { formatLocalPrice } = useCountry();
+
   const userStats = [
-    { label: "Propriétés publiées", value: "0", icon: Home },
+    { label: "Propriétés publiées", value: userProperties.length.toString(), icon: Home },
     { label: "Favoris", value: "0", icon: Heart },
     { label: "Notes moyennes", value: "0", icon: Star },
     { label: "Vues profil", value: "0", icon: Eye }
@@ -312,16 +349,74 @@ const Profile = () => {
               </Button>
             </div>
 
-            <div className="text-center py-12 animate-fade-in">
-              <Home className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-              <h4 className="text-lg font-semibold mb-2">Aucune propriété</h4>
-              <p className="text-muted-foreground mb-4">
-                Commencez par publier votre première annonce
-              </p>
-              <Button onClick={() => navigate('/add-property')}>
-                Créer une annonce
-              </Button>
-            </div>
+            {loadingProperties ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <p className="text-muted-foreground mt-2">Chargement...</p>
+              </div>
+            ) : userProperties.length === 0 ? (
+              <div className="text-center py-12 animate-fade-in">
+                <Home className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                <h4 className="text-lg font-semibold mb-2">Aucune propriété</h4>
+                <p className="text-muted-foreground mb-4">
+                  Commencez par publier votre première annonce
+                </p>
+                <Button onClick={() => navigate('/add-property')}>
+                  Créer une annonce
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {userProperties.map((property) => (
+                  <Card key={property.id} className="animate-scale-in overflow-hidden">
+                    <div className="aspect-video relative">
+                      {property.photos && property.photos.length > 0 ? (
+                        <img 
+                          src={property.photos[0]} 
+                          alt={property.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted flex items-center justify-center">
+                          <Home className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                      )}
+                      <Badge 
+                        className={`absolute top-2 right-2 ${
+                          property.status === 'published' 
+                            ? 'bg-green-500 text-white' 
+                            : 'bg-yellow-500 text-white'
+                        }`}
+                      >
+                        {property.status === 'published' ? 'Publié' : 'Brouillon'}
+                      </Badge>
+                    </div>
+                    <CardContent className="p-4">
+                      <h4 className="font-semibold truncate">{property.title}</h4>
+                      <p className="text-sm text-muted-foreground">{property.city}</p>
+                      <p className="text-lg font-bold text-primary">
+                        {formatLocalPrice(property.price)}
+                      </p>
+                      <div className="flex gap-2 mt-3">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={() => navigate(`/listing/${property.id}`)}
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          Voir
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <Edit className="w-4 h-4 mr-1" />
+                          Modifier
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           {/* Favorites Tab */}
