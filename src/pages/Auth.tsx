@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCountry } from '@/contexts/CountryContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +13,7 @@ import { Building2, User, Users, ArrowLeft } from 'lucide-react';
 
 const Auth = () => {
   const { signIn, signUp, user, loading } = useAuth();
+  const { countries, selectedCountry } = useCountry();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -22,11 +24,16 @@ const Auth = () => {
   });
   
   const [signupForm, setSignupForm] = useState({
+    first_name: '',
+    last_name: '',
     email: '',
+    country: selectedCountry.code,
+    city: '',
+    neighborhood: '',
+    phone: '',
+    user_type: 'proprietaire' as 'proprietaire' | 'demarcheur' | 'agence',
     password: '',
     confirmPassword: '',
-    full_name: '',
-    user_type: 'proprietaire' as 'proprietaire' | 'demarcheur' | 'agence',
     company_name: '',
     license_number: '',
   });
@@ -76,7 +83,13 @@ const Auth = () => {
     setIsLoading(true);
 
     const userData = {
-      full_name: signupForm.full_name,
+      first_name: signupForm.first_name,
+      last_name: signupForm.last_name,
+      full_name: `${signupForm.first_name} ${signupForm.last_name}`.trim(),
+      country: signupForm.country,
+      city: signupForm.city,
+      neighborhood: signupForm.neighborhood,
+      phone: signupForm.phone,
       user_type: signupForm.user_type,
       ...(signupForm.user_type === 'agence' && signupForm.company_name && { company_name: signupForm.company_name }),
       ...(signupForm.user_type !== 'proprietaire' && signupForm.license_number && { license_number: signupForm.license_number }),
@@ -170,20 +183,100 @@ const Auth = () => {
             
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-lastname">Nom *</Label>
+                    <Input
+                      id="signup-lastname"
+                      type="text"
+                      placeholder="Nom de famille"
+                      value={signupForm.last_name}
+                      onChange={(e) => setSignupForm({ ...signupForm, last_name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-firstname">Prénom *</Label>
+                    <Input
+                      id="signup-firstname"
+                      type="text"
+                      placeholder="Prénom"
+                      value={signupForm.first_name}
+                      onChange={(e) => setSignupForm({ ...signupForm, first_name: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Pays *</Label>
+                    <Select
+                      value={signupForm.country}
+                      onValueChange={(value) => {
+                        setSignupForm({ ...signupForm, country: value, city: '' });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {countries.map((country) => (
+                          <SelectItem key={country.code} value={country.code}>
+                            <div className="flex items-center gap-2">
+                              <span>{country.flag}</span>
+                              <span>{country.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Ville *</Label>
+                    <Select
+                      value={signupForm.city}
+                      onValueChange={(value) => setSignupForm({ ...signupForm, city: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner une ville" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {countries.find(c => c.code === signupForm.country)?.cities.map((city) => (
+                          <SelectItem key={city} value={city}>
+                            {city}
+                          </SelectItem>
+                        )) || []}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="signup-name">Nom complet</Label>
+                  <Label htmlFor="signup-neighborhood">Quartier</Label>
                   <Input
-                    id="signup-name"
+                    id="signup-neighborhood"
                     type="text"
-                    placeholder="Votre nom complet"
-                    value={signupForm.full_name}
-                    onChange={(e) => setSignupForm({ ...signupForm, full_name: e.target.value })}
+                    placeholder="Nom du quartier"
+                    value={signupForm.neighborhood}
+                    onChange={(e) => setSignupForm({ ...signupForm, neighborhood: e.target.value })}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="signup-phone">Téléphone *</Label>
+                  <Input
+                    id="signup-phone"
+                    type="tel"
+                    placeholder="+225 XX XX XX XX XX"
+                    value={signupForm.phone}
+                    onChange={(e) => setSignupForm({ ...signupForm, phone: e.target.value })}
                     required
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-email">Email *</Label>
                   <Input
                     id="signup-email"
                     type="email"
@@ -195,7 +288,7 @@ const Auth = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label>Type d'utilisateur</Label>
+                  <Label>Type d'utilisateur *</Label>
                   <Select
                     value={signupForm.user_type}
                     onValueChange={(value: 'proprietaire' | 'demarcheur' | 'agence') => 
@@ -251,10 +344,11 @@ const Auth = () => {
                 )}
                 
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Mot de passe</Label>
+                  <Label htmlFor="signup-password">Mot de passe *</Label>
                   <Input
                     id="signup-password"
                     type="password"
+                    placeholder="Mot de passe"
                     value={signupForm.password}
                     onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
                     required
@@ -262,10 +356,11 @@ const Auth = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="signup-confirm-password">Confirmer le mot de passe</Label>
+                  <Label htmlFor="signup-confirm-password">Confirmer le mot de passe *</Label>
                   <Input
                     id="signup-confirm-password"
                     type="password"
+                    placeholder="Confirmer le mot de passe"
                     value={signupForm.confirmPassword}
                     onChange={(e) => setSignupForm({ ...signupForm, confirmPassword: e.target.value })}
                     required
