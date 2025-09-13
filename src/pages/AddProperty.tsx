@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Button } from "@/components/ui/button";
@@ -12,10 +13,37 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Camera, MapPin, Home, DollarSign, FileText, Image, Plus, X, Video, Upload } from "lucide-react";
 import { useMediaUpload } from "@/hooks/useMediaUpload";
+import { supabase } from "@/integrations/supabase/client";
+import { useCountry } from "@/contexts/CountryContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const AddProperty = () => {
+  const navigate = useNavigate();
+  const { selectedCountry } = useCountry();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  
+  // Form states
+  const [formData, setFormData] = useState({
+    propertyType: "",
+    title: "",
+    description: "",
+    price: "",
+    city: "",
+    location: "",
+    bedrooms: "",
+    bathrooms: "",
+    area: "",
+    fullName: "",
+    email: "",
+    phone: "",
+    whatsapp: ""
+  });
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const photoInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const { 
@@ -79,6 +107,58 @@ const AddProperty = () => {
 
   const prevStep = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
+  };
+
+  const updateFormData = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSubmit = async () => {
+    if (!user) {
+      toast.error("Vous devez être connecté pour publier une annonce");
+      return;
+    }
+
+    if (!formData.title || !formData.price || !formData.city) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const photoUrls = uploadedPhotos.map(photo => photo.url);
+      const videoUrl = uploadedVideo?.url || null;
+
+      const { data, error } = await supabase
+        .from('listings')
+        .insert({
+          title: formData.title,
+          description: formData.description,
+          price: parseFloat(formData.price),
+          city: formData.city,
+          country_code: selectedCountry.code,
+          user_id: user.id,
+          lat: 5.3364, // Default coordinates for Abidjan - can be enhanced later
+          lng: -4.0267,
+          photos: photoUrls,
+          video_url: videoUrl,
+          status: 'published'
+        });
+
+      if (error) throw error;
+
+      toast.success("Annonce publiée avec succès!");
+      navigate("/");
+    } catch (error) {
+      console.error("Error publishing listing:", error);
+      toast.error("Erreur lors de la publication de l'annonce");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -173,14 +253,22 @@ const AddProperty = () => {
 
                 <div className="space-y-2">
                   <Label>Titre de l'annonce</Label>
-                  <Input placeholder="ex: Belle villa moderne avec piscine" />
+                  <Input 
+                    placeholder="ex: Belle villa moderne avec piscine" 
+                    value={formData.title}
+                    onChange={(e) => updateFormData('title', e.target.value)}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label>Localisation</Label>
                   <div className="flex gap-2">
                     <div className="flex-1">
-                      <Input placeholder="Ville ou commune" />
+                      <Input 
+                        placeholder="Ville ou commune" 
+                        value={formData.city}
+                        onChange={(e) => updateFormData('city', e.target.value)}
+                      />
                     </div>
                     <Button variant="outline" size="icon">
                       <MapPin className="w-4 h-4" />
@@ -228,7 +316,12 @@ const AddProperty = () => {
 
                   <div className="space-y-2">
                     <Label>Surface (m²)</Label>
-                    <Input type="number" placeholder="120" />
+                    <Input 
+                      type="number" 
+                      placeholder="120" 
+                      value={formData.area}
+                      onChange={(e) => updateFormData('area', e.target.value)}
+                    />
                   </div>
 
                   <div className="space-y-2">
@@ -259,6 +352,8 @@ const AddProperty = () => {
                   <Textarea 
                     placeholder="Décrivez votre bien en détail..."
                     className="min-h-[100px]"
+                    value={formData.description}
+                    onChange={(e) => updateFormData('description', e.target.value)}
                   />
                 </div>
               </div>
@@ -271,7 +366,13 @@ const AddProperty = () => {
                   <div className="space-y-2">
                     <Label>Prix</Label>
                     <div className="flex">
-                      <Input type="number" placeholder="85000000" className="rounded-r-none" />
+                      <Input 
+                        type="number" 
+                        placeholder="85000000" 
+                        className="rounded-r-none" 
+                        value={formData.price}
+                        onChange={(e) => updateFormData('price', e.target.value)}
+                      />
                       <div className="bg-muted px-3 py-2 border border-l-0 rounded-r-md text-sm text-muted-foreground">
                         FCFA
                       </div>
@@ -298,20 +399,33 @@ const AddProperty = () => {
                   <h4 className="font-semibold">Informations de contact</h4>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Nom complet</Label>
-                      <Input placeholder="Votre nom" />
-                    </div>
+                     <div className="space-y-2">
+                       <Label>Nom complet</Label>
+                       <Input 
+                         placeholder="Votre nom" 
+                         value={formData.fullName}
+                         onChange={(e) => updateFormData('fullName', e.target.value)}
+                       />
+                     </div>
 
-                    <div className="space-y-2">
-                      <Label>Téléphone</Label>
-                      <Input placeholder="+225 XX XX XX XX XX" />
-                    </div>
+                     <div className="space-y-2">
+                       <Label>Téléphone</Label>
+                       <Input 
+                         placeholder="+225 XX XX XX XX XX" 
+                         value={formData.phone}
+                         onChange={(e) => updateFormData('phone', e.target.value)}
+                       />
+                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label>Email</Label>
-                    <Input type="email" placeholder="votre@email.com" />
+                    <Input 
+                      type="email" 
+                      placeholder="votre@email.com" 
+                      value={formData.email}
+                      onChange={(e) => updateFormData('email', e.target.value)}
+                    />
                   </div>
 
                   <div className="space-y-2">
@@ -496,11 +610,15 @@ const AddProperty = () => {
                 <Button onClick={nextStep} className="bg-gradient-primary">
                   Suivant
                 </Button>
-              ) : (
-                <Button className="bg-gradient-primary">
-                  Publier l'annonce
-                </Button>
-              )}
+               ) : (
+                 <Button 
+                   className="bg-gradient-primary" 
+                   onClick={handleSubmit}
+                   disabled={isSubmitting || uploading}
+                 >
+                   {isSubmitting ? "Publication..." : "Publier l'annonce"}
+                 </Button>
+               )}
             </div>
           </CardContent>
         </Card>
