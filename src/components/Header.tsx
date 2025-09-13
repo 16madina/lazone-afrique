@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import CountrySelector from "@/components/CountrySelector";
 import { Bell, User, Menu, LogOut, Settings } from "lucide-react";
+import lazoneLogo from "@/assets/lazone-logo.png";
 
 const Header = () => {
   const [notifications, setNotifications] = useState(3);
@@ -48,11 +49,9 @@ const Header = () => {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>
-          <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-lg">I</span>
-          </div>
+          <img src={lazoneLogo} alt="LaZone" className="w-8 h-8" />
           <span className="font-bold text-xl bg-gradient-primary bg-clip-text text-transparent">
-            ImmoBens
+            LaZone
           </span>
         </div>
 

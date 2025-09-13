@@ -129,7 +129,7 @@ const Auth = () => {
         
         <Card className="w-full">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">ImmoBens</CardTitle>
+          <CardTitle className="text-2xl font-bold">LaZone</CardTitle>
           <CardDescription>Connexion à votre compte</CardDescription>
         </CardHeader>
         <CardContent>
