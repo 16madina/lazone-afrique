@@ -19,6 +19,7 @@ interface Listing {
   photos: string[] | null;
   city: string;
   country_code: string;
+  transaction_type: string | null;
 }
 
 
@@ -70,17 +71,18 @@ const Map = () => {
     try {
       const { data, error } = await supabase
         .from('listings')
-        .select('*')
+        .select('id, title, price, lat, lng, status, image, photos, city, country_code, transaction_type')
         .eq('status', 'published')
         .not('lat', 'is', null)
         .not('lng', 'is', null)
-        .limit(20); // Limit to 20 for performance
+        .limit(50); // Increase limit to 50
 
       if (error) {
         console.error('Error fetching listings:', error);
         return;
       }
 
+      console.log("Fetched listings:", data);
       setListings(data || []);
     } catch (error) {
       console.error('Error:', error);

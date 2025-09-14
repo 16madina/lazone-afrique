@@ -16,6 +16,7 @@ interface Listing {
   photos: string[] | null;
   city: string;
   country_code: string;
+  transaction_type: string | null;
 }
 
 interface MapboxMapProps {
@@ -169,14 +170,14 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
                   position: absolute; 
                   top: 8px; 
                   right: 8px; 
-                  background: rgba(0,0,0,0.7); 
+                  background: ${listing.transaction_type === 'rent' ? '#0E7490' : '#E11D48'}; 
                   color: white; 
                   padding: 4px 8px; 
                   border-radius: 12px; 
                   font-size: 11px; 
                   font-weight: 600;
                 ">
-                  ${listing.city}
+                  ${listing.transaction_type === 'rent' ? 'Location' : 'Vente'}
                 </div>
               </div>
               
@@ -191,14 +192,35 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
                   ${listing.title}
                 </div>
                 
-                <div style="
-                  color: #0E7490; 
-                  font-size: 18px; 
-                  font-weight: 700; 
-                  margin-bottom: 12px;
-                ">
-                  ${formatPrice(listing.price)} FCFA
-                </div>
+                 <div style="
+                   color: #0E7490; 
+                   font-size: 18px; 
+                   font-weight: 700; 
+                   margin-bottom: 12px;
+                 ">
+                   ${formatPrice(listing.price)} FCFA
+                 </div>
+                 
+                 <div style="
+                   display: flex; 
+                   align-items: center; 
+                   gap: 8px; 
+                   margin-bottom: 12px;
+                   font-size: 12px;
+                   color: #6b7280;
+                 ">
+                   <span>📍 ${listing.city}</span>
+                   <span>•</span>
+                   <span style="
+                     background: ${listing.transaction_type === 'rent' ? '#0E7490' : '#E11D48'}; 
+                     color: white; 
+                     padding: 2px 6px; 
+                     border-radius: 8px; 
+                     font-weight: 600;
+                   ">
+                     ${listing.transaction_type === 'rent' ? 'Location' : 'Vente'}
+                   </span>
+                 </div>
                 
                 <button 
                   onclick="window.location.href='/listing/${listing.id}'"
