@@ -28,7 +28,7 @@ const SponsorshipDialog = ({ listingId, children }: SponsorshipDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<SponsorshipPackage | null>(null);
   const { toast } = useToast();
-  const { formatLocalPrice } = useCountry();
+  const { formatPrice } = useCountry();
 
   useEffect(() => {
     fetchPackages();
@@ -167,7 +167,7 @@ const SponsorshipDialog = ({ listingId, children }: SponsorshipDialogProps) => {
                 <CardContent className="space-y-4">
                   <div className="text-center">
                     <div className="text-3xl font-bold text-primary">
-                      {formatLocalPrice(pkg.price_usd)}
+                      {formatPrice(pkg.price_usd)}
                     </div>
                     <div className="text-sm text-muted-foreground">
                       pour {pkg.duration_days} jours
@@ -197,7 +197,7 @@ const SponsorshipDialog = ({ listingId, children }: SponsorshipDialogProps) => {
                 <h4 className="font-medium">Récapitulatif de votre commande</h4>
                 <div className="flex justify-between items-center">
                   <span>{selectedPackage.name}</span>
-                  <span className="font-medium">{formatLocalPrice(selectedPackage.price_usd)}</span>
+                  <span className="font-medium">{formatPrice(selectedPackage.price_usd)}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm text-muted-foreground">
                   <span>Durée</span>
@@ -206,7 +206,7 @@ const SponsorshipDialog = ({ listingId, children }: SponsorshipDialogProps) => {
                 <Separator />
                 <div className="flex justify-between items-center font-medium">
                   <span>Total</span>
-                  <span className="text-primary">{formatLocalPrice(selectedPackage.price_usd)}</span>
+                  <span className="text-primary">{formatPrice(selectedPackage.price_usd)}</span>
                 </div>
               </div>
               
