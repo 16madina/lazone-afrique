@@ -3,11 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCountry } from "@/contexts/CountryContext";
-import { Search, MapPin, Filter } from "lucide-react";
+import { Search, MapPin, Filter, Star, Info } from "lucide-react";
 import heroImage from "@/assets/hero-african-villa.jpg";
 import propertyHouse from "@/assets/property-house.jpg";
 import propertyApartment from "@/assets/property-apartment.jpg";
 import propertyLand from "@/assets/property-land.jpg";
+import SponsorshipDialog from "@/components/SponsorshipDialog";
 
 const HeroSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -184,10 +185,22 @@ const HeroSection = () => {
                 </div>
               </div>
             </div>
-            <div className="text-center">
-              <Button variant="outline" className="bg-background/80 hover:bg-background text-foreground border-2">
-                Voir toutes les annonces sponsorisées
-              </Button>
+            <div className="text-center space-y-3">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <Button variant="outline" className="bg-background/80 hover:bg-background text-foreground border-2">
+                  Voir toutes les annonces sponsorisées
+                </Button>
+                <SponsorshipDialog listingId="demo">
+                  <Button variant="default" className="bg-gradient-primary hover:opacity-90">
+                    <Star className="w-4 h-4 mr-2" />
+                    Voir tarifs & sponsoriser
+                  </Button>
+                </SponsorshipDialog>
+              </div>
+              <div className="text-xs text-primary-foreground/70 flex items-center justify-center gap-1">
+                <Info className="w-3 h-3" />
+                Packages à partir de 15$ - Boost 3 à 30 jours
+              </div>
             </div>
           </div>
         </div>
