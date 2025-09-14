@@ -104,18 +104,20 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
           <div style="
             background: #0E7490;
             color: white;
-            padding: 6px 10px;
-            border-radius: 20px;
-            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 9px;
             font-weight: 600;
-            box-shadow: 0 4px 15px rgba(14,116,144,0.4);
+            box-shadow: 0 2px 8px rgba(14,116,144,0.3);
             white-space: nowrap;
             cursor: pointer;
-            border: 2px solid white;
+            border: 1px solid white;
             transition: all 0.3s ease;
             transform: scale(1);
+            min-width: 20px;
+            text-align: center;
           ">
-            ${formatPrice(listing.price)} FCFA
+            ${formatPrice(listing.price)}
           </div>
         `;
 
