@@ -20,6 +20,7 @@ interface Listing {
 
 interface MapboxMapProps {
   listings: Listing[];
+  selectedCityCoords?: {lat: number, lng: number} | null;
 }
 
 function formatPrice(price?: number | null) {
@@ -29,7 +30,7 @@ function formatPrice(price?: number | null) {
   return String(price);
 }
 
-const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
+const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
@@ -267,6 +268,17 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
       });
     }
   }, [selectedCountry]);
+
+  // Navigate to selected city when coordinates are provided
+  useEffect(() => {
+    if (map.current && selectedCityCoords) {
+      map.current.flyTo({
+        center: [selectedCityCoords.lng, selectedCityCoords.lat],
+        zoom: 12, // Zoom plus proche pour une ville
+        duration: 2000
+      });
+    }
+  }, [selectedCityCoords]);
 
   if (loading) {
     return (

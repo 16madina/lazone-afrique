@@ -28,6 +28,7 @@ const Map = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [listings, setListings] = useState<Listing[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedCityCoords, setSelectedCityCoords] = useState<{lat: number, lng: number} | null>(null);
   const { selectedCountry } = useCountry();
 
   console.log("Map component rendering, listings count:", listings.length);
@@ -37,9 +38,27 @@ const Map = () => {
     city.toLowerCase().startsWith(searchQuery.toLowerCase()) && searchQuery.length > 0
   );
 
-  const handleCitySelect = (city: string) => {
+  const handleCitySelect = async (city: string) => {
     setSearchQuery(city);
     setShowSuggestions(false);
+    
+    // Géocoder la ville pour obtenir les coordonnées
+    try {
+      const { data } = await supabase.functions.invoke('get-mapbox-token');
+      if (data?.token) {
+        const response = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(city)}.json?country=${selectedCountry.code}&access_token=${data.token}&limit=1`
+        );
+        const geoData = await response.json();
+        
+        if (geoData.features && geoData.features.length > 0) {
+          const [lng, lat] = geoData.features[0].center;
+          setSelectedCityCoords({ lat, lng });
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors du géocodage:', error);
+    }
   };
 
   // Fetch listings from Supabase
@@ -146,7 +165,7 @@ const Map = () => {
 
         {/* Carte Mapbox avec les marqueurs de prix */}
         <div className="w-full h-full">
-          <MapboxMap listings={listings} />
+          <MapboxMap listings={listings} selectedCityCoords={selectedCityCoords} />
         </div>
 
         {/* Listings Counter */}
