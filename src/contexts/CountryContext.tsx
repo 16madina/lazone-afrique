@@ -24,7 +24,7 @@ export const africanCountries: Country[] = [
     name: 'Côte d\'Ivoire',
     flag: '🇨🇮',
     currency: { code: 'XOF', symbol: 'FCFA', name: 'Franc CFA' },
-    cities: ['Abidjan', 'Bouaké', 'Yamoussoukro', 'San-Pédro', 'Korhogo', 'Daloa'],
+    cities: ['Abidjan', 'Yamoussoukro', 'Bouaké', 'Daloa', 'San-Pédro', 'Korhogo', 'Man', 'Abengourou', 'Divo', 'Gagnoa', 'Anyama', 'Agboville', 'Dabou', 'Grand-Bassam', 'Jacqueville', 'Tiassalé', 'Adzopé', 'Alépé', 'Bondoukou', 'Tanda', 'Bouna', 'Nassian', 'Doropo', 'Téhini', 'Ferkessédougou', 'Boundiali', 'Odienné', 'Minignan', 'Samatiguila', 'Touba', 'Biankouma', 'Danané', 'Bangolo', 'Duékoué', 'Guiglo', 'Toulepleu', 'Tabou', 'Soubré', 'Méagui', 'Buyo', 'Issia', 'Sinfra', 'Oumé', 'Lakota'],
     exchangeRate: 600,
     coordinates: { lat: 7.5399, lng: -5.5471, zoom: 6 }
   },
@@ -33,7 +33,7 @@ export const africanCountries: Country[] = [
     name: 'Guinée',
     flag: '🇬🇳',
     currency: { code: 'GNF', symbol: 'FG', name: 'Franc guinéen' },
-    cities: ['Conakry', 'Kankan', 'Labé', 'Kindia', 'Nzérékoré', 'Boké'],
+    cities: ['Conakry', 'Kankan', 'Labé', 'Nzérékoré', 'Kindia', 'Mamou', 'Boké', 'Faranah', 'Kissidougou', 'Guéckédou', 'Siguiri', 'Kouroussa', 'Mandiana', 'Dabola', 'Dinguiraye', 'Télimélé', 'Gaoual', 'Koundara', 'Mali-ville', 'Tougué', 'Koubia', 'Lélouma', 'Pita', 'Dalaba', 'Macenta', 'Yomou', 'Lola', 'Beyla', 'Kerouané', 'Coyah', 'Forécariah', 'Boffa', 'Fria', 'Sangarédi', 'Kamsar'],
     exchangeRate: 8600,
     coordinates: { lat: 9.9456, lng: -9.6966, zoom: 6 }
   },
@@ -42,7 +42,7 @@ export const africanCountries: Country[] = [
     name: 'Sénégal',
     flag: '🇸🇳',
     currency: { code: 'XOF', symbol: 'FCFA', name: 'Franc CFA' },
-    cities: ['Dakar', 'Thiès', 'Kaolack', 'Saint-Louis', 'Ziguinchor', 'Tambacounda'],
+    cities: ['Dakar', 'Thiès', 'Kaolack', 'Ziguinchor', 'Saint-Louis', 'Tambacounda', 'Mbour', 'Diourbel', 'Louga', 'Kolda', 'Rufisque', 'Pikine', 'Guédiawaye', 'Touba', 'Fatick', 'Sédhiou', 'Kédougou', 'Matam', 'Kaffrine', 'Linguère', 'Podor', 'Dagana', 'Richard-Toll', 'Bakel', 'Saraya', 'Vélingara', 'Bignona', 'Oussouye', 'Foundiougne', 'Gossas', 'Sokone', 'Bambey', 'Mbacké'],
     exchangeRate: 600,
     coordinates: { lat: 14.6928, lng: -14.6043, zoom: 6 }
   },
@@ -51,7 +51,7 @@ export const africanCountries: Country[] = [
     name: 'Maroc',
     flag: '🇲🇦',
     currency: { code: 'MAD', symbol: 'DH', name: 'Dirham marocain' },
-    cities: ['Casablanca', 'Rabat', 'Marrakech', 'Fès', 'Tanger', 'Agadir'],
+    cities: ['Casablanca', 'Rabat', 'Fès', 'Marrakech', 'Agadir', 'Tanger', 'Meknès', 'Oujda', 'Kenitra', 'Tétouan', 'Safi', 'Mohammedia', 'Khouribga', 'El Jadida', 'Béni Mellal', 'Nador', 'Taza', 'Settat', 'Larache', 'Ksar el-Kebir', 'Sale', 'Berrechid', 'Khemisset', 'Inezgane', 'Ouarzazate', 'Sidi Kacem', 'Taourirt', 'Berkane', 'Sidi Slimane', 'Errachidia', 'Guelmim', 'Ait Melloul', 'Laayoune', 'Tiznit', 'Taroudant'],
     exchangeRate: 10.2,
     coordinates: { lat: 31.7917, lng: -7.0926, zoom: 5 }
   },
@@ -60,7 +60,7 @@ export const africanCountries: Country[] = [
     name: 'Nigeria',
     flag: '🇳🇬',
     currency: { code: 'NGN', symbol: '₦', name: 'Naira' },
-    cities: ['Lagos', 'Abuja', 'Kano', 'Ibadan', 'Port Harcourt', 'Kaduna'],
+    cities: ['Lagos', 'Abuja', 'Kano', 'Ibadan', 'Kaduna', 'Port Harcourt', 'Benin City', 'Maiduguri', 'Zaria', 'Aba', 'Jos', 'Ilorin', 'Oyo', 'Enugu', 'Abeokuta', 'Ogbomoso', 'Sokoto', 'Onitsha', 'Warri', 'Okene', 'Calabar', 'Uyo', 'Abakaliki', 'Bauchi', 'Akure', 'Makurdi', 'Lafia', 'Gombe', 'Umuahia', 'Osogbo', 'Ado-Ekiti', 'Lokoja', 'Awka', 'Owerri', 'Asaba', 'Jalingo', 'Yenagoa', 'Dutse', 'Gusau', 'Birnin Kebbi'],
     exchangeRate: 750,
     coordinates: { lat: 9.0765, lng: 7.3986, zoom: 5 }
   },
@@ -69,7 +69,7 @@ export const africanCountries: Country[] = [
     name: 'Ghana',
     flag: '🇬🇭',
     currency: { code: 'GHS', symbol: '₵', name: 'Cedi ghanéen' },
-    cities: ['Accra', 'Kumasi', 'Tamale', 'Cape Coast', 'Sekondi-Takoradi', 'Sunyani'],
+    cities: ['Accra', 'Kumasi', 'Tamale', 'Sekondi-Takoradi', 'Cape Coast', 'Tema', 'Ho', 'Koforidua', 'Sunyani', 'Wa', 'Techiman', 'Obuasi', 'Tarkwa', 'Prestea', 'Axim', 'Half Assini', 'Elubo', 'Nkroful', 'Elmina', 'Winneba', 'Kasoa', 'Swedru', 'Saltpond', 'Agona Swedru', 'Dunkwa-on-Offin', 'Oduponkpehe', 'Oda', 'Akim Oda', 'Kibi', 'Nkawkaw', 'Mpraeso', 'Abetifi', 'Begoro', 'Somanya', 'Akuse'],
     exchangeRate: 12,
     coordinates: { lat: 7.9465, lng: -1.0232, zoom: 6 }
   },
@@ -78,7 +78,7 @@ export const africanCountries: Country[] = [
     name: 'Kenya',
     flag: '🇰🇪',
     currency: { code: 'KES', symbol: 'KSh', name: 'Shilling kenyan' },
-    cities: ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Thika'],
+    cities: ['Nairobi', 'Mombasa', 'Nakuru', 'Eldoret', 'Kisumu', 'Thika', 'Malindi', 'Kitale', 'Garissa', 'Kakamega', 'Machakos', 'Meru', 'Nyeri', 'Kericho', 'Embu', 'Migori', 'Homa Bay', 'Kilifi', 'Isiolo', 'Nanyuki', 'Voi', 'Bungoma', 'Siaya', 'Kitui', 'Kabarnet', 'Kapenguria', 'Maralal', 'Marsabit', 'Moyale', 'Lodwar', 'Lokichoggio', 'Mandera', 'Wajir', 'El Wak', 'Takaba'],
     exchangeRate: 150,
     coordinates: { lat: -0.0236, lng: 37.9062, zoom: 6 }
   },
@@ -87,7 +87,7 @@ export const africanCountries: Country[] = [
     name: 'Afrique du Sud',
     flag: '🇿🇦',
     currency: { code: 'ZAR', symbol: 'R', name: 'Rand sud-africain' },
-    cities: ['Johannesburg', 'Cape Town', 'Durban', 'Pretoria', 'Port Elizabeth', 'Bloemfontein'],
+    cities: ['Johannesburg', 'Cape Town', 'Durban', 'Pretoria', 'Port Elizabeth', 'Pietermaritzburg', 'Benoni', 'Tembisa', 'East London', 'Vereeniging', 'Bloemfontein', 'Boksburg', 'Welkom', 'Newcastle', 'Krugersdorp', 'Diepsloot', 'Botshabelo', 'Brakpan', 'Witbank', 'Oberholzer', 'Centurion', 'Springer', 'Klerksdorp', 'Midrand', 'Roodepoort', 'Uitenhage', 'Polokwane', 'Potchefstroom', 'Carletonville', 'Rustenburg'],
     exchangeRate: 18.5,
     coordinates: { lat: -30.5595, lng: 22.9375, zoom: 5 }
   },
@@ -96,7 +96,7 @@ export const africanCountries: Country[] = [
     name: 'Tunisie',
     flag: '🇹🇳',
     currency: { code: 'TND', symbol: 'DT', name: 'Dinar tunisien' },
-    cities: ['Tunis', 'Sfax', 'Sousse', 'Kairouan', 'Bizerte', 'Gabès'],
+    cities: ['Tunis', 'Sfax', 'Sousse', 'Kairouan', 'Bizerte', 'Gabès', 'Ariana', 'Gafsa', 'Monastir', 'Ben Arous', 'Kasserine', 'Médenine', 'Nabeul', 'Tataouine', 'Beja', 'Jendouba', 'Mahdia', 'Siliana', 'Manouba', 'Zaghouan', 'Tozeur', 'Kebili', 'Sidi Bouzid', 'Kef', 'Hammamet', 'Djerba', 'Zarzis', 'Korba', 'Grombalia', 'Soliman'],
     exchangeRate: 3.1,
     coordinates: { lat: 33.8869, lng: 9.5375, zoom: 6 }
   },
@@ -105,7 +105,7 @@ export const africanCountries: Country[] = [
     name: 'Égypte',
     flag: '🇪🇬',
     currency: { code: 'EGP', symbol: 'LE', name: 'Livre égyptienne' },
-    cities: ['Le Caire', 'Alexandrie', 'Gizeh', 'Sharm el-Sheikh', 'Hurghada', 'Louxor'],
+    cities: ['Le Caire', 'Alexandrie', 'Gizeh', 'Shubra el-Kheima', 'Port-Saïd', 'Suez', 'Luxor', 'al-Mahalla al-Kubra', 'Mansourah', 'Tanta', 'Assiout', 'Ismaïlia', 'Fayyoum', 'Zagazig', 'Assouan', 'Damiette', 'al-Minya', 'Damanhur', 'Beni Suef', 'Hurghada', 'Qena', 'Sohag', 'Shibin al-Kom', 'Banha', 'Kafr el-Sheikh', 'Arish', 'Mallawi', '10th of Ramadan City', 'Bilbays', 'Marsa Matruh'],
     exchangeRate: 31,
     coordinates: { lat: 26.8206, lng: 30.8025, zoom: 5 }
   },
@@ -114,7 +114,7 @@ export const africanCountries: Country[] = [
     name: 'Cameroun',
     flag: '🇨🇲',
     currency: { code: 'XAF', symbol: 'FCFA', name: 'Franc CFA Central' },
-    cities: ['Douala', 'Yaoundé', 'Bamenda', 'Bafoussam', 'Garoua', 'Maroua'],
+    cities: ['Yaoundé', 'Douala', 'Garoua', 'Bafoussam', 'Bamenda', 'Maroua', 'Nkongsamba', 'Bertoua', 'Loum', 'Kumba', 'Edéa', 'Foumban', 'Ebolowa', 'Kribi', 'Limbe', 'Dschang', 'Mbouda', 'Bafang', 'Bandjoun', 'Baham', 'Bangangté', 'Manjo', 'Mbanga', 'Penja', 'Njombé', 'Kekem', 'Foumbot', 'Koutaba', 'Galim', 'Magba'],
     exchangeRate: 600,
     coordinates: { lat: 7.3697, lng: 12.3547, zoom: 6 }
   },
@@ -123,7 +123,7 @@ export const africanCountries: Country[] = [
     name: 'Rwanda',
     flag: '🇷🇼',
     currency: { code: 'RWF', symbol: 'FRw', name: 'Franc rwandais' },
-    cities: ['Kigali', 'Butare', 'Gitarama', 'Ruhengeri', 'Gisenyi', 'Byumba'],
+    cities: ['Kigali', 'Butare', 'Gitarama', 'Ruhengeri', 'Gisenyi', 'Byumba', 'Cyangugu', 'Kibungo', 'Kibuye', 'Gikongoro', 'Umutara', 'Kigoma', 'Nyanza', 'Muhanga', 'Musanze', 'Rubavu', 'Nyagatare', 'Kayonza', 'Rusizi', 'Karongi', 'Nyaruguru', 'Gicumbi', 'Rulindo', 'Gakenke', 'Burera'],
     exchangeRate: 1250,
     coordinates: { lat: -1.9403, lng: 29.8739, zoom: 8 }
   },
@@ -132,7 +132,7 @@ export const africanCountries: Country[] = [
     name: 'Éthiopie',
     flag: '🇪🇹',
     currency: { code: 'ETB', symbol: 'Br', name: 'Birr éthiopien' },
-    cities: ['Addis-Abeba', 'Dire Dawa', 'Mek\'ele', 'Gondar', 'Awasa', 'Bahir Dar'],
+    cities: ['Addis-Abeba', 'Dire Dawa', 'Mekelle', 'Gondar', 'Adama', 'Awasa', 'Bahir Dar', 'Dessie', 'Jimma', 'Jijiga', 'Shashamane', 'Bishoftu', 'Sodo', 'Arba Minch', 'Hosaena', 'Harar', 'Dilla', 'Nekemte', 'Debre Markos', 'Adigrat', 'Aksum', 'Shire', 'Alamata', 'Wukro', 'Maychew', 'Korem', 'Lalibela', 'Debre Tabor', 'Finote Selam', 'Injibara'],
     exchangeRate: 55,
     coordinates: { lat: 9.1450, lng: 40.4897, zoom: 5 }
   },
@@ -141,7 +141,7 @@ export const africanCountries: Country[] = [
     name: 'Tanzanie',
     flag: '🇹🇿',
     currency: { code: 'TZS', symbol: 'TSh', name: 'Shilling tanzanien' },
-    cities: ['Dar es Salaam', 'Dodoma', 'Mwanza', 'Arusha', 'Mbeya', 'Morogoro'],
+    cities: ['Dar es Salaam', 'Mwanza', 'Arusha', 'Dodoma', 'Mbeya', 'Morogoro', 'Tanga', 'Kahama', 'Tabora', 'Zanzibar City', 'Kigoma', 'Sumbawanga', 'Kasulu', 'Musoma', 'Shinyanga', 'Iringa', 'Singida', 'Njombe', 'Bukoba', 'Mtwara', 'Lindi', 'Songea', 'Mpanda', 'Makete', 'Kyela', 'Mbozi', 'Rungwe', 'Mbarali', 'Kilosa', 'Mvomero'],
     exchangeRate: 2500,
     coordinates: { lat: -6.3690, lng: 34.8888, zoom: 5 }
   },
@@ -150,9 +150,54 @@ export const africanCountries: Country[] = [
     name: 'Ouganda',
     flag: '🇺🇬',
     currency: { code: 'UGX', symbol: 'USh', name: 'Shilling ougandais' },
-    cities: ['Kampala', 'Gulu', 'Lira', 'Mbarara', 'Jinja', 'Mbale'],
+    cities: ['Kampala', 'Gulu', 'Lira', 'Mbarara', 'Jinja', 'Bwizibwera', 'Mbale', 'Mukono', 'Kasese', 'Masaka', 'Entebbe', 'Njeru', 'Kitgum', 'Arua', 'Koboko', 'Yumbe', 'Moyo', 'Adjumani', 'Nebbi', 'Pakwach', 'Masindi', 'Hoima', 'Kibaale', 'Kyenjojo', 'Kabarole', 'Bundibugyo', 'Ntoroko', 'Kamwenge', 'Ibanda', 'Kiruhura'],
     exchangeRate: 3750,
     coordinates: { lat: 1.3733, lng: 32.2903, zoom: 6 }
+  },
+  {
+    code: 'dz',
+    name: 'Algérie',
+    flag: '🇩🇿',
+    currency: { code: 'DZD', symbol: 'DA', name: 'Dinar algérien' },
+    cities: ['Alger', 'Oran', 'Constantine', 'Batna', 'Djelfa', 'Sétif', 'Annaba', 'Sidi Bel Abbès', 'Biskra', 'Témouchent', 'Tébessa', 'El Oued', 'Skikda', 'Tiaret', 'Béjaïa', 'Tlemcen', 'Ouargla', 'Blida', 'Jijel', 'Relizane', 'Médéa', 'Tindouf', 'Mascara', 'Oum el-Bouaghi', 'El Bayadh', 'Bordj Bou Arréridj', 'Chlef', 'Laghouat', 'Souk Ahras', 'Bouïra'],
+    exchangeRate: 134,
+    coordinates: { lat: 28.0339, lng: 1.6596, zoom: 5 }
+  },
+  {
+    code: 'ly',
+    name: 'Libye',
+    flag: '🇱🇾',
+    currency: { code: 'LYD', symbol: 'LD', name: 'Dinar libyen' },
+    cities: ['Tripoli', 'Benghazi', 'Misratah', 'Tarhuna', 'al-Bayda', 'Zawiya', 'Zuwara', 'Ajdabiya', 'Tobrouk', 'Sabha', 'Sirte', 'al-Marj', 'Ubari', 'Ghat', 'Murzuq', 'Hun', 'Bani Walid', 'Yafran', 'Nalut', 'Gharyan', 'al-Khums', 'Zliten', 'Derna', 'Shahat', 'Qaminis', 'al-Abyar', 'Tocra', 'Cyrène', 'Apollonia', 'Taucheira'],
+    exchangeRate: 4.8,
+    coordinates: { lat: 26.3351, lng: 17.2283, zoom: 5 }
+  },
+  {
+    code: 'ml',
+    name: 'Mali',
+    flag: '🇲🇱',
+    currency: { code: 'XOF', symbol: 'FCFA', name: 'Franc CFA' },
+    cities: ['Bamako', 'Sikasso', 'Mopti', 'Koutiala', 'Kayes', 'Ségou', 'Gao', 'Kidal', 'Tombouctou', 'Djenné', 'Kati', 'Kolokani', 'Niono', 'San', 'Bandiagara', 'Douentza', 'Youwarou', 'Ténenkou', 'Niafunké', 'Gourma-Rharous', 'Ansongo', 'Bourem', 'Ménaka', 'Tessalit', 'Aguelhok', 'Abeibara', 'Tin-Essako', 'Koulikoro', 'Kangaba', 'Yanfolila'],
+    exchangeRate: 600,
+    coordinates: { lat: 17.5707, lng: -3.9962, zoom: 5 }
+  },
+  {
+    code: 'bf',
+    name: 'Burkina Faso',
+    flag: '🇧🇫',
+    currency: { code: 'XOF', symbol: 'FCFA', name: 'Franc CFA' },
+    cities: ['Ouagadougou', 'Bobo-Dioulasso', 'Koudougou', 'Ouahigouya', 'Banfora', 'Kaya', 'Tenkodogo', 'Dori', 'Gaoua', 'Ziniaré', 'Réo', 'Manga', 'Zabré', 'Pouytenga', 'Garango', 'Bittou', 'Fada N\'Gourma', 'Diapaga', 'Bogandé', 'Diébougou', 'Batié', 'Dissin', 'Sindou', 'Orodara', 'Solenzo', 'Nouna', 'Dédougou', 'Boromo', 'Houndé', 'Safané'],
+    exchangeRate: 600,
+    coordinates: { lat: 12.2383, lng: -1.5616, zoom: 6 }
+  },
+  {
+    code: 'ne',
+    name: 'Niger',
+    flag: '🇳🇪',
+    currency: { code: 'XOF', symbol: 'FCFA', name: 'Franc CFA' },
+    cities: ['Niamey', 'Zinder', 'Maradi', 'Tahoua', 'Agadez', 'Arlit', 'Dosso', 'Tillabéri', 'Diffa', 'Nguigmi', 'Mayahi', 'Tessaoua', 'Aguié', 'Dakoro', 'Guidan Roumji', 'Madarounfa', 'Tibiri', 'Bouza', 'Keïta', 'Madaoua', 'Malbaza', 'Illéla', 'Konni', 'Birni N\'Konni', 'Abalak', 'Tchintabaraden', 'Ingall', 'Tassara', 'Bilma', 'N\'Gourti'],
+    exchangeRate: 600,
+    coordinates: { lat: 17.6078, lng: 8.0817, zoom: 5 }
   }
 ];
 
