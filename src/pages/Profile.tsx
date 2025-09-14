@@ -57,6 +57,7 @@ const Profile = () => {
   const { favorites, fetchFavorites } = useFavorites();
   const [favoriteListings, setFavoriteListings] = useState<any[]>([]);
   const [loadingFavorites, setLoadingFavorites] = useState(false);
+  const [activeTab, setActiveTab] = useState('profile');
   const [contactForm, setContactForm] = useState({
     full_name: '',
     phone: '',
@@ -301,7 +302,7 @@ const Profile = () => {
       <Header />
       
       <main className="flex-1 container mx-auto px-4 py-6 pb-20 animate-fade-in">
-        <Tabs defaultValue="profile" className="space-y-6">
+        <Tabs defaultValue="profile" className="space-y-6" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="profile">Profil</TabsTrigger>
             <TabsTrigger value="properties">Mes biens</TabsTrigger>
@@ -391,8 +392,16 @@ const Profile = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {userStats.map((stat, index) => {
                 const Icon = stat.icon;
+                const isClickable = stat.label === "Propriétés publiées" || stat.label === "Favoris";
+                const tabValue = stat.label === "Propriétés publiées" ? "properties" : stat.label === "Favoris" ? "favorites" : null;
+                
                 return (
-                  <Card key={stat.label} className="animate-scale-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <Card 
+                    key={stat.label} 
+                    className={`animate-scale-in ${isClickable ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`}
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                    onClick={() => isClickable && tabValue && setActiveTab(tabValue)}
+                  >
                     <CardContent className="p-4 text-center">
                       <Icon className="w-6 h-6 mx-auto mb-2 text-primary" />
                       <div className="text-2xl font-bold text-primary">{stat.value}</div>
