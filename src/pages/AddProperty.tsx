@@ -316,29 +316,42 @@ const AddProperty = () => {
               <div className="space-y-6 animate-fade-in">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="space-y-2">
-                    <Label>Chambres</Label>
+                    <Label>{transactionType === "commercial" ? "Pièces/Espaces" : "Chambres"}</Label>
                     <Select>
                       <SelectTrigger>
-                        <SelectValue placeholder="0" />
+                        <SelectValue placeholder={transactionType === "commercial" ? "Nombre" : "0"} />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0">Studio</SelectItem>
-                        <SelectItem value="1">1</SelectItem>
-                        <SelectItem value="2">2</SelectItem>
-                        <SelectItem value="3">3</SelectItem>
-                        <SelectItem value="4">4</SelectItem>
-                        <SelectItem value="5">5+</SelectItem>
+                      <SelectContent className="bg-background border shadow-lg z-50">
+                        {transactionType === "commercial" ? (
+                          <>
+                            <SelectItem value="1">1 pièce</SelectItem>
+                            <SelectItem value="2">2 pièces</SelectItem>
+                            <SelectItem value="3">3 pièces</SelectItem>
+                            <SelectItem value="4">4 pièces</SelectItem>
+                            <SelectItem value="5">5 pièces</SelectItem>
+                            <SelectItem value="6">6+ pièces</SelectItem>
+                          </>
+                        ) : (
+                          <>
+                            <SelectItem value="0">Studio</SelectItem>
+                            <SelectItem value="1">1</SelectItem>
+                            <SelectItem value="2">2</SelectItem>
+                            <SelectItem value="3">3</SelectItem>
+                            <SelectItem value="4">4</SelectItem>
+                            <SelectItem value="5">5+</SelectItem>
+                          </>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Salles de bain</Label>
+                    <Label>{transactionType === "commercial" ? "Sanitaires" : "Salles de bain"}</Label>
                     <Select>
                       <SelectTrigger>
                         <SelectValue placeholder="1" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background border shadow-lg z-50">
                         <SelectItem value="1">1</SelectItem>
                         <SelectItem value="2">2</SelectItem>
                         <SelectItem value="3">3</SelectItem>
