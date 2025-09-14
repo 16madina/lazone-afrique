@@ -131,10 +131,10 @@ const HeroSection = () => {
                   </div>
                 </div>
                 <div className="p-3">
-                  <h4 className="font-semibold text-sm mb-1">Villa Moderne Cocody</h4>
+                  <h4 className="font-semibold text-xs mb-1">Villa Moderne Cocody</h4>
                   <p className="text-xs text-muted-foreground mb-2">Cocody, Abidjan</p>
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-primary text-sm">85M FCFA</span>
+                    <span className="font-bold text-primary text-xs">85M FCFA</span>
                     <span className="text-xs text-muted-foreground">4ch • 3sdb</span>
                   </div>
                 </div>
@@ -153,10 +153,10 @@ const HeroSection = () => {
                   </div>
                 </div>
                 <div className="p-3">
-                  <h4 className="font-semibold text-sm mb-1">Appartement Haut Standing</h4>
+                  <h4 className="font-semibold text-xs mb-1">Appartement Haut Standing</h4>
                   <p className="text-xs text-muted-foreground mb-2">Plateau, Abidjan</p>
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-primary text-sm">45M FCFA</span>
+                    <span className="font-bold text-primary text-xs">45M FCFA</span>
                     <span className="text-xs text-muted-foreground">3ch • 2sdb</span>
                   </div>
                 </div>
@@ -175,10 +175,10 @@ const HeroSection = () => {
                   </div>
                 </div>
                 <div className="p-3">
-                  <h4 className="font-semibold text-sm mb-1">Terrain Titre Foncier</h4>
+                  <h4 className="font-semibold text-xs mb-1">Terrain Titre Foncier</h4>
                   <p className="text-xs text-muted-foreground mb-2">Bingerville</p>
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-primary text-sm">25M FCFA</span>
+                    <span className="font-bold text-primary text-xs">25M FCFA</span>
                     <span className="text-xs text-muted-foreground">500m²</span>
                   </div>
                 </div>
