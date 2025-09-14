@@ -5,6 +5,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useCountry } from "@/contexts/CountryContext";
 import { Search, MapPin, Filter } from "lucide-react";
 import heroImage from "@/assets/hero-african-villa.jpg";
+import propertyHouse from "@/assets/property-house.jpg";
+import propertyApartment from "@/assets/property-apartment.jpg";
+import propertyLand from "@/assets/property-land.jpg";
 
 const HeroSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -119,7 +122,7 @@ const HeroSection = () => {
               <div className="bg-background/95 backdrop-blur-sm rounded-xl overflow-hidden shadow-warm hover:scale-105 transition-transform duration-300">
                 <div className="relative h-32 w-full">
                   <img 
-                    src="/placeholder.svg" 
+                    src={propertyHouse} 
                     alt="Villa moderne Cocody"
                     className="w-full h-full object-cover"
                   />
@@ -141,7 +144,7 @@ const HeroSection = () => {
               <div className="bg-background/95 backdrop-blur-sm rounded-xl overflow-hidden shadow-warm hover:scale-105 transition-transform duration-300">
                 <div className="relative h-32 w-full">
                   <img 
-                    src="/placeholder.svg" 
+                    src={propertyApartment} 
                     alt="Appartement Plateau"
                     className="w-full h-full object-cover"
                   />
@@ -163,7 +166,7 @@ const HeroSection = () => {
               <div className="bg-background/95 backdrop-blur-sm rounded-xl overflow-hidden shadow-warm hover:scale-105 transition-transform duration-300">
                 <div className="relative h-32 w-full">
                   <img 
-                    src="/placeholder.svg" 
+                    src={propertyLand} 
                     alt="Terrain Bingerville"
                     className="w-full h-full object-cover"
                   />
