@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
 import MapboxMap from "@/components/MapboxMap";
+import { useCountry } from "@/contexts/CountryContext";
 
 interface Listing {
   id: string;
@@ -26,8 +27,20 @@ const Map = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [listings, setListings] = useState<Listing[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const { selectedCountry } = useCountry();
 
   console.log("Map component rendering, listings count:", listings.length);
+
+  // Filtrer les villes en fonction de la recherche
+  const filteredCities = selectedCountry.cities.filter(city =>
+    city.toLowerCase().startsWith(searchQuery.toLowerCase()) && searchQuery.length > 0
+  );
+
+  const handleCitySelect = (city: string) => {
+    setSearchQuery(city);
+    setShowSuggestions(false);
+  };
 
   // Fetch listings from Supabase
   useEffect(() => {
@@ -69,9 +82,33 @@ const Map = () => {
                 <Input
                   placeholder="Rechercher une zone..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                   className="pl-10"
                 />
+                
+                {/* Suggestions de villes */}
+                {showSuggestions && filteredCities.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg max-h-40 overflow-y-auto z-20">
+                    {filteredCities.map((city, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleCitySelect(city)}
+                        className="w-full text-left px-4 py-2 hover:bg-muted transition-colors text-sm"
+                      >
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-3 h-3 text-muted-foreground" />
+                          <span>{city}</span>
+                          <span className="text-xs text-muted-foreground ml-auto">{selectedCountry.flag}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
               <Button 
                 variant="outline" 

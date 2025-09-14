@@ -70,9 +70,10 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
-      center: [0, 0], // Centre de l'Afrique
-      zoom: 2.5,
+      center: [15, 0], // Centre de l'Afrique
+      zoom: 3,
       pitch: 0,
+      maxBounds: [[-30, -40], [60, 40]], // Limiter aux coordonnées de l'Afrique
     });
 
     // Ajouter les contrôles de navigation
@@ -100,10 +101,10 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
           <div style="
             background: #0E7490;
             color: white;
-            padding: 8px 12px;
-            border-radius: 25px;
-            font-size: 13px;
-            font-weight: 700;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
             box-shadow: 0 4px 15px rgba(14,116,144,0.4);
             white-space: nowrap;
             cursor: pointer;
