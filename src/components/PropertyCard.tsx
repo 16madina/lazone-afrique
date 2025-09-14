@@ -46,7 +46,7 @@ const PropertyCard = ({
   isSponsored = false,
   isFavorite = false
 }: PropertyCardProps) => {
-  const { formatPrice, selectedCountry } = useCountry();
+  const { formatLocalPrice, selectedCountry } = useCountry();
   const navigate = useNavigate();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -203,7 +203,7 @@ const PropertyCard = ({
           </h3>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <p className="text-2xl font-bold text-primary">{formatPrice(priceUSD)}</p>
+              <p className="text-2xl font-bold text-primary">{formatLocalPrice(priceUSD)}</p>
               {type === "rent" && (
                 <span className="text-sm text-muted-foreground">/mois</span>
               )}

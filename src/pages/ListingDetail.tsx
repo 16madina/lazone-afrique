@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCountry } from "@/contexts/CountryContext";
 import { useRealTimeMessages } from "@/hooks/useRealTimeMessages";
 import { ArrowLeft, MapPin, Calendar, Phone, MessageCircle, ChevronLeft, ChevronRight, Play, Send } from "lucide-react";
 import { toast } from "sonner";
@@ -36,7 +35,6 @@ const ListingDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { formatPrice: formatCurrencyPrice } = useCountry();
   const [listing, setListing] = useState<ListingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -90,7 +88,9 @@ const ListingDetail = () => {
     fetchListing();
   }, [id]);
 
-  // Removed local formatPrice function - using country context instead
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
@@ -348,7 +348,7 @@ const ListingDetail = () => {
               </div>
 
               <div className="text-3xl font-bold text-primary">
-                {formatCurrencyPrice(listing.price)}
+                {formatPrice(listing.price)}
               </div>
 
               {listing.description && (
