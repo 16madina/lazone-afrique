@@ -213,6 +213,28 @@ const AddProperty = () => {
       const photoUrls = uploadedPhotos.map(photo => photo.url);
       const videoUrl = uploadedVideo?.url || null;
 
+      // Get real coordinates for the city using geocoding
+      console.log(`Geocoding city: ${formData.city}, ${selectedCountry.code}`);
+      const { data: geocodeData, error: geocodeError } = await supabase.functions.invoke('geocode-city', {
+        body: {
+          city: formData.city,
+          countryCode: selectedCountry.code
+        }
+      });
+
+      let coordinates = { lat: 5.3364, lng: -4.0267 }; // Fallback to Abidjan
+      
+      if (geocodeError) {
+        console.error('Geocoding error:', geocodeError);
+        toast.error("Impossible de géolocaliser la ville, coordonnées par défaut utilisées");
+      } else if (geocodeData) {
+        coordinates = { lat: geocodeData.lat, lng: geocodeData.lng };
+        if (!geocodeData.foundExact) {
+          toast.error("Ville non trouvée, coordonnées approximatives utilisées");
+        }
+        console.log(`Coordinates found: ${coordinates.lat}, ${coordinates.lng}`);
+      }
+
       // Prepare data for insertion
       const insertData: any = {
         title: formData.title,
@@ -221,8 +243,8 @@ const AddProperty = () => {
         city: formData.city,
         country_code: selectedCountry.code.toUpperCase(),
         user_id: user.id,
-        lat: 5.3364, // Default coordinates for Abidjan - can be enhanced later
-        lng: -4.0267,
+        lat: coordinates.lat,
+        lng: coordinates.lng,
         photos: photoUrls,
         video_url: videoUrl,
         status: 'published',
