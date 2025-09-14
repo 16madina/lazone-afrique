@@ -597,8 +597,8 @@ const Profile = () => {
                     bathrooms={property.bathrooms}
                     surface={property.surface_area}
                     agent={{
-                      name: property.profiles?.full_name || 'Agent',
-                      type: property.profiles?.user_type || 'individual',
+                      name: 'Agent',
+                      type: 'individual',
                       rating: 4.5,
                       verified: true
                     }}
