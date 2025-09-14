@@ -3,6 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './mapbox-styles.css';
 import { supabase } from '@/integrations/supabase/client';
+import { useCountry } from '@/contexts/CountryContext';
 
 interface Listing {
   id: string;
@@ -34,6 +35,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { selectedCountry } = useCountry();
 
   // Récupérer le token Mapbox depuis l'edge function
   useEffect(() => {
@@ -253,6 +255,18 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
       map.current?.remove();
     };
   }, [mapboxToken, listings]);
+
+  // Navigate to selected country when it changes
+  useEffect(() => {
+    if (map.current) {
+      const { lat, lng, zoom } = selectedCountry.coordinates;
+      map.current.flyTo({
+        center: [lng, lat],
+        zoom: zoom,
+        duration: 2000 // Animation duration in milliseconds
+      });
+    }
+  }, [selectedCountry]);
 
   if (loading) {
     return (

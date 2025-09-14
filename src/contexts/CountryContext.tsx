@@ -11,6 +11,11 @@ export interface Country {
   };
   cities: string[];
   exchangeRate: number; // Taux par rapport au USD pour conversion
+  coordinates: {
+    lat: number;
+    lng: number;
+    zoom: number;
+  };
 }
 
 export const africanCountries: Country[] = [
@@ -20,7 +25,8 @@ export const africanCountries: Country[] = [
     flag: '🇨🇮',
     currency: { code: 'XOF', symbol: 'FCFA', name: 'Franc CFA' },
     cities: ['Abidjan', 'Bouaké', 'Yamoussoukro', 'San-Pédro', 'Korhogo', 'Daloa'],
-    exchangeRate: 600
+    exchangeRate: 600,
+    coordinates: { lat: 7.5399, lng: -5.5471, zoom: 6 }
   },
   {
     code: 'gn',
@@ -28,7 +34,8 @@ export const africanCountries: Country[] = [
     flag: '🇬🇳',
     currency: { code: 'GNF', symbol: 'FG', name: 'Franc guinéen' },
     cities: ['Conakry', 'Kankan', 'Labé', 'Kindia', 'Nzérékoré', 'Boké'],
-    exchangeRate: 8600
+    exchangeRate: 8600,
+    coordinates: { lat: 9.9456, lng: -9.6966, zoom: 6 }
   },
   {
     code: 'sn',
@@ -36,7 +43,8 @@ export const africanCountries: Country[] = [
     flag: '🇸🇳',
     currency: { code: 'XOF', symbol: 'FCFA', name: 'Franc CFA' },
     cities: ['Dakar', 'Thiès', 'Kaolack', 'Saint-Louis', 'Ziguinchor', 'Tambacounda'],
-    exchangeRate: 600
+    exchangeRate: 600,
+    coordinates: { lat: 14.6928, lng: -14.6043, zoom: 6 }
   },
   {
     code: 'ma',
@@ -44,7 +52,8 @@ export const africanCountries: Country[] = [
     flag: '🇲🇦',
     currency: { code: 'MAD', symbol: 'DH', name: 'Dirham marocain' },
     cities: ['Casablanca', 'Rabat', 'Marrakech', 'Fès', 'Tanger', 'Agadir'],
-    exchangeRate: 10.2
+    exchangeRate: 10.2,
+    coordinates: { lat: 31.7917, lng: -7.0926, zoom: 5 }
   },
   {
     code: 'ng',
@@ -52,7 +61,8 @@ export const africanCountries: Country[] = [
     flag: '🇳🇬',
     currency: { code: 'NGN', symbol: '₦', name: 'Naira' },
     cities: ['Lagos', 'Abuja', 'Kano', 'Ibadan', 'Port Harcourt', 'Kaduna'],
-    exchangeRate: 750
+    exchangeRate: 750,
+    coordinates: { lat: 9.0765, lng: 7.3986, zoom: 5 }
   },
   {
     code: 'gh',
@@ -60,7 +70,8 @@ export const africanCountries: Country[] = [
     flag: '🇬🇭',
     currency: { code: 'GHS', symbol: '₵', name: 'Cedi ghanéen' },
     cities: ['Accra', 'Kumasi', 'Tamale', 'Cape Coast', 'Sekondi-Takoradi', 'Sunyani'],
-    exchangeRate: 12
+    exchangeRate: 12,
+    coordinates: { lat: 7.9465, lng: -1.0232, zoom: 6 }
   },
   {
     code: 'ke',
@@ -68,7 +79,8 @@ export const africanCountries: Country[] = [
     flag: '🇰🇪',
     currency: { code: 'KES', symbol: 'KSh', name: 'Shilling kenyan' },
     cities: ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Thika'],
-    exchangeRate: 150
+    exchangeRate: 150,
+    coordinates: { lat: -0.0236, lng: 37.9062, zoom: 6 }
   },
   {
     code: 'za',
@@ -76,7 +88,8 @@ export const africanCountries: Country[] = [
     flag: '🇿🇦',
     currency: { code: 'ZAR', symbol: 'R', name: 'Rand sud-africain' },
     cities: ['Johannesburg', 'Cape Town', 'Durban', 'Pretoria', 'Port Elizabeth', 'Bloemfontein'],
-    exchangeRate: 18.5
+    exchangeRate: 18.5,
+    coordinates: { lat: -30.5595, lng: 22.9375, zoom: 5 }
   },
   {
     code: 'tn',
@@ -84,7 +97,8 @@ export const africanCountries: Country[] = [
     flag: '🇹🇳',
     currency: { code: 'TND', symbol: 'DT', name: 'Dinar tunisien' },
     cities: ['Tunis', 'Sfax', 'Sousse', 'Kairouan', 'Bizerte', 'Gabès'],
-    exchangeRate: 3.1
+    exchangeRate: 3.1,
+    coordinates: { lat: 33.8869, lng: 9.5375, zoom: 6 }
   },
   {
     code: 'eg',
@@ -92,7 +106,8 @@ export const africanCountries: Country[] = [
     flag: '🇪🇬',
     currency: { code: 'EGP', symbol: 'LE', name: 'Livre égyptienne' },
     cities: ['Le Caire', 'Alexandrie', 'Gizeh', 'Sharm el-Sheikh', 'Hurghada', 'Louxor'],
-    exchangeRate: 31
+    exchangeRate: 31,
+    coordinates: { lat: 26.8206, lng: 30.8025, zoom: 5 }
   },
   {
     code: 'cm',
@@ -100,7 +115,8 @@ export const africanCountries: Country[] = [
     flag: '🇨🇲',
     currency: { code: 'XAF', symbol: 'FCFA', name: 'Franc CFA Central' },
     cities: ['Douala', 'Yaoundé', 'Bamenda', 'Bafoussam', 'Garoua', 'Maroua'],
-    exchangeRate: 600
+    exchangeRate: 600,
+    coordinates: { lat: 7.3697, lng: 12.3547, zoom: 6 }
   },
   {
     code: 'rw',
@@ -108,7 +124,8 @@ export const africanCountries: Country[] = [
     flag: '🇷🇼',
     currency: { code: 'RWF', symbol: 'FRw', name: 'Franc rwandais' },
     cities: ['Kigali', 'Butare', 'Gitarama', 'Ruhengeri', 'Gisenyi', 'Byumba'],
-    exchangeRate: 1250
+    exchangeRate: 1250,
+    coordinates: { lat: -1.9403, lng: 29.8739, zoom: 8 }
   },
   {
     code: 'et',
@@ -116,7 +133,8 @@ export const africanCountries: Country[] = [
     flag: '🇪🇹',
     currency: { code: 'ETB', symbol: 'Br', name: 'Birr éthiopien' },
     cities: ['Addis-Abeba', 'Dire Dawa', 'Mek\'ele', 'Gondar', 'Awasa', 'Bahir Dar'],
-    exchangeRate: 55
+    exchangeRate: 55,
+    coordinates: { lat: 9.1450, lng: 40.4897, zoom: 5 }
   },
   {
     code: 'tz',
@@ -124,7 +142,8 @@ export const africanCountries: Country[] = [
     flag: '🇹🇿',
     currency: { code: 'TZS', symbol: 'TSh', name: 'Shilling tanzanien' },
     cities: ['Dar es Salaam', 'Dodoma', 'Mwanza', 'Arusha', 'Mbeya', 'Morogoro'],
-    exchangeRate: 2500
+    exchangeRate: 2500,
+    coordinates: { lat: -6.3690, lng: 34.8888, zoom: 5 }
   },
   {
     code: 'ug',
@@ -132,7 +151,8 @@ export const africanCountries: Country[] = [
     flag: '🇺🇬',
     currency: { code: 'UGX', symbol: 'USh', name: 'Shilling ougandais' },
     cities: ['Kampala', 'Gulu', 'Lira', 'Mbarara', 'Jinja', 'Mbale'],
-    exchangeRate: 3750
+    exchangeRate: 3750,
+    coordinates: { lat: 1.3733, lng: 32.2903, zoom: 6 }
   }
 ];
 
