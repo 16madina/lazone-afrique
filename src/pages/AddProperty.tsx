@@ -20,7 +20,7 @@ import { toast } from "sonner";
 
 const AddProperty = () => {
   const navigate = useNavigate();
-  const { selectedCountry } = useCountry();
+  const { selectedCountry, convertPrice } = useCountry();
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
@@ -133,12 +133,16 @@ const AddProperty = () => {
       const photoUrls = uploadedPhotos.map(photo => photo.url);
       const videoUrl = uploadedVideo?.url || null;
 
+      // Convert price from local currency to USD for storage
+      const priceInLocalCurrency = parseFloat(formData.price);
+      const priceInUSD = Math.round(priceInLocalCurrency / selectedCountry.exchangeRate);
+
       const { data, error } = await supabase
         .from('listings')
         .insert({
           title: formData.title,
           description: formData.description,
-          price: parseFloat(formData.price),
+          price: priceInUSD,
           city: formData.city,
           country_code: selectedCountry.code.toUpperCase(),
           user_id: user.id,
