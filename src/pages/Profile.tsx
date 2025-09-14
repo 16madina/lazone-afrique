@@ -151,15 +151,7 @@ const Profile = () => {
     try {
       const { data, error } = await supabase
         .from('listings')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            user_type,
-            phone,
-            avatar_url
-          )
-        `)
+        .select('*')
         .in('id', favorites)
         .eq('status', 'published');
 
