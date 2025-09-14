@@ -19,7 +19,12 @@ import {
   Ban, 
   CheckCircle, 
   Trash2,
-  Eye
+  Eye,
+  Star,
+  DollarSign,
+  Edit,
+  Plus,
+  Crown
 } from 'lucide-react';
 
 interface User {
@@ -38,10 +43,22 @@ interface Listing {
   price: number;
   user_id: string;
   created_at: string;
+  is_sponsored: boolean;
+  sponsored_until: string | null;
   profiles?: {
     full_name: string;
     email: string;
   } | null;
+}
+
+interface SponsorshipPackage {
+  id: string;
+  name: string;
+  description: string;
+  duration_days: number;
+  price_usd: number;
+  features: string[];
+  is_active: boolean;
 }
 
 const AdminPanel = () => {
@@ -49,10 +66,24 @@ const AdminPanel = () => {
   const { toast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [listings, setListings] = useState<Listing[]>([]);
+  const [packages, setPackages] = useState<SponsorshipPackage[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [emailForm, setEmailForm] = useState({ subject: '', message: '' });
+  const [packageForm, setPackageForm] = useState({
+    id: '',
+    name: '',
+    description: '',
+    duration_days: 7,
+    price_usd: 15,
+    features: [''],
+    is_active: true
+  });
+  const [sponsorForm, setSponsorForm] = useState({
+    listingId: '',
+    duration: 7
+  });
 
   const fetchUsers = async () => {
     try {
@@ -98,9 +129,29 @@ const AdminPanel = () => {
     }
   };
 
+  const fetchPackages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('sponsorship_packages')
+        .select('*')
+        .order('price_usd', { ascending: true });
+
+      if (error) throw error;
+      setPackages(data || []);
+    } catch (error: any) {
+      console.error('Error fetching packages:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les packages',
+        variant: 'destructive'
+      });
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
     fetchListings();
+    fetchPackages();
   }, []);
 
   const performAdminAction = async (action: string, targetUserId?: string, targetListingId?: string, data?: any) => {
@@ -166,6 +217,62 @@ const AdminPanel = () => {
     setSelectedUser(null);
   };
 
+  const handleCreatePackage = async () => {
+    if (!packageForm.name || !packageForm.duration_days || !packageForm.price_usd) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez remplir tous les champs requis',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    await performAdminAction('create_package', undefined, undefined, {
+      name: packageForm.name,
+      description: packageForm.description,
+      duration_days: packageForm.duration_days,
+      price_usd: packageForm.price_usd,
+      features: packageForm.features.filter(f => f.trim() !== '')
+    });
+
+    setPackageForm({
+      id: '',
+      name: '',
+      description: '',
+      duration_days: 7,
+      price_usd: 15,
+      features: [''],
+      is_active: true
+    });
+    fetchPackages();
+  };
+
+  const handleUpdatePackage = async (packageId: string, updates: any) => {
+    await performAdminAction('update_package', undefined, undefined, {
+      packageId,
+      ...updates
+    });
+    fetchPackages();
+  };
+
+  const handleFreeSponsor = async () => {
+    if (!sponsorForm.listingId || !sponsorForm.duration) {
+      toast({
+        title: 'Erreur',
+        description: 'Veuillez sélectionner une annonce et une durée',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    await performAdminAction('free_sponsor', undefined, sponsorForm.listingId, {
+      duration_days: sponsorForm.duration
+    });
+
+    setSponsorForm({ listingId: '', duration: 7 });
+    fetchListings();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2 mb-4">
@@ -174,9 +281,10 @@ const AdminPanel = () => {
       </div>
 
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="users">Utilisateurs</TabsTrigger>
           <TabsTrigger value="listings">Annonces</TabsTrigger>
+          <TabsTrigger value="sponsorship">Sponsoring</TabsTrigger>
           <TabsTrigger value="actions">Actions</TabsTrigger>
         </TabsList>
 
@@ -278,12 +386,20 @@ const AdminPanel = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <h4 className="font-semibold">{listing.title}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {listing.city} • {listing.price.toLocaleString('fr-FR')} FCFA
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Par {listing.profiles?.full_name} • {new Date(listing.created_at).toLocaleDateString('fr-FR')}
-                      </p>
+                       <div className="flex items-center gap-2">
+                         <p className="text-sm text-muted-foreground">
+                           {listing.city} • {listing.price.toLocaleString('fr-FR')} FCFA
+                         </p>
+                         {listing.is_sponsored && listing.sponsored_until && new Date(listing.sponsored_until) > new Date() && (
+                           <Badge variant="default" className="bg-gradient-primary">
+                             <Crown className="w-3 h-3 mr-1" />
+                             Sponsorisée
+                           </Badge>
+                         )}
+                       </div>
+                       <p className="text-xs text-muted-foreground">
+                         Par {listing.profiles?.full_name} • {new Date(listing.created_at).toLocaleDateString('fr-FR')}
+                       </p>
                     </div>
                     <div className="flex gap-2">
                       <Button
@@ -308,6 +424,127 @@ const AdminPanel = () => {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </TabsContent>
+
+        {/* Sponsorship Management */}
+        <TabsContent value="sponsorship" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Package Management */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="w-5 h-5" />
+                  Gestion des packages
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div>
+                    <Label>Nom du package</Label>
+                    <Input
+                      value={packageForm.name}
+                      onChange={(e) => setPackageForm({...packageForm, name: e.target.value})}
+                      placeholder="Ex: Package Premium"
+                    />
+                  </div>
+                  <div>
+                    <Label>Description</Label>
+                    <Textarea
+                      value={packageForm.description}
+                      onChange={(e) => setPackageForm({...packageForm, description: e.target.value})}
+                      placeholder="Description du package"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label>Durée (jours)</Label>
+                      <Input
+                        type="number"
+                        value={packageForm.duration_days}
+                        onChange={(e) => setPackageForm({...packageForm, duration_days: parseInt(e.target.value) || 0})}
+                      />
+                    </div>
+                    <div>
+                      <Label>Prix ($)</Label>
+                      <Input
+                        type="number"
+                        value={packageForm.price_usd}
+                        onChange={(e) => setPackageForm({...packageForm, price_usd: parseFloat(e.target.value) || 0})}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <Button onClick={handleCreatePackage} className="w-full">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Créer le package
+                </Button>
+
+                <div className="space-y-2">
+                  <h4 className="font-medium">Packages existants</h4>
+                  {packages.map((pkg) => (
+                    <div key={pkg.id} className="flex items-center justify-between p-2 border rounded">
+                      <div className="flex-1">
+                        <div className="font-medium">{pkg.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {pkg.duration_days}j • ${pkg.price_usd}
+                        </div>
+                      </div>
+                      <Button
+                        variant={pkg.is_active ? "destructive" : "default"}
+                        size="sm"
+                        onClick={() => handleUpdatePackage(pkg.id, { is_active: !pkg.is_active })}
+                      >
+                        {pkg.is_active ? 'Désactiver' : 'Activer'}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Free Sponsorship */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="w-5 h-5" />
+                  Sponsoring gratuit
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div>
+                    <Label>Annonce à sponsoriser</Label>
+                    <select
+                      className="w-full p-2 border rounded"
+                      value={sponsorForm.listingId}
+                      onChange={(e) => setSponsorForm({...sponsorForm, listingId: e.target.value})}
+                    >
+                      <option value="">Sélectionner une annonce</option>
+                      {listings.map((listing) => (
+                        <option key={listing.id} value={listing.id}>
+                          {listing.title} - {listing.profiles?.full_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <Label>Durée (jours)</Label>
+                    <Input
+                      type="number"
+                      value={sponsorForm.duration}
+                      onChange={(e) => setSponsorForm({...sponsorForm, duration: parseInt(e.target.value) || 0})}
+                      min="1"
+                      max="365"
+                    />
+                  </div>
+                </div>
+                <Button onClick={handleFreeSponsor} className="w-full" disabled={loading}>
+                  <Crown className="w-4 h-4 mr-2" />
+                  Sponsoriser gratuitement
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
 

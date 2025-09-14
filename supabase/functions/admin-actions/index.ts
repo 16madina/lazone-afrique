@@ -8,12 +8,19 @@ const corsHeaders = {
 };
 
 interface AdminActionRequest {
-  action: 'ban_user' | 'unban_user' | 'delete_listing' | 'send_email' | 'send_sms';
+  action: 'ban_user' | 'unban_user' | 'delete_listing' | 'send_email' | 'send_sms' | 'create_package' | 'update_package' | 'free_sponsor';
   targetUserId?: string;
   targetListingId?: string;
   reason?: string;
   message?: string;
   subject?: string;
+  name?: string;
+  description?: string;
+  duration_days?: number;
+  price_usd?: number;
+  features?: string[];
+  packageId?: string;
+  is_active?: boolean;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -51,7 +58,7 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Access denied - Admin privileges required');
     }
 
-    const { action, targetUserId, targetListingId, reason, message, subject }: AdminActionRequest = await req.json();
+    const { action, targetUserId, targetListingId, reason, message, subject, name, description, duration_days, price_usd, features, packageId, is_active }: AdminActionRequest = await req.json();
 
     let result;
 
@@ -135,6 +142,62 @@ const handler = async (req: Request): Promise<Response> => {
         // SMS functionality would require additional service integration
         // For now, we'll log it as an action but not actually send SMS
         result = { success: true, note: 'SMS functionality not implemented yet' };
+        break;
+
+      case 'create_package':
+        if (!name || !duration_days || !price_usd) {
+          throw new Error('Name, duration_days, and price_usd required');
+        }
+
+        result = await supabase
+          .from('sponsorship_packages')
+          .insert({
+            name,
+            description: description || '',
+            duration_days,
+            price_usd,
+            features: features || [],
+            is_active: true
+          });
+
+        break;
+
+      case 'update_package':
+        if (!packageId) throw new Error('Package ID required');
+
+        const updateData: any = {};
+        if (name !== undefined) updateData.name = name;
+        if (description !== undefined) updateData.description = description;
+        if (duration_days !== undefined) updateData.duration_days = duration_days;
+        if (price_usd !== undefined) updateData.price_usd = price_usd;
+        if (features !== undefined) updateData.features = features;
+        if (is_active !== undefined) updateData.is_active = is_active;
+
+        result = await supabase
+          .from('sponsorship_packages')
+          .update(updateData)
+          .eq('id', packageId);
+
+        break;
+
+      case 'free_sponsor':
+        if (!targetListingId || !duration_days) {
+          throw new Error('Target listing ID and duration required');
+        }
+
+        const sponsoredUntil = new Date();
+        sponsoredUntil.setDate(sponsoredUntil.getDate() + duration_days);
+
+        result = await supabase
+          .from('listings')
+          .update({
+            is_sponsored: true,
+            sponsored_until: sponsoredUntil.toISOString(),
+            sponsored_at: new Date().toISOString(),
+            sponsor_amount: 0 // Free sponsorship
+          })
+          .eq('id', targetListingId);
+
         break;
 
       default:
