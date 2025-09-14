@@ -26,6 +26,7 @@ const AddProperty = () => {
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   
   // Form states
+  const [transactionType, setTransactionType] = useState("");
   const [formData, setFormData] = useState({
     propertyType: "",
     title: "",
@@ -68,6 +69,30 @@ const AddProperty = () => {
     "Balcon", "Terrasse", "Cave", "Ascenseur", "Parking",
     "Internet", "Meublé", "Eau chaude", "Générateur"
   ];
+
+  // Property type options based on transaction type
+  const getPropertyTypeOptions = () => {
+    if (transactionType === "commercial") {
+      return [
+        { value: "bureau", label: "Bureau" },
+        { value: "boutique", label: "Boutique" },
+        { value: "entrepot", label: "Entrepôt" },
+        { value: "local-commercial", label: "Local commercial" },
+        { value: "restaurant", label: "Restaurant" },
+        { value: "hotel", label: "Hôtel" },
+        { value: "usine", label: "Usine" },
+        { value: "terrain-commercial", label: "Terrain commercial" }
+      ];
+    } else {
+      return [
+        { value: "apartment", label: "Appartement" },
+        { value: "house", label: "Maison" },
+        { value: "villa", label: "Villa" },
+        { value: "land", label: "Terrain" },
+        { value: "studio", label: "Studio" }
+      ];
+    }
+  };
 
   const toggleFeature = (feature: string) => {
     setSelectedFeatures(prev =>
@@ -222,11 +247,15 @@ const AddProperty = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Type de transaction</Label>
-                    <Select>
+                    <Select value={transactionType} onValueChange={(value) => {
+                      setTransactionType(value);
+                      // Reset property type when transaction type changes
+                      updateFormData('propertyType', "");
+                    }}>
                       <SelectTrigger>
                         <SelectValue placeholder="Choisir..." />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background border shadow-lg z-50">
                         <SelectItem value="sale">Vente</SelectItem>
                         <SelectItem value="rent">Location</SelectItem>
                         <SelectItem value="commercial">Commercial</SelectItem>
@@ -236,16 +265,20 @@ const AddProperty = () => {
 
                   <div className="space-y-2">
                     <Label>Type de bien</Label>
-                    <Select>
+                    <Select 
+                      value={formData.propertyType} 
+                      onValueChange={(value) => updateFormData('propertyType', value)}
+                      disabled={!transactionType}
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Choisir..." />
+                        <SelectValue placeholder={transactionType ? "Choisir..." : "Sélectionnez d'abord le type de transaction"} />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="apartment">Appartement</SelectItem>
-                        <SelectItem value="house">Maison</SelectItem>
-                        <SelectItem value="villa">Villa</SelectItem>
-                        <SelectItem value="land">Terrain</SelectItem>
-                        <SelectItem value="commercial">Commercial</SelectItem>
+                      <SelectContent className="bg-background border shadow-lg z-50">
+                        {getPropertyTypeOptions().map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
