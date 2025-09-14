@@ -25,6 +25,7 @@ interface Listing {
   user_id?: string;
   is_sponsored?: boolean;
   sponsored_until?: string;
+  transaction_type?: string;
   profiles?: {
     full_name?: string;
     user_type?: string;
@@ -65,7 +66,8 @@ const Index = () => {
             user_id,
             created_at,
             is_sponsored,
-            sponsored_until
+            sponsored_until,
+            transaction_type
           `)
           .eq('country_code', selectedCountry.code.toUpperCase())
           .eq('status', 'published');
@@ -215,7 +217,7 @@ const Index = () => {
                   title={property.title}
                   priceUSD={property.price}
                   location={`${property.city}, ${getCountryName(property.country_code)}`}
-                  type="sale"
+                  type={property.transaction_type === 'rent' ? 'rent' : 'sale'}
                   propertyType="house"
                   photos={property.photos}
                   image={property.image || "/placeholder.svg"}

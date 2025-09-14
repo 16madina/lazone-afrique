@@ -69,6 +69,7 @@ const Map = () => {
 
   const fetchListings = async () => {
     try {
+      console.log("Fetching all listings for map...");
       const { data, error } = await supabase
         .from('listings')
         .select('id, title, price, lat, lng, status, image, photos, city, country_code, transaction_type')
@@ -83,6 +84,7 @@ const Map = () => {
       }
 
       console.log("Fetched listings:", data);
+      console.log("Number of listings:", data?.length);
       setListings(data || []);
     } catch (error) {
       console.error('Error:', error);
