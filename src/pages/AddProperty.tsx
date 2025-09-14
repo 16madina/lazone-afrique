@@ -27,6 +27,7 @@ const AddProperty = () => {
   
   // Form states
   const [transactionType, setTransactionType] = useState("");
+  const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     propertyType: "",
     title: "",
@@ -70,6 +71,32 @@ const AddProperty = () => {
     "Internet", "Meublé", "Eau chaude", "Générateur"
   ];
 
+  // Property documents options
+  const propertyDocuments = [
+    "ACD (Arrêté de Concession Définitive)",
+    "Titre Foncier",
+    "Attestation Villageoise", 
+    "Certificat de Propriété",
+    "Acte de Vente",
+    "Contrat de Bail",
+    "Autorisation de Construire",
+    "Plan Cadastral"
+  ];
+
+  // Land-specific features
+  const landFeatures = [
+    "Accès à l'eau", "Électricité disponible", "Route bitumée", 
+    "Proximité transports", "Zone résidentielle", "Zone commerciale",
+    "Terrain plat", "Terrain en pente", "Clôturé", "Sécurisé"
+  ];
+
+  // Commercial-specific features  
+  const commercialFeatures = [
+    "Parking client", "Vitrine", "Climatisation", "Sécurité 24h",
+    "Accès PMR", "Enseigne autorisée", "Zone passante", "Internet haut débit",
+    "Sanitaires", "Stockage", "Loading dock", "Système d'alarme"
+  ];
+
   // Property type options based on transaction type
   const getPropertyTypeOptions = () => {
     if (transactionType === "commercial") {
@@ -92,6 +119,30 @@ const AddProperty = () => {
         { value: "studio", label: "Studio" }
       ];
     }
+  };
+
+  // Get appropriate features based on property type
+  const getFeaturesList = () => {
+    if (formData.propertyType === "land" || formData.propertyType === "terrain-commercial") {
+      return landFeatures;
+    } else if (transactionType === "commercial") {
+      return commercialFeatures;
+    } else {
+      return features;
+    }
+  };
+
+  // Check if property type is terrain
+  const isLandProperty = () => {
+    return formData.propertyType === "land" || formData.propertyType === "terrain-commercial";
+  };
+
+  const toggleDocument = (document: string) => {
+    setSelectedDocuments(prev =>
+      prev.includes(document)
+        ? prev.filter(d => d !== document)
+        : [...prev, document]
+    );
   };
 
   const toggleFeature = (feature: string) => {
@@ -314,72 +365,148 @@ const AddProperty = () => {
             {/* Step 2: Details */}
             {currentStep === 2 && (
               <div className="space-y-6 animate-fade-in">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="space-y-2">
-                    <Label>{transactionType === "commercial" ? "Pièces/Espaces" : "Chambres"}</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder={transactionType === "commercial" ? "Nombre" : "0"} />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background border shadow-lg z-50">
-                        {transactionType === "commercial" ? (
-                          <>
-                            <SelectItem value="1">1 pièce</SelectItem>
-                            <SelectItem value="2">2 pièces</SelectItem>
-                            <SelectItem value="3">3 pièces</SelectItem>
-                            <SelectItem value="4">4 pièces</SelectItem>
-                            <SelectItem value="5">5 pièces</SelectItem>
-                            <SelectItem value="6">6+ pièces</SelectItem>
-                          </>
-                        ) : (
-                          <>
-                            <SelectItem value="0">Studio</SelectItem>
-                            <SelectItem value="1">1</SelectItem>
-                            <SelectItem value="2">2</SelectItem>
-                            <SelectItem value="3">3</SelectItem>
-                            <SelectItem value="4">4</SelectItem>
-                            <SelectItem value="5">5+</SelectItem>
-                          </>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                {/* Conditional fields based on property type */}
+                {!isLandProperty() && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="space-y-2">
+                      <Label>{transactionType === "commercial" ? "Pièces/Espaces" : "Chambres"}</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder={transactionType === "commercial" ? "Nombre" : "0"} />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border shadow-lg z-50">
+                          {transactionType === "commercial" ? (
+                            <>
+                              <SelectItem value="1">1 pièce</SelectItem>
+                              <SelectItem value="2">2 pièces</SelectItem>
+                              <SelectItem value="3">3 pièces</SelectItem>
+                              <SelectItem value="4">4 pièces</SelectItem>
+                              <SelectItem value="5">5 pièces</SelectItem>
+                              <SelectItem value="6">6+ pièces</SelectItem>
+                            </>
+                          ) : (
+                            <>
+                              <SelectItem value="0">Studio</SelectItem>
+                              <SelectItem value="1">1</SelectItem>
+                              <SelectItem value="2">2</SelectItem>
+                              <SelectItem value="3">3</SelectItem>
+                              <SelectItem value="4">4</SelectItem>
+                              <SelectItem value="5">5+</SelectItem>
+                            </>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label>{transactionType === "commercial" ? "Sanitaires" : "Salles de bain"}</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="1" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background border shadow-lg z-50">
-                        <SelectItem value="1">1</SelectItem>
-                        <SelectItem value="2">2</SelectItem>
-                        <SelectItem value="3">3</SelectItem>
-                        <SelectItem value="4">4+</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                    <div className="space-y-2">
+                      <Label>{transactionType === "commercial" ? "Sanitaires" : "Salles de bain"}</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="1" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border shadow-lg z-50">
+                          <SelectItem value="1">1</SelectItem>
+                          <SelectItem value="2">2</SelectItem>
+                          <SelectItem value="3">3</SelectItem>
+                          <SelectItem value="4">4+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label>Surface (m²)</Label>
-                    <Input 
-                      type="number" 
-                      placeholder="120" 
-                      value={formData.area}
-                      onChange={(e) => updateFormData('area', e.target.value)}
-                    />
-                  </div>
+                    <div className="space-y-2">
+                      <Label>Surface (m²)</Label>
+                      <Input 
+                        type="number" 
+                        placeholder="120" 
+                        value={formData.area}
+                        onChange={(e) => updateFormData('area', e.target.value)}
+                      />
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label>Étage</Label>
-                    <Input placeholder="RDC" />
+                    <div className="space-y-2">
+                      <Label>Étage</Label>
+                      <Input placeholder="RDC" />
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {/* Land-specific fields */}
+                {isLandProperty() && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Surface (m²)</Label>
+                      <Input 
+                        type="number" 
+                        placeholder="ex: 500" 
+                        value={formData.area}
+                        onChange={(e) => updateFormData('area', e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Type de terrain</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choisir..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border shadow-lg z-50">
+                          <SelectItem value="residential">Résidentiel</SelectItem>
+                          <SelectItem value="commercial">Commercial</SelectItem>
+                          <SelectItem value="industrial">Industriel</SelectItem>
+                          <SelectItem value="agricultural">Agricole</SelectItem>
+                          <SelectItem value="mixed">Mixte</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Forme du terrain</Label>
+                      <Select>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choisir..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border shadow-lg z-50">
+                          <SelectItem value="rectangle">Rectangle</SelectItem>
+                          <SelectItem value="square">Carré</SelectItem>
+                          <SelectItem value="irregular">Irrégulier</SelectItem>
+                          <SelectItem value="corner">D'angle</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+
+                {/* Documents section for land properties */}
+                {isLandProperty() && (
+                  <div className="space-y-3">
+                    <Label>Documents en votre possession (sélection multiple possible)</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {propertyDocuments.map(document => (
+                        <Button
+                          key={document}
+                          variant={selectedDocuments.includes(document) ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => toggleDocument(document)}
+                          className="text-xs justify-start h-auto py-2 px-3"
+                        >
+                          {document}
+                        </Button>
+                      ))}
+                    </div>
+                    {selectedDocuments.length > 0 && (
+                      <div className="text-sm text-muted-foreground">
+                        Documents sélectionnés : {selectedDocuments.length}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="space-y-3">
-                  <Label>Commodités</Label>
+                  <Label>
+                    {isLandProperty() ? "Caractéristiques du terrain" : "Commodités"}
+                  </Label>
                   <div className="flex flex-wrap gap-2">
-                    {features.map(feature => (
+                    {getFeaturesList().map(feature => (
                       <Button
                         key={feature}
                         variant={selectedFeatures.includes(feature) ? "default" : "outline"}
