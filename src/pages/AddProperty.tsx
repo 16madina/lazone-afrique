@@ -11,12 +11,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Camera, MapPin, Home, DollarSign, FileText, Image, Plus, X, Video, Upload } from "lucide-react";
+import { Camera, MapPin, Home, DollarSign, FileText, Image, Plus, X, Video, Upload, Loader2 } from "lucide-react";
 import { useMediaUpload } from "@/hooks/useMediaUpload";
 import { supabase } from "@/integrations/supabase/client";
 import { useCountry } from "@/contexts/CountryContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import CountrySelector from "@/components/CountrySelector";
 
 const AddProperty = () => {
   const navigate = useNavigate();
@@ -49,6 +50,7 @@ const AddProperty = () => {
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeolocating, setIsGeolocating] = useState(false);
   
   const photoInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -179,6 +181,69 @@ const AddProperty = () => {
     if (videoInputRef.current) {
       videoInputRef.current.value = '';
     }
+  };
+
+  // Geolocation function
+  const handleGeolocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("La géolocalisation n'est pas supportée par votre navigateur");
+      return;
+    }
+
+    setIsGeolocating(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          // Reverse geocoding to get city name from coordinates
+          const response = await fetch(
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${position.coords.longitude},${position.coords.latitude}.json?access_token=${process.env.MAPBOX_ACCESS_TOKEN}&types=place,locality&limit=1`
+          );
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.features && data.features.length > 0) {
+              const placeName = data.features[0].text || data.features[0].place_name;
+              updateFormData('city', placeName);
+              toast.success("Localisation détectée avec succès!");
+            } else {
+              toast.error("Impossible de déterminer votre ville");
+            }
+          } else {
+            toast.error("Erreur lors de la géolocalisation");
+          }
+        } catch (error) {
+          console.error('Geolocation error:', error);
+          toast.error("Erreur lors de la géolocalisation");
+        } finally {
+          setIsGeolocating(false);
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        setIsGeolocating(false);
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            toast.error("Autorisation de géolocalisation refusée");
+            break;
+          case error.POSITION_UNAVAILABLE:
+            toast.error("Position non disponible");
+            break;
+          case error.TIMEOUT:
+            toast.error("Délai de géolocalisation dépassé");
+            break;
+          default:
+            toast.error("Erreur de géolocalisation");
+            break;
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 600000
+      }
+    );
   };
 
   const nextStep = () => {
@@ -392,19 +457,36 @@ const AddProperty = () => {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Localisation</Label>
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <Input 
-                        placeholder="Ville ou commune" 
-                        value={formData.city}
-                        onChange={(e) => updateFormData('city', e.target.value)}
-                      />
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Pays</Label>
+                    <CountrySelector />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Localisation</Label>
+                    <div className="flex gap-2">
+                      <div className="flex-1">
+                        <Input 
+                          placeholder="Ville ou commune" 
+                          value={formData.city}
+                          onChange={(e) => updateFormData('city', e.target.value)}
+                        />
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        onClick={handleGeolocation}
+                        disabled={isGeolocating}
+                        title="Utiliser ma position actuelle"
+                      >
+                        {isGeolocating ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <MapPin className="w-4 h-4" />
+                        )}
+                      </Button>
                     </div>
-                    <Button variant="outline" size="icon">
-                      <MapPin className="w-4 h-4" />
-                    </Button>
                   </div>
                 </div>
               </div>
