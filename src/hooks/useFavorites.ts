@@ -29,6 +29,33 @@ export const useFavorites = () => {
     }
   };
 
+  // Setup real-time updates for favorites
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('favorites-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'favorites',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Favorites changed:', payload);
+          // Refresh favorites when changes occur
+          fetchFavorites();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   // Add listing to favorites
   const addToFavorites = async (listingId: string) => {
     if (!user) {
@@ -55,7 +82,6 @@ export const useFavorites = () => {
         return false;
       }
 
-      setFavorites(prev => [...prev, listingId]);
       toast.success('Ajouté aux favoris');
       return true;
     } catch (error) {
@@ -89,7 +115,6 @@ export const useFavorites = () => {
         return false;
       }
 
-      setFavorites(prev => prev.filter(id => id !== listingId));
       toast.success('Retiré des favoris');
       return true;
     } catch (error) {
