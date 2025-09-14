@@ -114,7 +114,7 @@ const HeroSection = () => {
             <h3 className="text-xl font-semibold text-primary-foreground text-center">
               🌟 Annonces Sponsorisées
             </h3>
-            <div className="flex flex-col space-y-3 max-w-md mx-auto">
+            <div className="space-y-3 max-w-2xl mx-auto">
               {/* Demo Sponsored Property 1 */}
               <div className="bg-background/95 backdrop-blur-sm rounded-xl overflow-hidden shadow-warm hover:scale-105 transition-transform duration-300">
                 <div className="flex">
