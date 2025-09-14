@@ -39,6 +39,7 @@ import {
   Building2,
   Users
 } from "lucide-react";
+import SponsorButton from "@/components/SponsorButton";
 
 const Profile = () => {
   const { user, profile, signOut, loading, updateProfile } = useAuth();
@@ -512,6 +513,11 @@ const Profile = () => {
                           <Edit className="w-4 h-4 mr-1" />
                           Modifier
                         </Button>
+                      </div>
+                      
+                      {/* Sponsor Button */}
+                      <div className="mt-3">
+                        <SponsorButton listingId={property.id} userId={property.user_id} />
                       </div>
                     </CardContent>
                   </Card>

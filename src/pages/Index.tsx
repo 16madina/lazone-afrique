@@ -23,6 +23,8 @@ interface Listing {
   photos?: string[] | null;
   status: string;
   user_id?: string;
+  is_sponsored?: boolean;
+  sponsored_until?: string;
   profiles?: {
     full_name?: string;
     user_type?: string;
@@ -61,11 +63,12 @@ const Index = () => {
             photos,
             status,
             user_id,
-            created_at
+            created_at,
+            is_sponsored,
+            sponsored_until
           `)
           .eq('country_code', selectedCountry.code.toUpperCase())
-          .eq('status', 'published')
-          .order('created_at', { ascending: false });
+          .eq('status', 'published');
 
         if (error) {
           console.error('Erreur lors du chargement des propriétés:', error);
@@ -87,7 +90,19 @@ const Index = () => {
             return listing;
           }));
           
-          setProperties(listingsWithProfiles);
+          // Sort properties to show sponsored ones first
+          const sortedProperties = listingsWithProfiles.sort((a, b) => {
+            const aSponsored = a.is_sponsored && a.sponsored_until && new Date(a.sponsored_until) > new Date();
+            const bSponsored = b.is_sponsored && b.sponsored_until && new Date(b.sponsored_until) > new Date();
+            
+            if (aSponsored && !bSponsored) return -1;
+            if (!aSponsored && bSponsored) return 1;
+            
+            // If both sponsored or both not sponsored, sort by creation date
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          });
+          
+          setProperties(sortedProperties);
         }
       } catch (err) {
         console.error('Erreur:', err);
@@ -212,6 +227,7 @@ const Index = () => {
                     verified: true
                   }}
                   features={["Moderne", "Bien situé"]}
+                  isSponsored={property.is_sponsored && property.sponsored_until && new Date(property.sponsored_until) > new Date()}
                 />
               );
             })}

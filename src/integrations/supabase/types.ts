@@ -121,10 +121,14 @@ export type Database = {
           description: string | null
           id: string
           image: string | null
+          is_sponsored: boolean | null
           lat: number
           lng: number
           photos: string[] | null
           price: number
+          sponsor_amount: number | null
+          sponsored_at: string | null
+          sponsored_until: string | null
           status: string
           title: string
           updated_at: string
@@ -138,10 +142,14 @@ export type Database = {
           description?: string | null
           id?: string
           image?: string | null
+          is_sponsored?: boolean | null
           lat: number
           lng: number
           photos?: string[] | null
           price: number
+          sponsor_amount?: number | null
+          sponsored_at?: string | null
+          sponsored_until?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -155,10 +163,14 @@ export type Database = {
           description?: string | null
           id?: string
           image?: string | null
+          is_sponsored?: boolean | null
           lat?: number
           lng?: number
           photos?: string[] | null
           price?: number
+          sponsor_amount?: number | null
+          sponsored_at?: string | null
+          sponsored_until?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -268,6 +280,81 @@ export type Database = {
         }
         Relationships: []
       }
+      sponsorship_packages: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_days: number
+          features: string[] | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price_usd: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_days: number
+          features?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price_usd: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_days?: number
+          features?: string[] | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price_usd?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sponsorship_transactions: {
+        Row: {
+          amount_paid: number
+          created_at: string
+          id: string
+          listing_id: string
+          package_id: string
+          payment_method: string | null
+          payment_status: string
+          transaction_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid: number
+          created_at?: string
+          id?: string
+          listing_id: string
+          package_id: string
+          payment_method?: string | null
+          payment_status?: string
+          transaction_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string
+          id?: string
+          listing_id?: string
+          package_id?: string
+          payment_method?: string | null
+          payment_status?: string
+          transaction_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_actions: {
         Row: {
           action_type: string
@@ -316,6 +403,10 @@ export type Database = {
       }
       is_admin: {
         Args: { user_uuid?: string }
+        Returns: boolean
+      }
+      is_listing_sponsored: {
+        Args: { listing_id: string }
         Returns: boolean
       }
     }
