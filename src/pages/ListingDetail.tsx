@@ -29,6 +29,17 @@ interface ListingData {
   created_at: string;
   updated_at: string;
   user_id: string | null;
+  transaction_type: string | null;
+  property_type: string | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  surface_area: number | null;
+  floor_number: string | null;
+  land_type: string | null;
+  land_shape: string | null;
+  property_documents: string[] | null;
+  features: string[] | null;
+  is_negotiable: boolean | null;
 }
 
 const ListingDetail = () => {
@@ -347,8 +358,39 @@ const ListingDetail = () => {
                 </div>
               </div>
 
-              <div className="text-3xl font-bold text-primary">
-                {formatPrice(listing.price)}
+              <div className="flex items-center gap-4">
+                <div className="text-3xl font-bold text-primary">
+                  {formatPrice(listing.price)}
+                </div>
+                {listing.is_negotiable && (
+                  <Badge variant="outline" className="text-green-600 border-green-600">
+                    Prix négociable
+                  </Badge>
+                )}
+              </div>
+
+              {/* Badges de type */}
+              <div className="flex flex-wrap gap-2">
+                {listing.transaction_type && (
+                  <Badge variant="secondary">
+                    {listing.transaction_type === 'sale' ? 'Vente' : 
+                     listing.transaction_type === 'rent' ? 'Location' : 
+                     listing.transaction_type === 'commercial' ? 'Commercial' : listing.transaction_type}
+                  </Badge>
+                )}
+                {listing.property_type && (
+                  <Badge variant="outline">
+                    {listing.property_type === 'apartment' ? 'Appartement' :
+                     listing.property_type === 'house' ? 'Maison' :
+                     listing.property_type === 'villa' ? 'Villa' :
+                     listing.property_type === 'land' ? 'Terrain' :
+                     listing.property_type === 'bureau' ? 'Bureau' :
+                     listing.property_type === 'boutique' ? 'Boutique' :
+                     listing.property_type === 'entrepot' ? 'Entrepôt' :
+                     listing.property_type === 'local-commercial' ? 'Local commercial' :
+                     listing.property_type}
+                  </Badge>
+                )}
               </div>
 
               {listing.description && (
@@ -364,6 +406,101 @@ const ListingDetail = () => {
                   <span className="ml-4">• Modifié le {formatDate(listing.updated_at)}</span>
                 )}
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Caractéristiques du bien */}
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Caractéristiques du bien</h2>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                {/* Surface */}
+                {listing.surface_area && (
+                  <div className="text-center p-3 bg-muted/50 rounded-lg">
+                    <div className="text-2xl font-bold text-primary">{listing.surface_area}</div>
+                    <div className="text-sm text-muted-foreground">m²</div>
+                  </div>
+                )}
+
+                {/* Chambres/Pièces pour non-terrain */}
+                {listing.bedrooms !== null && listing.property_type !== 'land' && listing.property_type !== 'terrain-commercial' && (
+                  <div className="text-center p-3 bg-muted/50 rounded-lg">
+                    <div className="text-2xl font-bold text-primary">{listing.bedrooms}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {listing.transaction_type === 'commercial' ? 'Pièces' : 'Chambres'}
+                    </div>
+                  </div>
+                )}
+
+                {/* Salles de bain/Sanitaires pour non-terrain */}
+                {listing.bathrooms !== null && listing.property_type !== 'land' && listing.property_type !== 'terrain-commercial' && (
+                  <div className="text-center p-3 bg-muted/50 rounded-lg">
+                    <div className="text-2xl font-bold text-primary">{listing.bathrooms}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {listing.transaction_type === 'commercial' ? 'Sanitaires' : 'Salles de bain'}
+                    </div>
+                  </div>
+                )}
+
+                {/* Étage pour non-terrain */}
+                {listing.floor_number && listing.property_type !== 'land' && listing.property_type !== 'terrain-commercial' && (
+                  <div className="text-center p-3 bg-muted/50 rounded-lg">
+                    <div className="text-lg font-bold text-primary">{listing.floor_number}</div>
+                    <div className="text-sm text-muted-foreground">Étage</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Informations spécifiques aux terrains */}
+              {(listing.property_type === 'land' || listing.property_type === 'terrain-commercial') && (
+                <div className="space-y-4 mb-6">
+                  {listing.land_type && (
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="font-medium">Type de terrain</span>
+                      <span className="text-muted-foreground capitalize">{listing.land_type}</span>
+                    </div>
+                  )}
+                  {listing.land_shape && (
+                    <div className="flex justify-between items-center py-2 border-b">
+                      <span className="font-medium">Forme du terrain</span>
+                      <span className="text-muted-foreground capitalize">{listing.land_shape}</span>
+                    </div>
+                  )}
+                  
+                  {/* Documents de propriété */}
+                  {listing.property_documents && listing.property_documents.length > 0 && (
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Documents en possession</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {listing.property_documents.map((doc, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            ✓ {doc}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Caractéristiques/Commodités */}
+              {listing.features && listing.features.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium">
+                    {listing.property_type === 'land' || listing.property_type === 'terrain-commercial' 
+                      ? 'Caractéristiques du terrain' 
+                      : 'Commodités'}
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {listing.features.map((feature, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs">
+                        {feature}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 

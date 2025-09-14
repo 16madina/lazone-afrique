@@ -28,6 +28,7 @@ const AddProperty = () => {
   // Form states
   const [transactionType, setTransactionType] = useState("");
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
+  const [isNegotiable, setIsNegotiable] = useState(false);
   const [formData, setFormData] = useState({
     propertyType: "",
     title: "",
@@ -38,6 +39,9 @@ const AddProperty = () => {
     bedrooms: "",
     bathrooms: "",
     area: "",
+    floorNumber: "",
+    landType: "",
+    landShape: "",
     fullName: "",
     email: "",
     phone: "",
@@ -198,7 +202,7 @@ const AddProperty = () => {
       return;
     }
 
-    if (!formData.title || !formData.price || !formData.city) {
+    if (!formData.title || !formData.price || !formData.city || !transactionType || !formData.propertyType) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
     }
@@ -209,21 +213,43 @@ const AddProperty = () => {
       const photoUrls = uploadedPhotos.map(photo => photo.url);
       const videoUrl = uploadedVideo?.url || null;
 
+      // Prepare data for insertion
+      const insertData: any = {
+        title: formData.title,
+        description: formData.description,
+        price: parseFloat(formData.price),
+        city: formData.city,
+        country_code: selectedCountry.code.toUpperCase(),
+        user_id: user.id,
+        lat: 5.3364, // Default coordinates for Abidjan - can be enhanced later
+        lng: -4.0267,
+        photos: photoUrls,
+        video_url: videoUrl,
+        status: 'published',
+        transaction_type: transactionType,
+        property_type: formData.propertyType,
+        surface_area: formData.area ? parseFloat(formData.area) : null,
+        features: selectedFeatures,
+        is_negotiable: isNegotiable
+      };
+
+      // Add property-type specific fields
+      if (!isLandProperty()) {
+        if (formData.bedrooms) insertData.bedrooms = parseInt(formData.bedrooms);
+        if (formData.bathrooms) insertData.bathrooms = parseInt(formData.bathrooms);
+        if (formData.floorNumber) insertData.floor_number = formData.floorNumber;
+      }
+
+      // Add land-specific fields
+      if (isLandProperty()) {
+        if (formData.landType) insertData.land_type = formData.landType;
+        if (formData.landShape) insertData.land_shape = formData.landShape;
+        if (selectedDocuments.length > 0) insertData.property_documents = selectedDocuments;
+      }
+
       const { data, error } = await supabase
         .from('listings')
-        .insert({
-          title: formData.title,
-          description: formData.description,
-          price: parseFloat(formData.price),
-          city: formData.city,
-          country_code: selectedCountry.code.toUpperCase(),
-          user_id: user.id,
-          lat: 5.3364, // Default coordinates for Abidjan - can be enhanced later
-          lng: -4.0267,
-          photos: photoUrls,
-          video_url: videoUrl,
-          status: 'published'
-        });
+        .insert(insertData);
 
       if (error) throw error;
 
@@ -370,7 +396,10 @@ const AddProperty = () => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="space-y-2">
                       <Label>{transactionType === "commercial" ? "Pièces/Espaces" : "Chambres"}</Label>
-                      <Select>
+                      <Select 
+                        value={formData.bedrooms} 
+                        onValueChange={(value) => updateFormData('bedrooms', value)}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder={transactionType === "commercial" ? "Nombre" : "0"} />
                         </SelectTrigger>
@@ -400,7 +429,10 @@ const AddProperty = () => {
 
                     <div className="space-y-2">
                       <Label>{transactionType === "commercial" ? "Sanitaires" : "Salles de bain"}</Label>
-                      <Select>
+                      <Select 
+                        value={formData.bathrooms} 
+                        onValueChange={(value) => updateFormData('bathrooms', value)}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="1" />
                         </SelectTrigger>
@@ -425,7 +457,11 @@ const AddProperty = () => {
 
                     <div className="space-y-2">
                       <Label>Étage</Label>
-                      <Input placeholder="RDC" />
+                      <Input 
+                        placeholder="RDC"
+                        value={formData.floorNumber}
+                        onChange={(e) => updateFormData('floorNumber', e.target.value)}
+                      />
                     </div>
                   </div>
                 )}
@@ -445,7 +481,10 @@ const AddProperty = () => {
 
                     <div className="space-y-2">
                       <Label>Type de terrain</Label>
-                      <Select>
+                      <Select 
+                        value={formData.landType} 
+                        onValueChange={(value) => updateFormData('landType', value)}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Choisir..." />
                         </SelectTrigger>
@@ -461,7 +500,10 @@ const AddProperty = () => {
 
                     <div className="space-y-2">
                       <Label>Forme du terrain</Label>
-                      <Select>
+                      <Select 
+                        value={formData.landShape} 
+                        onValueChange={(value) => updateFormData('landShape', value)}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Choisir..." />
                         </SelectTrigger>
@@ -554,11 +596,14 @@ const AddProperty = () => {
 
                   <div className="space-y-2">
                     <Label>Prix négociable</Label>
-                    <Select>
+                    <Select 
+                      value={isNegotiable ? "yes" : "no"} 
+                      onValueChange={(value) => setIsNegotiable(value === "yes")}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Choisir..." />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-background border shadow-lg z-50">
                         <SelectItem value="yes">Oui</SelectItem>
                         <SelectItem value="no">Non</SelectItem>
                       </SelectContent>

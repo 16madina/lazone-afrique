@@ -115,64 +115,97 @@ export type Database = {
       }
       listings: {
         Row: {
+          bathrooms: number | null
+          bedrooms: number | null
           city: string
           country_code: string
           created_at: string
           description: string | null
+          features: string[] | null
+          floor_number: string | null
           id: string
           image: string | null
+          is_negotiable: boolean | null
           is_sponsored: boolean | null
+          land_shape: string | null
+          land_type: string | null
           lat: number
           lng: number
           photos: string[] | null
           price: number
+          property_documents: string[] | null
+          property_type: string | null
           sponsor_amount: number | null
           sponsored_at: string | null
           sponsored_until: string | null
           status: string
+          surface_area: number | null
           title: string
+          transaction_type: string | null
           updated_at: string
           user_id: string | null
           video_url: string | null
         }
         Insert: {
+          bathrooms?: number | null
+          bedrooms?: number | null
           city: string
           country_code?: string
           created_at?: string
           description?: string | null
+          features?: string[] | null
+          floor_number?: string | null
           id?: string
           image?: string | null
+          is_negotiable?: boolean | null
           is_sponsored?: boolean | null
+          land_shape?: string | null
+          land_type?: string | null
           lat: number
           lng: number
           photos?: string[] | null
           price: number
+          property_documents?: string[] | null
+          property_type?: string | null
           sponsor_amount?: number | null
           sponsored_at?: string | null
           sponsored_until?: string | null
           status?: string
+          surface_area?: number | null
           title: string
+          transaction_type?: string | null
           updated_at?: string
           user_id?: string | null
           video_url?: string | null
         }
         Update: {
+          bathrooms?: number | null
+          bedrooms?: number | null
           city?: string
           country_code?: string
           created_at?: string
           description?: string | null
+          features?: string[] | null
+          floor_number?: string | null
           id?: string
           image?: string | null
+          is_negotiable?: boolean | null
           is_sponsored?: boolean | null
+          land_shape?: string | null
+          land_type?: string | null
           lat?: number
           lng?: number
           photos?: string[] | null
           price?: number
+          property_documents?: string[] | null
+          property_type?: string | null
           sponsor_amount?: number | null
           sponsored_at?: string | null
           sponsored_until?: string | null
           status?: string
+          surface_area?: number | null
           title?: string
+          transaction_type?: string | null
           updated_at?: string
           user_id?: string | null
           video_url?: string | null
