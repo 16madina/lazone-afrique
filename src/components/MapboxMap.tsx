@@ -133,13 +133,16 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
 
         // Créer le popup avec un design amélioré
         const getListingImage = (listing: Listing) => {
+          // Vérifier d'abord les photos
           if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
             return listing.photos[0];
           }
-          if (listing.image) {
+          // Vérifier l'image mais ignorer les placeholders
+          if (listing.image && listing.image !== '/placeholder.svg' && !listing.image.includes('placeholder')) {
             return listing.image;
           }
-          return 'https://via.placeholder.com/280x160?text=Pas+d%27image';
+          // Image par défaut avec un design plus attrayant
+          return 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=280&h=160&fit=crop&auto=format';
         };
 
         const popup = new mapboxgl.Popup({ 
