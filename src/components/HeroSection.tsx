@@ -114,75 +114,69 @@ const HeroSection = () => {
             <h3 className="text-xl font-semibold text-primary-foreground text-center">
               🌟 Annonces Sponsorisées
             </h3>
-            <div className="space-y-3 max-w-2xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
               {/* Demo Sponsored Property 1 */}
               <div className="bg-background/95 backdrop-blur-sm rounded-xl overflow-hidden shadow-warm hover:scale-105 transition-transform duration-300">
-                <div className="flex">
-                  <div className="relative w-24 h-20 flex-shrink-0">
-                    <img 
-                      src="/placeholder.svg" 
-                      alt="Villa moderne Cocody"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute top-1 left-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-1 py-0.5 rounded-full font-medium">
-                      ⭐
-                    </div>
+                <div className="relative h-32 w-full">
+                  <img 
+                    src="/placeholder.svg" 
+                    alt="Villa moderne Cocody"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-2 left-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                    ⭐ Sponsorisé
                   </div>
-                  <div className="flex-1 p-3">
-                    <h4 className="font-semibold text-sm mb-1">Villa Moderne Cocody</h4>
-                    <p className="text-xs text-muted-foreground mb-1">Cocody, Abidjan</p>
-                    <div className="flex justify-between items-center">
-                      <span className="font-bold text-primary text-sm">85M FCFA</span>
-                      <span className="text-xs text-muted-foreground">4ch • 3sdb</span>
-                    </div>
+                </div>
+                <div className="p-3">
+                  <h4 className="font-semibold text-sm mb-1">Villa Moderne Cocody</h4>
+                  <p className="text-xs text-muted-foreground mb-2">Cocody, Abidjan</p>
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-primary text-sm">85M FCFA</span>
+                    <span className="text-xs text-muted-foreground">4ch • 3sdb</span>
                   </div>
                 </div>
               </div>
 
               {/* Demo Sponsored Property 2 */}
               <div className="bg-background/95 backdrop-blur-sm rounded-xl overflow-hidden shadow-warm hover:scale-105 transition-transform duration-300">
-                <div className="flex">
-                  <div className="relative w-24 h-20 flex-shrink-0">
-                    <img 
-                      src="/placeholder.svg" 
-                      alt="Appartement Plateau"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute top-1 left-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-1 py-0.5 rounded-full font-medium">
-                      ⭐
-                    </div>
+                <div className="relative h-32 w-full">
+                  <img 
+                    src="/placeholder.svg" 
+                    alt="Appartement Plateau"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-2 left-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                    ⭐ Sponsorisé
                   </div>
-                  <div className="flex-1 p-3">
-                    <h4 className="font-semibold text-sm mb-1">Appartement Haut Standing</h4>
-                    <p className="text-xs text-muted-foreground mb-1">Plateau, Abidjan</p>
-                    <div className="flex justify-between items-center">
-                      <span className="font-bold text-primary text-sm">45M FCFA</span>
-                      <span className="text-xs text-muted-foreground">3ch • 2sdb</span>
-                    </div>
+                </div>
+                <div className="p-3">
+                  <h4 className="font-semibold text-sm mb-1">Appartement Haut Standing</h4>
+                  <p className="text-xs text-muted-foreground mb-2">Plateau, Abidjan</p>
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-primary text-sm">45M FCFA</span>
+                    <span className="text-xs text-muted-foreground">3ch • 2sdb</span>
                   </div>
                 </div>
               </div>
 
               {/* Demo Sponsored Property 3 */}
               <div className="bg-background/95 backdrop-blur-sm rounded-xl overflow-hidden shadow-warm hover:scale-105 transition-transform duration-300">
-                <div className="flex">
-                  <div className="relative w-24 h-20 flex-shrink-0">
-                    <img 
-                      src="/placeholder.svg" 
-                      alt="Terrain Bingerville"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute top-1 left-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-1 py-0.5 rounded-full font-medium">
-                      ⭐
-                    </div>
+                <div className="relative h-32 w-full">
+                  <img 
+                    src="/placeholder.svg" 
+                    alt="Terrain Bingerville"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-2 left-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                    ⭐ Sponsorisé
                   </div>
-                  <div className="flex-1 p-3">
-                    <h4 className="font-semibold text-sm mb-1">Terrain Titre Foncier</h4>
-                    <p className="text-xs text-muted-foreground mb-1">Bingerville</p>
-                    <div className="flex justify-between items-center">
-                      <span className="font-bold text-primary text-sm">25M FCFA</span>
-                      <span className="text-xs text-muted-foreground">500m²</span>
-                    </div>
+                </div>
+                <div className="p-3">
+                  <h4 className="font-semibold text-sm mb-1">Terrain Titre Foncier</h4>
+                  <p className="text-xs text-muted-foreground mb-2">Bingerville</p>
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-primary text-sm">25M FCFA</span>
+                    <span className="text-xs text-muted-foreground">500m²</span>
                   </div>
                 </div>
               </div>
