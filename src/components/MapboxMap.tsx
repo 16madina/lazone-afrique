@@ -3,6 +3,8 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './mapbox-styles.css';
 import { supabase } from '@/integrations/supabase/client';
+import { useFavorites } from '@/hooks/useFavorites';
+import { useAuth } from '@/contexts/AuthContext';
 import { useCountry } from '@/contexts/CountryContext';
 
 interface Listing {
@@ -38,6 +40,31 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { selectedCountry } = useCountry();
+  const { user } = useAuth();
+  const { toggleFavorite, isFavorite, loading: favoritesLoading } = useFavorites();
+
+  // Expose favorite functions to window for popup access
+  useEffect(() => {
+    (window as any).toggleMapFavorite = async (listingId: string) => {
+      if (!user) {
+        alert('Vous devez être connecté pour ajouter aux favoris');
+        return;
+      }
+      
+      const success = await toggleFavorite(listingId);
+      if (success) {
+        // Update the button appearance
+        const btn = document.getElementById(`favorite-btn-${listingId}`);
+        if (btn) {
+          btn.innerHTML = isFavorite(listingId) ? '❤️' : '🤍';
+        }
+      }
+    };
+
+    return () => {
+      delete (window as any).toggleMapFavorite;
+    };
+  }, [user, toggleFavorite, isFavorite]);
 
   // Récupérer le token Mapbox depuis l'edge function
   useEffect(() => {
@@ -179,6 +206,31 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
                 ">
                   ${listing.transaction_type === 'rent' ? 'Location' : 'Vente'}
                 </div>
+                <button 
+                  id="favorite-btn-${listing.id}"
+                  style="
+                    position: absolute; 
+                    top: 8px; 
+                    left: 8px; 
+                    background: rgba(255, 255, 255, 0.9);
+                    border: none;
+                    border-radius: 50%;
+                    width: 36px;
+                    height: 36px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    font-size: 16px;
+                    transition: all 0.3s ease;
+                    backdrop-filter: blur(10px);
+                  "
+                  onclick="window.toggleMapFavorite('${listing.id}')"
+                  onmouseover="this.style.background='rgba(255, 255, 255, 1)'; this.style.transform='scale(1.1)'"
+                  onmouseout="this.style.background='rgba(255, 255, 255, 0.9)'; this.style.transform='scale(1)'"
+                >
+                  🤍
+                </button>
               </div>
               
               <div style="padding: 16px;">
@@ -259,6 +311,14 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
           // Ouvrir le nouveau popup
           popup.addTo(map.current!);
           popup.setLngLat([listing.lng, listing.lat]);
+          
+          // Update favorite button state after popup is added
+          setTimeout(() => {
+            const btn = document.getElementById(`favorite-btn-${listing.id}`);
+            if (btn) {
+              btn.innerHTML = isFavorite(listing.id) ? '❤️' : '🤍';
+            }
+          }, 100);
           
           // Animation du marqueur
           markerElement.style.transform = 'scale(1.2)';
