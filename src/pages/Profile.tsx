@@ -18,6 +18,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import AdminPanel from "@/components/AdminPanel";
 import AdminSetup from "@/components/AdminSetup";
+import { useFavorites } from "@/hooks/useFavorites";
+import PropertyCard from "@/components/PropertyCard";
 import { 
   User, 
   Settings, 
@@ -52,6 +54,9 @@ const Profile = () => {
   const [loadingProperties, setLoadingProperties] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const { uploadFile, uploading } = useFileUpload();
+  const { favorites, fetchFavorites } = useFavorites();
+  const [favoriteListings, setFavoriteListings] = useState<any[]>([]);
+  const [loadingFavorites, setLoadingFavorites] = useState(false);
   const [contactForm, setContactForm] = useState({
     full_name: '',
     phone: '',
@@ -135,6 +140,41 @@ const Profile = () => {
     }
   };
 
+  // Fetch favorite listings
+  const fetchFavoriteListings = async () => {
+    if (favorites.length === 0) {
+      setFavoriteListings([]);
+      return;
+    }
+
+    setLoadingFavorites(true);
+    try {
+      const { data, error } = await supabase
+        .from('listings')
+        .select(`
+          *,
+          profiles:user_id (
+            full_name,
+            user_type,
+            phone,
+            avatar_url
+          )
+        `)
+        .in('id', favorites)
+        .eq('status', 'published');
+
+      if (error) {
+        console.error('Error fetching favorite listings:', error);
+      } else {
+        setFavoriteListings(data || []);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoadingFavorites(false);
+    }
+  };
+
   // Fetch properties when user is available
   useEffect(() => {
     if (user && profile) {
@@ -142,6 +182,11 @@ const Profile = () => {
       checkAdminStatus();
     }
   }, [user, profile]);
+
+  // Fetch favorite listings when favorites change
+  useEffect(() => {
+    fetchFavoriteListings();
+  }, [favorites]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -244,7 +289,7 @@ const Profile = () => {
 
   const userStats = [
     { label: "Propriétés publiées", value: userProperties.length.toString(), icon: Home },
-    { label: "Favoris", value: "0", icon: Heart },
+    { label: "Favoris", value: favoriteListings.length.toString(), icon: Heart },
     { label: "Notes moyennes", value: "0", icon: Star },
     { label: "Vues profil", value: "0", icon: Eye }
   ];
@@ -530,13 +575,48 @@ const Profile = () => {
           <TabsContent value="favorites" className="space-y-6">
             <h3 className="text-xl font-semibold">Mes favoris</h3>
             
-            <div className="text-center py-12 animate-fade-in">
-              <Heart className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-              <h4 className="text-lg font-semibold mb-2">Aucun favori</h4>
-              <p className="text-muted-foreground">
-                Ajoutez des propriétés à vos favoris pour les retrouver facilement
-              </p>
-            </div>
+            {loadingFavorites ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <p className="text-muted-foreground mt-2">Chargement des favoris...</p>
+              </div>
+            ) : favoriteListings.length === 0 ? (
+              <div className="text-center py-12 animate-fade-in">
+                <Heart className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                <h4 className="text-lg font-semibold mb-2">Aucun favori</h4>
+                <p className="text-muted-foreground">
+                  Ajoutez des propriétés à vos favoris pour les retrouver facilement
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {favoriteListings.map((property) => (
+                  <PropertyCard
+                    key={property.id}
+                    id={property.id}
+                    title={property.title}
+                    priceUSD={property.price}
+                    location={property.city}
+                    type={property.transaction_type === 'rent' ? 'rent' : 'sale'}
+                    propertyType={property.property_type}
+                    photos={property.photos}
+                    image={property.image}
+                    bedrooms={property.bedrooms}
+                    bathrooms={property.bathrooms}
+                    surface={property.surface_area}
+                    agent={{
+                      name: property.profiles?.full_name || 'Agent',
+                      type: property.profiles?.user_type || 'individual',
+                      rating: 4.5,
+                      verified: true
+                    }}
+                    features={property.features || []}
+                    isSponsored={property.is_sponsored || false}
+                    isFavorite={true}
+                  />
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           {/* Settings Tab */}

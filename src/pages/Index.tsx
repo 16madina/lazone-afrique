@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ArrowUpDown, Grid3X3, List, Globe } from "lucide-react";
+import { useFavorites } from "@/hooks/useFavorites";
 
 interface Listing {
   id: string;
@@ -26,6 +27,11 @@ interface Listing {
   is_sponsored?: boolean;
   sponsored_until?: string;
   transaction_type?: string;
+  property_type?: string;
+  surface_area?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  features?: string[];
   profiles?: {
     full_name?: string;
     user_type?: string;
@@ -44,6 +50,7 @@ const Index = () => {
   const [properties, setProperties] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const { selectedCountry, formatPrice } = useCountry();
+  const { isFavorite } = useFavorites();
 
   // Fetch properties for selected country from Supabase
   useEffect(() => {
@@ -67,7 +74,12 @@ const Index = () => {
             created_at,
             is_sponsored,
             sponsored_until,
-            transaction_type
+            transaction_type,
+            property_type,
+            surface_area,
+            bedrooms,
+            bathrooms,
+            features
           `)
           .eq('country_code', selectedCountry.code.toUpperCase())
           .eq('status', 'published');
@@ -91,7 +103,7 @@ const Index = () => {
             }
             return listing;
           }));
-          
+
           // Sort properties to show sponsored ones first
           const sortedProperties = listingsWithProfiles.sort((a, b) => {
             const aSponsored = a.is_sponsored && a.sponsored_until && new Date(a.sponsored_until) > new Date();
@@ -218,18 +230,21 @@ const Index = () => {
                   priceUSD={property.price}
                   location={`${property.city}, ${getCountryName(property.country_code)}`}
                   type={property.transaction_type === 'rent' ? 'rent' : 'sale'}
-                  propertyType="house"
+                  propertyType={property.property_type as any || "house"}
                   photos={property.photos}
                   image={property.image || "/placeholder.svg"}
-                  surface={120}
+                  bedrooms={property.bedrooms}
+                  bathrooms={property.bathrooms}
+                  surface={property.surface_area || 120}
                   agent={{
                     name: agentName,
                     type: agentType,
                     rating: 4.5,
                     verified: true
                   }}
-                  features={["Moderne", "Bien situé"]}
+                  features={property.features || ["Moderne", "Bien situé"]}
                   isSponsored={property.is_sponsored && property.sponsored_until && new Date(property.sponsored_until) > new Date()}
+                  isFavorite={isFavorite(property.id)}
                 />
               );
             })}

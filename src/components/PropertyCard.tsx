@@ -5,6 +5,7 @@ import { useCountry } from "@/contexts/CountryContext";
 import { useNavigate } from "react-router-dom";
 import { MapPin, Heart, Bed, Bath, Square, Phone, MessageCircle, Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
+import { useFavorites } from "@/hooks/useFavorites";
 
 interface PropertyCardProps {
   id: string;
@@ -49,6 +50,12 @@ const PropertyCard = ({
   const { formatLocalPrice, selectedCountry } = useCountry();
   const navigate = useNavigate();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const { toggleFavorite, isFavorite: isInFavorites, loading: favLoading } = useFavorites();
+
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await toggleFavorite(id);
+  };
 
   // Fonction pour obtenir toutes les images disponibles
   const getAllImages = () => {
@@ -186,12 +193,13 @@ const PropertyCard = ({
           size="icon" 
           variant="ghost" 
           className={`absolute top-3 right-3 w-8 h-8 rounded-full bg-background/80 hover:bg-background ${
-            isFavorite ? 'text-destructive' : 'text-muted-foreground'
-          } z-20`}
-          onClick={(e) => e.stopPropagation()}
+            isInFavorites(id) ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-red-500'
+          } z-20 transition-colors`}
+          onClick={handleFavoriteClick}
+          disabled={favLoading}
           style={{ marginTop: isSponsored ? '4.5rem' : '0' }}
         >
-          <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
+          <Heart className={`w-4 h-4 ${isInFavorites(id) ? 'fill-current' : ''}`} />
         </Button>
       </div>
 
