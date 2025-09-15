@@ -66,9 +66,7 @@ const Messages = () => {
   // Get avatar image URL for conversation
   const getConversationAvatarUrl = (conversation: any) => {
     const otherParticipant = conversation.participants.find((p: any) => p.user_id !== user?.id);
-    const avatarUrl = otherParticipant?.profile?.avatar_url;
-    console.log('Avatar URL for', otherParticipant?.profile?.full_name, ':', avatarUrl);
-    return avatarUrl;
+    return otherParticipant?.profile?.avatar_url;
   };
 
   // Get avatar initials for conversation
