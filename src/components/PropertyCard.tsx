@@ -2,9 +2,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { useCountry } from "@/contexts/CountryContext";
 import { useNavigate } from "react-router-dom";
-import { MapPin, Heart, Bed, Bath, Square, Phone, MessageCircle, Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { MapPin, Heart, Bed, Bath, Square, Phone, MessageCircle, Star } from "lucide-react";
 import { useState } from "react";
 import { useFavorites } from "@/hooks/useFavorites";
 
@@ -51,7 +52,6 @@ const PropertyCard = ({
 }: PropertyCardProps) => {
   const { formatLocalPrice, selectedCountry } = useCountry();
   const navigate = useNavigate();
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { toggleFavorite, isFavorite: isInFavorites, loading: favLoading } = useFavorites();
 
   const handleFavoriteClick = async (e: React.MouseEvent) => {
@@ -72,21 +72,6 @@ const PropertyCard = ({
   };
 
   const allImages = getAllImages();
-
-  const nextImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
-  };
-
-  const prevImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
-  };
-
-  const goToImage = (index: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCurrentImageIndex(index);
-  };
 
   const handleCardClick = () => {
     // Vérifier que l'ID est un UUID valide (format Supabase)
@@ -130,55 +115,21 @@ const PropertyCard = ({
     >
       {/* Image Carousel */}
       <div className="relative aspect-[4/3] overflow-hidden">
-        <div className="relative w-full h-full">
-          <img 
-            src={allImages[currentImageIndex]} 
-            alt={`${title} - Image ${currentImageIndex + 1}`}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-          
-          {/* Navigation arrows - only show if multiple images */}
-          {allImages.length > 1 && (
-            <>
-              <Button
-                size="icon"
-                variant="secondary"
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-background/80 hover:bg-background/90 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10"
-                onClick={prevImage}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <Button
-                size="icon"
-                variant="secondary"
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-background/80 hover:bg-background/90 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10"
-                onClick={nextImage}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-              
-              {/* Image indicators */}
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1 z-10">
-                {allImages.map((_, index) => (
-                  <button
-                    key={index}
-                    className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                      index === currentImageIndex 
-                        ? 'bg-white scale-110' 
-                        : 'bg-white/60 hover:bg-white/80'
-                    }`}
-                    onClick={(e) => goToImage(index, e)}
+        <Carousel className="w-full h-full">
+          <CarouselContent>
+            {allImages.map((imgSrc, index) => (
+              <CarouselItem key={index}>
+                <div className="relative w-full h-full">
+                  <img 
+                    src={imgSrc} 
+                    alt={`${title} - Image ${index + 1}`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                ))}
-              </div>
-              
-              {/* Image counter */}
-              <div className="absolute top-3 left-3 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-medium z-10">
-                {currentImageIndex + 1}/{allImages.length}
-              </div>
-            </>
-          )}
-        </div>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
         
         {/* Badges */}
         <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">

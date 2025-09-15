@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRealTimeMessages } from "@/hooks/useRealTimeMessages";
-import { ArrowLeft, MapPin, Calendar, Phone, MessageCircle, ChevronLeft, ChevronRight, Play, Send } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Phone, MessageCircle, Play, Send } from "lucide-react";
 import { toast } from "sonner";
 
 interface ListingData {
@@ -49,7 +50,6 @@ const ListingDetail = () => {
   const [listing, setListing] = useState<ListingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
   const [messageContent, setMessageContent] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
@@ -122,15 +122,6 @@ const ListingDetail = () => {
     return images.length > 0 ? images : ['https://via.placeholder.com/800x400?text=Pas+d%27image'];
   };
 
-  const nextImage = () => {
-    const images = getAllImages();
-    setCurrentImageIndex((prev) => (prev + 1) % images.length);
-  };
-
-  const prevImage = () => {
-    const images = getAllImages();
-    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
 
   const getCountryName = (countryCode: string) => {
     const countries: { [key: string]: string } = {
@@ -275,66 +266,34 @@ const ListingDetail = () => {
                 const images = getAllImages();
                 return (
                   <>
-                    <img 
-                      src={images[currentImageIndex]} 
-                      alt={`${listing.title} - Image ${currentImageIndex + 1}`}
-                      className="w-full h-64 md:h-96 object-cover"
-                    />
+                    <Carousel className="w-full">
+                      <CarouselContent>
+                        {images.map((imgSrc, index) => (
+                          <CarouselItem key={index}>
+                            <div className="relative">
+                              <img 
+                                src={imgSrc} 
+                                alt={`${listing.title} - Image ${index + 1}`}
+                                className="w-full h-64 md:h-96 object-cover"
+                              />
+                            </div>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                    </Carousel>
                     
                     {/* Badges et contrôles superposés */}
-                    <div className="absolute top-4 right-4">
+                    <div className="absolute top-4 right-4 z-10">
                       <Badge variant="secondary" className="bg-background/80">
                         {listing.status === 'published' ? 'Publié' : listing.status}
                       </Badge>
                     </div>
                     
-                    {images.length > 1 && (
-                      <>
-                        {/* Boutons de navigation */}
-                        <Button
-                          variant="secondary"
-                          size="icon"
-                          className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background/90"
-                          onClick={prevImage}
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="icon"
-                          className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background/90"
-                          onClick={nextImage}
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </Button>
-                        
-                        {/* Indicateurs */}
-                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                          {images.map((_, index) => (
-                            <button
-                              key={index}
-                              className={`w-2 h-2 rounded-full transition-all ${
-                                index === currentImageIndex 
-                                  ? 'bg-white' 
-                                  : 'bg-white/50'
-                              }`}
-                              onClick={() => setCurrentImageIndex(index)}
-                            />
-                          ))}
-                        </div>
-                        
-                        {/* Compteur d'images */}
-                        <div className="absolute bottom-4 right-4 bg-background/80 px-2 py-1 rounded text-sm">
-                          {currentImageIndex + 1} / {images.length}
-                        </div>
-                      </>
-                    )}
-                    
                     {/* Bouton vidéo si disponible */}
                     {listing.video_url && (
                       <Button
                         variant="secondary"
-                        className="absolute top-4 left-4 bg-background/80 hover:bg-background/90"
+                        className="absolute top-4 left-4 bg-background/80 hover:bg-background/90 z-10"
                         onClick={() => window.open(listing.video_url!, '_blank')}
                       >
                         <Play className="w-4 h-4 mr-2" />
