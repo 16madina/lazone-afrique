@@ -98,8 +98,10 @@ const ListingDetail = () => {
       }
     };
 
-    fetchListing();
-  }, [id]);
+    if (user || !authLoading) {
+      fetchListing();
+    }
+  }, [id, user, authLoading]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
@@ -192,6 +194,29 @@ const ListingDetail = () => {
       setSendingMessage(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background">
+        <Header />
+        <main className="flex-1 p-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-muted rounded w-1/4"></div>
+              <div className="h-64 bg-muted rounded"></div>
+              <div className="h-6 bg-muted rounded w-3/4"></div>
+              <div className="h-4 bg-muted rounded w-1/2"></div>
+            </div>
+          </div>
+        </main>
+        <BottomNavigation />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // This will be handled by the useEffect redirect
+  }
 
   if (loading) {
     return (
