@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import CountrySelector from "@/components/CountrySelector";
 import { Bell, User, Menu, LogOut, Settings } from "lucide-react";
@@ -78,6 +78,9 @@ const Header = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2 h-auto p-2">
                   <Avatar className="w-8 h-8">
+                    {profile?.avatar_url && (
+                      <AvatarImage src={profile.avatar_url} alt={profile.full_name || 'Utilisateur'} />
+                    )}
                     <AvatarFallback className="bg-gradient-primary text-primary-foreground text-sm">
                       {getUserInitials()}
                     </AvatarFallback>

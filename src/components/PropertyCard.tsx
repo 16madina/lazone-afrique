@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useCountry } from "@/contexts/CountryContext";
 import { useNavigate } from "react-router-dom";
 import { MapPin, Heart, Bed, Bath, Square, Phone, MessageCircle, Star, ChevronLeft, ChevronRight } from "lucide-react";
@@ -24,6 +25,7 @@ interface PropertyCardProps {
     type: "individual" | "agency" | "broker";
     rating: number;
     verified: boolean;
+    avatar_url?: string;
   };
   features: string[];
   isSponsored?: boolean;
@@ -281,9 +283,14 @@ const PropertyCard = ({
         {/* Agent Info */}
         <div className="flex items-center justify-between pt-2 border-t border-border">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-              <span className="text-sm font-medium">{agent.name.charAt(0)}</span>
-            </div>
+            <Avatar className="w-8 h-8">
+              {agent.avatar_url && (
+                <AvatarImage src={agent.avatar_url} alt={agent.name} />
+              )}
+              <AvatarFallback className="text-sm font-medium">
+                {agent.name.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
             <div className="flex flex-col">
               <div className="flex items-center gap-1">
                 <span className="text-sm font-medium">{agent.name}</span>

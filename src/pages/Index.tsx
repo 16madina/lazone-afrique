@@ -92,7 +92,7 @@ const Index = () => {
             if (listing.user_id) {
               const { data: profile } = await supabase
                 .from('profiles')
-                .select('full_name, user_type, company_name')
+                .select('full_name, user_type, company_name, avatar_url')
                 .eq('user_id', listing.user_id)
                 .single();
               
@@ -240,7 +240,8 @@ const Index = () => {
                     name: agentName,
                     type: agentType,
                     rating: 4.5,
-                    verified: true
+                    verified: true,
+                    avatar_url: (profile as any)?.avatar_url
                   }}
                   features={property.features || ["Moderne", "Bien situé"]}
                   isSponsored={property.is_sponsored && property.sponsored_until && new Date(property.sponsored_until) > new Date()}
