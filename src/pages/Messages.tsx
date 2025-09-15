@@ -67,7 +67,10 @@ const Messages = () => {
   // Get avatar image URL for conversation
   const getConversationAvatarUrl = (conversation: any) => {
     const otherParticipant = conversation.participants.find((p: any) => p.user_id !== user?.id);
-    return otherParticipant?.profile?.avatar_url;
+    const avatarUrl = otherParticipant?.profile?.avatar_url;
+    console.log('Avatar URL for conversation:', conversation.id, 'URL:', avatarUrl);
+    console.log('Other participant:', otherParticipant);
+    return avatarUrl;
   };
 
   // Get avatar initials for conversation
@@ -190,16 +193,19 @@ const Messages = () => {
                   `}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <Avatar className="w-12 h-12">
-                        <AvatarImage 
-                          src={getConversationAvatarUrl(conversation)} 
-                          alt={getConversationDisplayName(conversation)}
-                        />
-                        <AvatarFallback className="bg-gradient-primary text-primary-foreground">
-                          {getConversationAvatar(conversation)}
-                        </AvatarFallback>
-                      </Avatar>
+                     <div className="relative">
+                       <Avatar className="w-12 h-12">
+                         <AvatarImage 
+                           src={getConversationAvatarUrl(conversation)} 
+                           alt={getConversationDisplayName(conversation)}
+                           onError={(e) => {
+                             console.log('Avatar failed to load:', getConversationAvatarUrl(conversation));
+                           }}
+                         />
+                         <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+                           {getConversationAvatar(conversation)}
+                         </AvatarFallback>
+                       </Avatar>
                       {isParticipantOnline(conversation) && (
                         <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-accent rounded-full border-2 border-background" />
                       )}

@@ -65,7 +65,9 @@ export const useRealTimeMessages = () => {
           conversation_participants!inner (
             user_id,
             last_read_at,
-            profiles (
+            profiles!conversation_participants_user_id_fkey (
+              id,
+              user_id,
               first_name,
               last_name,
               full_name,
