@@ -24,7 +24,8 @@ const Messages = () => {
     selectedConversationId,
     setSelectedConversationId,
     loading,
-    sendMessage
+    sendMessage,
+    markConversationAsRead
   } = useRealTimeMessages();
 
   // Emojis populaires organisés par catégories
@@ -176,7 +177,13 @@ const Messages = () => {
               filteredConversations.map((conversation) => (
                 <div
                   key={conversation.id}
-                  onClick={() => setSelectedConversationId(conversation.id)}
+                  onClick={() => {
+                    setSelectedConversationId(conversation.id);
+                    // Marquer la conversation comme lue
+                    if (conversation.unread_count > 0) {
+                      markConversationAsRead(conversation.id);
+                    }
+                  }}
                   className={`
                     p-4 border-b border-border cursor-pointer transition-colors hover:bg-muted/50
                     ${selectedConversationId === conversation.id ? 'bg-muted' : ''}

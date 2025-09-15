@@ -248,6 +248,30 @@ export const useRealTimeMessages = () => {
     }
   }, [toast]);
 
+  // Mark conversation as read
+  const markConversationAsRead = useCallback(async (conversationId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('conversation_participants')
+        .update({ last_read_at: new Date().toISOString() })
+        .eq('conversation_id', conversationId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error marking conversation as read:', error);
+        return;
+      }
+
+      // Refresh conversations to update unread counts
+      await fetchConversations();
+    } catch (error) {
+      console.error('Error in markConversationAsRead:', error);
+    }
+  }, [fetchConversations]);
+
   // Create a new conversation with atomic transaction approach
   const createConversation = useCallback(async (
     participantIds: string[], 
@@ -441,6 +465,7 @@ export const useRealTimeMessages = () => {
     loading,
     sendMessage,
     createConversation,
+    markConversationAsRead,
     refreshConversations: fetchConversations,
     refreshMessages: () => selectedConversationId && fetchMessages(selectedConversationId)
   };
