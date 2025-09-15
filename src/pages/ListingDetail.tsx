@@ -381,20 +381,24 @@ const ListingDetail = () => {
 
           {/* Dialog galerie plein écran */}
           <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
-            <DialogContent className="max-w-4xl w-full h-[90vh] p-0">
-              <DialogHeader className="p-4 pb-0">
-                <DialogTitle>Galerie photos - {listing.title}</DialogTitle>
+            <DialogContent className="max-w-7xl w-[95vw] h-[95vh] p-0 bg-black/95">
+              <DialogHeader className="p-4 pb-2 bg-background/80 backdrop-blur-sm">
+                <DialogTitle className="text-center">Galerie photos - {listing.title}</DialogTitle>
               </DialogHeader>
-              <div className="flex-1 p-4 overflow-hidden">
-                <Carousel className="w-full h-full">
-                  <CarouselContent>
+              <div className="flex-1 flex items-center justify-center p-2">
+                <Carousel className="w-full h-full" setApi={(api) => {
+                  if (api) {
+                    api.scrollTo(currentImageIndex, false);
+                  }
+                }}>
+                  <CarouselContent className="h-full">
                     {getAllImages().map((imgSrc, index) => (
-                      <CarouselItem key={index}>
-                        <div className="h-full flex items-center justify-center">
+                      <CarouselItem key={index} className="h-full">
+                        <div className="h-full flex items-center justify-center p-4">
                           <img 
                             src={imgSrc} 
                             alt={`${listing.title} - Image ${index + 1}`}
-                            className="max-w-full max-h-full object-contain"
+                            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
                           />
                         </div>
                       </CarouselItem>
