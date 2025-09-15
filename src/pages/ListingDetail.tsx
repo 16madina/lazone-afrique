@@ -53,6 +53,8 @@ const ListingDetail = () => {
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
   const [messageContent, setMessageContent] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   const { createConversation, sendMessage } = useRealTimeMessages();
 
@@ -264,6 +266,7 @@ const ListingDetail = () => {
             <div className="relative">
               {(() => {
                 const images = getAllImages();
+                
                 return (
                   <>
                     <Carousel className="w-full">
@@ -274,13 +277,58 @@ const ListingDetail = () => {
                               <img 
                                 src={imgSrc} 
                                 alt={`${listing.title} - Image ${index + 1}`}
-                                className="w-full h-64 md:h-96 object-cover"
+                                className="w-full h-64 md:h-96 object-cover cursor-pointer"
+                                onClick={() => {
+                                  setCurrentImageIndex(index);
+                                  setGalleryOpen(true);
+                                }}
                               />
                             </div>
                           </CarouselItem>
                         ))}
                       </CarouselContent>
                     </Carousel>
+                    
+                    {/* Miniatures sous l'image principale */}
+                    {images.length > 1 && (
+                      <div className="flex gap-2 p-4 overflow-x-auto">
+                        {images.slice(0, 3).map((imgSrc, index) => (
+                          <div
+                            key={index}
+                            className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:border-primary transition-colors"
+                            onClick={() => {
+                              setCurrentImageIndex(index);
+                              setGalleryOpen(true);
+                            }}
+                          >
+                            <img 
+                              src={imgSrc} 
+                              alt={`Miniature ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ))}
+                        
+                        {/* Bouton "voir plus" si plus de 3 images */}
+                        {images.length > 3 && (
+                          <div
+                            className="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden cursor-pointer border-2 border-transparent hover:border-primary transition-colors relative bg-black/60"
+                            onClick={() => setGalleryOpen(true)}
+                          >
+                            <img 
+                              src={images[3]} 
+                              alt="Voir plus"
+                              className="w-full h-full object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                              <span className="text-white text-xs font-medium">
+                                +{images.length - 3}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     
                     {/* Badges et contrôles superposés */}
                     <div className="absolute top-4 right-4 z-10">
@@ -305,6 +353,47 @@ const ListingDetail = () => {
               })()}
             </div>
           </Card>
+
+          {/* Dialog galerie plein écran */}
+          <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
+            <DialogContent className="max-w-4xl w-full h-[90vh] p-0">
+              <DialogHeader className="p-4 pb-0">
+                <DialogTitle>Galerie photos - {listing.title}</DialogTitle>
+              </DialogHeader>
+              <div className="flex-1 p-4 overflow-hidden">
+                <Carousel className="w-full h-full">
+                  <CarouselContent>
+                    {getAllImages().map((imgSrc, index) => (
+                      <CarouselItem key={index}>
+                        <div className="h-full flex items-center justify-center">
+                          <img 
+                            src={imgSrc} 
+                            alt={`${listing.title} - Image ${index + 1}`}
+                            className="max-w-full max-h-full object-contain"
+                          />
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                </Carousel>
+              </div>
+              <div className="flex justify-center gap-2 p-4 pt-0 overflow-x-auto">
+                {getAllImages().map((imgSrc, index) => (
+                  <div
+                    key={index}
+                    className="flex-shrink-0 w-12 h-12 rounded overflow-hidden cursor-pointer border-2 border-transparent hover:border-primary transition-colors"
+                    onClick={() => setCurrentImageIndex(index)}
+                  >
+                    <img 
+                      src={imgSrc} 
+                      alt={`Miniature ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {/* Informations principales */}
           <Card>
