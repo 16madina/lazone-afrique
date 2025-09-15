@@ -341,31 +341,59 @@ const Messages = () => {
                   <div
                     key={msg.id}
                     className={`
-                      flex animate-fade-in
+                      flex animate-fade-in gap-3
                       ${isMyMessage(msg.sender_id) ? 'justify-end' : 'justify-start'}
                     `}
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
-                    <div className={`
-                      max-w-[70%] px-4 py-2 rounded-2xl
-                      ${isMyMessage(msg.sender_id)
-                        ? 'bg-gradient-primary text-primary-foreground rounded-br-md' 
-                        : 'bg-muted text-foreground rounded-bl-md'
-                      }
-                    `}>
-                      <p className="text-sm">{msg.content}</p>
-                      <div className="flex items-center justify-between mt-1">
-                        <p className={`
-                          text-xs 
-                          ${isMyMessage(msg.sender_id) ? 'text-primary-foreground/70' : 'text-muted-foreground'}
-                        `}>
-                          {formatMessageTime(msg.created_at)}
+                    {/* Avatar pour les messages reçus */}
+                    {!isMyMessage(msg.sender_id) && (
+                      <div className="flex-shrink-0 mt-auto mb-1">
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage 
+                            src={msg.sender_profile?.avatar_url} 
+                            alt={msg.sender_profile?.full_name || 'Avatar'}
+                          />
+                          <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
+                            {msg.sender_profile?.full_name?.substring(0, 2)?.toUpperCase() || 
+                             `${msg.sender_profile?.first_name?.[0] || ''}${msg.sender_profile?.last_name?.[0] || ''}`.toUpperCase() ||
+                             'U'}
+                          </AvatarFallback>
+                        </Avatar>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col">
+                      {/* Nom de l'expéditeur pour les messages reçus */}
+                      {!isMyMessage(msg.sender_id) && (
+                        <p className="text-xs text-muted-foreground mb-1 ml-2">
+                          {msg.sender_profile?.full_name || 
+                           `${msg.sender_profile?.first_name || ''} ${msg.sender_profile?.last_name || ''}`.trim() ||
+                           'Utilisateur'}
                         </p>
-                        {isMyMessage(msg.sender_id) && (
-                          <div className="ml-2">
-                            <CheckCheck className="w-3 h-3 text-primary-foreground/50" />
-                          </div>
-                        )}
+                      )}
+
+                      <div className={`
+                        max-w-[70%] px-4 py-2 rounded-2xl
+                        ${isMyMessage(msg.sender_id)
+                          ? 'bg-gradient-primary text-primary-foreground rounded-br-md' 
+                          : 'bg-muted text-foreground rounded-bl-md'
+                        }
+                      `}>
+                        <p className="text-sm">{msg.content}</p>
+                        <div className="flex items-center justify-between mt-1">
+                          <p className={`
+                            text-xs 
+                            ${isMyMessage(msg.sender_id) ? 'text-primary-foreground/70' : 'text-muted-foreground'}
+                          `}>
+                            {formatMessageTime(msg.created_at)}
+                          </p>
+                          {isMyMessage(msg.sender_id) && (
+                            <div className="ml-2">
+                              <CheckCheck className="w-3 h-3 text-primary-foreground/50" />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>

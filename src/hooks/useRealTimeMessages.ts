@@ -15,6 +15,7 @@ export interface Message {
     first_name?: string;
     last_name?: string;
     full_name?: string;
+    avatar_url?: string;
   };
 }
 
@@ -98,11 +99,11 @@ export const useRealTimeMessages = () => {
 
           let latestMessage = undefined;
           if (latestMessageData?.[0]) {
-            const { data: senderProfile } = await supabase
-              .from('profiles')
-              .select('first_name, last_name, full_name')
-              .eq('user_id', latestMessageData[0].sender_id)
-              .single();
+          const { data: senderProfile } = await supabase
+            .from('profiles')
+            .select('first_name, last_name, full_name, avatar_url')
+            .eq('user_id', latestMessageData[0].sender_id)
+            .single();
 
             latestMessage = {
               ...latestMessageData[0],
@@ -184,7 +185,7 @@ export const useRealTimeMessages = () => {
         (data || []).map(async (msg: any) => {
           const { data: senderProfile } = await supabase
             .from('profiles')
-            .select('first_name, last_name, full_name')
+            .select('first_name, last_name, full_name, avatar_url')
             .eq('user_id', msg.sender_id)
             .single();
 
