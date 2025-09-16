@@ -426,7 +426,7 @@ const ListingDetail = () => {
 
           {/* Informations principales */}
           <Card>
-            <CardContent className="p-6 space-y-4">
+            <CardContent className="p-8 space-y-4">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold">{listing.title}</h1>
                 <div className="flex items-center text-muted-foreground mt-2">
@@ -488,7 +488,7 @@ const ListingDetail = () => {
 
           {/* Caractéristiques du bien */}
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-8">
               <h2 className="text-xl font-semibold mb-4">Caractéristiques du bien</h2>
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -583,7 +583,7 @@ const ListingDetail = () => {
 
           {/* Localisation */}
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-8">
               <h2 className="text-xl font-semibold mb-4">Localisation</h2>
               <div className="space-y-2">
                 <div className="flex items-center">
@@ -599,7 +599,7 @@ const ListingDetail = () => {
 
           {/* Actions de contact */}
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-8">
               <h2 className="text-xl font-semibold mb-4">Contacter le vendeur</h2>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button className="flex-1">
