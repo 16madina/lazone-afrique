@@ -11,9 +11,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Search, MessageCircle, Phone, Video, MoreVertical, Check, CheckCheck } from "lucide-react";
 import { useRealTimeMessages } from "@/hooks/useRealTimeMessages";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Messages = () => {
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const [newMessage, setNewMessage] = useState("");
+  const [isSending, setIsSending] = useState(false);
   const { user } = useAuth();
 
   const {
@@ -32,6 +36,45 @@ const Messages = () => {
 
   // Get selected conversation
   const selectedConversation = conversations.find(conv => conv.id === selectedConversationId);
+
+  // Send message function
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !selectedConversationId || !user || isSending) return;
+
+    setIsSending(true);
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: selectedConversationId,
+          sender_id: user.id,
+          content: newMessage.trim(),
+          message_type: 'text'
+        });
+
+      if (error) {
+        console.error('Error sending message:', error);
+        toast.error('Erreur lors de l\'envoi du message');
+        return;
+      }
+
+      setNewMessage("");
+      toast.success('Message envoyé');
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Erreur lors de l\'envoi du message');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  // Handle Enter key press
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
 
   // Get display name for conversation participant (not current user)
   const getConversationDisplayName = (conversation: any) => {
@@ -390,9 +433,18 @@ const Messages = () => {
                   <Input
                     placeholder="Tapez votre message..."
                     className="min-h-[44px] border border-border/50 bg-background focus:bg-background focus:border-primary"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    disabled={isSending}
                   />
                 </div>
-                <Button size="icon" className="shrink-0 h-[44px] w-[44px]">
+                <Button 
+                  size="icon" 
+                  className="shrink-0 h-[44px] w-[44px]"
+                  onClick={sendMessage}
+                  disabled={isSending || !newMessage.trim()}
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
