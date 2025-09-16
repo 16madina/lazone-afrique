@@ -8,14 +8,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Search, MessageCircle, Phone, Video, MoreVertical, Send, Smile, Paperclip, Check, CheckCheck } from "lucide-react";
+import { Search, MessageCircle, Phone, Video, MoreVertical, Check, CheckCheck } from "lucide-react";
 import { useRealTimeMessages } from "@/hooks/useRealTimeMessages";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Messages = () => {
-  const [message, setMessage] = useState("");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
-  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
   const { user } = useAuth();
 
   const {
@@ -24,24 +22,8 @@ const Messages = () => {
     selectedConversationId,
     setSelectedConversationId,
     loading,
-    sendMessage,
     markConversationAsRead
   } = useRealTimeMessages();
-
-  // Emojis populaires organisés par catégories
-  const emojiCategories = {
-    "Smileys": ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚', '😋', '😛', '😝', '😜', '🤪'],
-    "Coeurs": ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟'],
-    "Gestes": ['👍', '👎', '👌', '🤌', '🤏', '✌️', '🤞', '🫰', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👋', '🤚', '🖐️', '✋', '🖖', '👏', '🙌'],
-    "Objets": ['🔥', '💯', '💫', '⭐', '✨', '🎉', '🎊', '🏠', '💝', '🎁', '🎈', '🎂', '🥳', '🚀', '💎', '⚡'],
-  };
-
-  const handleSendMessage = async () => {
-    if (!message.trim() || !selectedConversationId) return;
-    
-    await sendMessage(selectedConversationId, message);
-    setMessage("");
-  };
 
   // Filter conversations based on unread filter
   const filteredConversations = showUnreadOnly 
@@ -247,7 +229,7 @@ const Messages = () => {
         {selectedConversationId && selectedConversation ? (
           <div className={`
             ${selectedConversationId ? 'flex' : 'hidden md:flex'} 
-            flex-col flex-1 pb-32 md:pb-8
+            flex-col flex-1
           `}>
             {/* Chat Header */}
             <div className="p-4 border-b border-border bg-background/95 backdrop-blur-sm">
@@ -329,7 +311,7 @@ const Messages = () => {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 p-4 pb-32 md:pb-8 overflow-y-auto space-y-4">
+            <div className="flex-1 p-4 overflow-y-auto space-y-4">
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center">
                   <MessageCircle className="w-12 h-12 text-muted-foreground mb-4" />
@@ -417,86 +399,6 @@ const Messages = () => {
         )}
       </main>
 
-      {/* Message Input - Always visible */}
-      <div className="p-4 border-t border-border bg-background/95 backdrop-blur-sm fixed bottom-16 md:bottom-0 left-0 right-0 md:sticky z-[60]">
-        <div className="flex items-end gap-3 max-w-full">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="mb-1 flex-shrink-0"
-            onClick={() => {
-              console.log('Ouvrir sélecteur de fichier');
-              // Ici on peut ajouter l'ouverture d'un input file
-              const input = document.createElement('input');
-              input.type = 'file';
-              input.accept = 'image/*,document/*';
-              input.click();
-            }}
-          >
-            <Paperclip className="w-5 h-5 text-muted-foreground" />
-          </Button>
-          
-          <div className="flex-1 relative min-w-0">
-            <Input
-              placeholder={selectedConversation ? "Tapez votre message..." : "Sélectionnez une conversation pour commencer"}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="pr-12 py-3 rounded-full border-2 w-full"
-              disabled={!selectedConversation}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage();
-                }
-              }}
-            />
-            <Popover open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
-              <PopoverTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2"
-                >
-                  <Smile className="w-4 h-4 text-muted-foreground" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-80 p-2" align="end">
-                <div className="space-y-3">
-                  {Object.entries(emojiCategories).map(([category, emojis]) => (
-                    <div key={category}>
-                      <h4 className="text-sm font-medium text-muted-foreground mb-2">{category}</h4>
-                      <div className="grid grid-cols-8 gap-1">
-                        {emojis.map((emoji, index) => (
-                          <Button
-                            key={`${category}-${index}`}
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 hover:bg-muted"
-                            onClick={() => {
-                              setMessage(prev => prev + emoji);
-                              setEmojiPickerOpen(false);
-                            }}
-                          >
-                            <span className="text-lg">{emoji}</span>
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <Button 
-            onClick={handleSendMessage}
-            disabled={!message.trim() || !selectedConversation}
-            className="rounded-full w-12 h-12 p-0 bg-gradient-primary hover:bg-gradient-primary/90 disabled:opacity-50 flex-shrink-0"
-          >
-            <Send className="w-5 h-5" />
-          </Button>
-        </div>
-      </div>
 
       <BottomNavigation />
     </div>
