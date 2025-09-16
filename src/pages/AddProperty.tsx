@@ -328,11 +328,14 @@ const AddProperty = () => {
         console.log(`Coordinates found: ${coordinates.lat}, ${coordinates.lng}`);
       }
 
-      // Prepare data for insertion
+      // Prepare data for insertion - Convert local price to USD for storage
+      const priceInLocalCurrency = parseFloat(formData.price);
+      const priceInUSD = Math.round(priceInLocalCurrency / selectedCountry.exchangeRate);
+      
       const insertData: any = {
         title: formData.title,
         description: formData.description,
-        price: parseFloat(formData.price),
+        price: priceInUSD,
         city: formData.city,
         country_code: selectedCountry.code.toUpperCase(),
         user_id: user.id,
@@ -711,19 +714,22 @@ const AddProperty = () => {
               <div className="space-y-6 animate-fade-in">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Prix</Label>
+                    <Label>Prix (en {selectedCountry.currency.name})</Label>
                     <div className="flex">
                       <Input 
                         type="number" 
-                        placeholder="85000000" 
+                        placeholder={`Ex: ${selectedCountry.code === 'ci' ? '85000000' : selectedCountry.code === 'ma' ? '850000' : '85000000'}`}
                         className="rounded-r-none" 
                         value={formData.price}
                         onChange={(e) => updateFormData('price', e.target.value)}
                       />
-                      <div className="bg-muted px-3 py-2 border border-l-0 rounded-r-md text-sm text-muted-foreground">
-                        FCFA
+                      <div className="bg-muted px-3 py-2 border border-l-0 rounded-r-md text-sm text-muted-foreground flex items-center gap-1">
+                        {selectedCountry.flag} {selectedCountry.currency.symbol}
                       </div>
                     </div>
+                    <p className="text-xs text-muted-foreground">
+                      Entrez le prix dans la devise de {selectedCountry.name}
+                    </p>
                   </div>
 
                   <div className="space-y-2">

@@ -328,7 +328,7 @@ export const CountryProvider: React.FC<CountryProviderProps> = ({ children }) =>
     const convertedPrice = convertPrice(priceInUSD);
     const currency = selectedCountry.currency;
     
-    // Format number with spaces for readability
+    // Format number with spaces for readability  
     const formattedNumber = convertedPrice.toLocaleString('fr-FR');
     
     return `${formattedNumber} ${currency.symbol}`;
