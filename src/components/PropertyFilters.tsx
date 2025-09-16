@@ -16,7 +16,11 @@ interface FilterState {
   features: string[];
 }
 
-const PropertyFilters = () => {
+interface PropertyFiltersProps {
+  onFiltersChange: (filters: FilterState) => void;
+}
+
+const PropertyFilters = ({ onFiltersChange }: PropertyFiltersProps) => {
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     type: "",
@@ -43,16 +47,18 @@ const PropertyFilters = () => {
   };
 
   const toggleFeature = (feature: string) => {
-    setFilters(prev => ({
-      ...prev,
-      features: prev.features.includes(feature)
-        ? prev.features.filter(f => f !== feature)
-        : [...prev.features, feature]
-    }));
+    const newFilters = {
+      ...filters,
+      features: filters.features.includes(feature)
+        ? filters.features.filter(f => f !== feature)
+        : [...filters.features, feature]
+    };
+    setFilters(newFilters);
+    onFiltersChange(newFilters);
   };
 
   const clearFilters = () => {
-    setFilters({
+    const clearedFilters = {
       type: "",
       propertyType: "",
       priceRange: [0, 1000000000],
@@ -60,7 +66,9 @@ const PropertyFilters = () => {
       bathrooms: "",
       surface: [0, 1000],
       features: []
-    });
+    };
+    setFilters(clearedFilters);
+    onFiltersChange(clearedFilters);
   };
 
   const activeFiltersCount = Object.entries(filters).filter(([key, value]) => {
@@ -104,7 +112,11 @@ const PropertyFilters = () => {
               Type: {filters.type}
               <X 
                 className="w-3 h-3 cursor-pointer" 
-                onClick={() => setFilters(prev => ({ ...prev, type: "" }))}
+                onClick={() => {
+                  const newFilters = { ...filters, type: "" };
+                  setFilters(newFilters);
+                  onFiltersChange(newFilters);
+                }}
               />
             </Badge>
           )}
@@ -113,7 +125,11 @@ const PropertyFilters = () => {
               {filters.propertyType}
               <X 
                 className="w-3 h-3 cursor-pointer" 
-                onClick={() => setFilters(prev => ({ ...prev, propertyType: "" }))}
+                onClick={() => {
+                  const newFilters = { ...filters, propertyType: "" };
+                  setFilters(newFilters);
+                  onFiltersChange(newFilters);
+                }}
               />
             </Badge>
           )}
@@ -143,9 +159,11 @@ const PropertyFilters = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Type de transaction</label>
-                <Select value={filters.type} onValueChange={(value) => 
-                  setFilters(prev => ({ ...prev, type: value }))
-                }>
+                <Select value={filters.type} onValueChange={(value) => {
+                  const newFilters = { ...filters, type: value };
+                  setFilters(newFilters);
+                  onFiltersChange(newFilters);
+                }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Toutes" />
                   </SelectTrigger>
@@ -159,9 +177,11 @@ const PropertyFilters = () => {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Type de bien</label>
-                <Select value={filters.propertyType} onValueChange={(value) => 
-                  setFilters(prev => ({ ...prev, propertyType: value }))
-                }>
+                <Select value={filters.propertyType} onValueChange={(value) => {
+                  const newFilters = { ...filters, propertyType: value };
+                  setFilters(newFilters);
+                  onFiltersChange(newFilters);
+                }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Tous" />
                   </SelectTrigger>
@@ -181,7 +201,11 @@ const PropertyFilters = () => {
               <label className="text-sm font-medium">Gamme de prix</label>
               <Slider
                 value={filters.priceRange}
-                onValueChange={(value) => setFilters(prev => ({ ...prev, priceRange: value }))}
+                onValueChange={(value) => {
+                  const newFilters = { ...filters, priceRange: value };
+                  setFilters(newFilters);
+                  onFiltersChange(newFilters);
+                }}
                 max={1000000000}
                 min={0}
                 step={1000000}
@@ -197,9 +221,11 @@ const PropertyFilters = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Chambres</label>
-                <Select value={filters.bedrooms} onValueChange={(value) => 
-                  setFilters(prev => ({ ...prev, bedrooms: value }))
-                }>
+                <Select value={filters.bedrooms} onValueChange={(value) => {
+                  const newFilters = { ...filters, bedrooms: value };
+                  setFilters(newFilters);
+                  onFiltersChange(newFilters);
+                }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Indifférent" />
                   </SelectTrigger>
@@ -215,9 +241,11 @@ const PropertyFilters = () => {
 
               <div className="space-y-2">
                 <label className="text-sm font-medium">Salles de bain</label>
-                <Select value={filters.bathrooms} onValueChange={(value) => 
-                  setFilters(prev => ({ ...prev, bathrooms: value }))
-                }>
+                <Select value={filters.bathrooms} onValueChange={(value) => {
+                  const newFilters = { ...filters, bathrooms: value };
+                  setFilters(newFilters);
+                  onFiltersChange(newFilters);
+                }}>
                   <SelectTrigger>
                     <SelectValue placeholder="Indifférent" />
                   </SelectTrigger>
@@ -236,7 +264,11 @@ const PropertyFilters = () => {
               <label className="text-sm font-medium">Surface (m²)</label>
               <Slider
                 value={filters.surface}
-                onValueChange={(value) => setFilters(prev => ({ ...prev, surface: value }))}
+                onValueChange={(value) => {
+                  const newFilters = { ...filters, surface: value };
+                  setFilters(newFilters);
+                  onFiltersChange(newFilters);
+                }}
                 max={1000}
                 min={0}
                 step={10}
@@ -273,3 +305,4 @@ const PropertyFilters = () => {
 };
 
 export default PropertyFilters;
+export type { FilterState };

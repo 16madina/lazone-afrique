@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { MapPin, Heart, Bed, Bath, Square, Phone, MessageCircle, Star } from "lucide-react";
 import { useState } from "react";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useContactActions } from "@/hooks/useContactActions";
 
 interface PropertyCardProps {
   id: string;
@@ -27,6 +28,8 @@ interface PropertyCardProps {
     rating: number;
     verified: boolean;
     avatar_url?: string;
+    user_id?: string;
+    phone?: string;
   };
   features: string[];
   isSponsored?: boolean;
@@ -53,6 +56,7 @@ const PropertyCard = ({
   const { formatLocalPrice, selectedCountry } = useCountry();
   const navigate = useNavigate();
   const { toggleFavorite, isFavorite: isInFavorites, loading: favLoading } = useFavorites();
+  const { handlePhoneContact, handleMessageContact, loading: contactLoading } = useContactActions();
 
   const handleFavoriteClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -80,6 +84,18 @@ const PropertyCard = ({
       navigate(`/listing/${id}`);
     } else {
       console.warn('ID invalide détecté:', id);
+    }
+  };
+
+  const handlePhoneClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    handlePhoneContact(agent.phone, agent.name);
+  };
+
+  const handleMessageClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (agent.user_id) {
+      handleMessageContact(agent.user_id, id, title, agent.name);
     }
   };
   const typeColors = {
@@ -269,7 +285,9 @@ const PropertyCard = ({
               size="sm" 
               variant="outline" 
               className="px-2"
-              onClick={(e) => e.stopPropagation()}
+              onClick={handlePhoneClick}
+              disabled={contactLoading || !agent.phone}
+              title={agent.phone ? `Appeler ${agent.name}` : 'Numéro non disponible'}
             >
               <Phone className="w-3 h-3" />
             </Button>
@@ -277,7 +295,9 @@ const PropertyCard = ({
               size="sm" 
               variant="outline" 
               className="px-2"
-              onClick={(e) => e.stopPropagation()}
+              onClick={handleMessageClick}
+              disabled={contactLoading || !agent.user_id}
+              title={agent.user_id ? `Envoyer un message à ${agent.name}` : 'Contact non disponible'}
             >
               <MessageCircle className="w-3 h-3" />
             </Button>

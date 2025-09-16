@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
-import PropertyFilters from "@/components/PropertyFilters";
+import PropertyFilters, { FilterState } from "@/components/PropertyFilters";
 import PropertyCard from "@/components/PropertyCard";
 import BottomNavigation from "@/components/BottomNavigation";
 import { useCountry } from "@/contexts/CountryContext";
@@ -9,8 +9,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpDown, Grid3X3, List, Globe } from "lucide-react";
+import { ArrowUpDown, Grid3X3, List, Globe, ChevronLeft, ChevronRight } from "lucide-react";
 import { useFavorites } from "@/hooks/useFavorites";
+import { usePagination } from "@/hooks/usePagination";
+import { toast } from "sonner";
 
 interface Listing {
   id: string;
@@ -24,6 +26,7 @@ interface Listing {
   photos?: string[] | null;
   status: string;
   user_id?: string;
+  created_at: string;
   is_sponsored?: boolean;
   sponsored_until?: string;
   transaction_type?: string;
@@ -36,6 +39,7 @@ interface Listing {
     full_name?: string;
     user_type?: string;
     company_name?: string;
+    phone?: string;
   };
 }
 
@@ -48,9 +52,34 @@ const Index = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState("date");
   const [properties, setProperties] = useState<Listing[]>([]);
+  const [allProperties, setAllProperties] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentFilters, setCurrentFilters] = useState<FilterState>({
+    type: "",
+    propertyType: "",
+    priceRange: [0, 1000000000],
+    bedrooms: "",
+    bathrooms: "",
+    surface: [0, 1000],
+    features: []
+  });
   const { selectedCountry, formatPrice } = useCountry();
   const { isFavorite } = useFavorites();
+  
+  // Pagination for properties
+  const {
+    currentItems: paginatedProperties,
+    currentPage,
+    totalPages,
+    hasNextPage,
+    hasPreviousPage,
+    goToNextPage,
+    goToPreviousPage,
+    goToPage,
+    startIndex,
+    endIndex,
+    totalItems
+  } = usePagination({ items: properties, itemsPerPage: 12 });
 
   // Fetch properties for selected country from Supabase
   useEffect(() => {
@@ -85,14 +114,14 @@ const Index = () => {
           .eq('status', 'published');
 
         if (error) {
-          console.error('Erreur lors du chargement des propriétés:', error);
+          toast.error('Erreur lors du chargement des propriétés');
         } else {
           // Récupérer les profils pour chaque listing
           const listingsWithProfiles = await Promise.all((data || []).map(async (listing) => {
             if (listing.user_id) {
               const { data: profile } = await supabase
                 .from('profiles')
-                .select('full_name, user_type, company_name, avatar_url')
+                .select('full_name, user_type, company_name, avatar_url, phone')
                 .eq('user_id', listing.user_id)
                 .single();
               
@@ -116,10 +145,11 @@ const Index = () => {
             return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
           });
           
+          setAllProperties(sortedProperties);
           setProperties(sortedProperties);
         }
       } catch (err) {
-        console.error('Erreur:', err);
+        toast.error('Erreur lors du chargement des propriétés');
       } finally {
         setLoading(false);
       }
@@ -127,6 +157,77 @@ const Index = () => {
 
     fetchProperties();
   }, [selectedCountry.code]);
+
+  // Filter properties based on current filters
+  const filterProperties = (properties: Listing[], filters: FilterState) => {
+    return properties.filter(property => {
+      // Filter by transaction type
+      if (filters.type && property.transaction_type !== filters.type) return false;
+      
+      // Filter by property type  
+      if (filters.propertyType && property.property_type !== filters.propertyType) return false;
+      
+      // Filter by price range
+      if (property.price < filters.priceRange[0] || property.price > filters.priceRange[1]) return false;
+      
+      // Filter by bedrooms
+      if (filters.bedrooms) {
+        const minBedrooms = parseInt(filters.bedrooms);
+        if (!property.bedrooms || property.bedrooms < minBedrooms) return false;
+      }
+      
+      // Filter by bathrooms
+      if (filters.bathrooms) {
+        const minBathrooms = parseInt(filters.bathrooms);
+        if (!property.bathrooms || property.bathrooms < minBathrooms) return false;
+      }
+      
+      // Filter by surface area
+      if (property.surface_area) {
+        if (property.surface_area < filters.surface[0] || property.surface_area > filters.surface[1]) return false;
+      }
+      
+      // Filter by features
+      if (filters.features.length > 0) {
+        const hasAllFeatures = filters.features.every(feature => 
+          property.features?.includes(feature)
+        );
+        if (!hasAllFeatures) return false;
+      }
+      
+      return true;
+    });
+  };
+
+  // Handle filter changes
+  const handleFiltersChange = (filters: FilterState) => {
+    setCurrentFilters(filters);
+    const filteredProperties = filterProperties(allProperties, filters);
+    setProperties(filteredProperties);
+  };
+
+  // Sort properties
+  const sortProperties = (properties: Listing[], sortBy: string) => {
+    return [...properties].sort((a, b) => {
+      switch (sortBy) {
+        case 'price-asc':
+          return a.price - b.price;
+        case 'price-desc':
+          return b.price - a.price;
+        case 'surface':
+          return (b.surface_area || 0) - (a.surface_area || 0);
+        case 'date':
+        default:
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+    });
+  };
+
+  // Update properties when sort changes
+  useEffect(() => {
+    const sortedProperties = sortProperties(properties, sortBy);
+    setProperties(sortedProperties);
+  }, [sortBy]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -150,7 +251,7 @@ const Index = () => {
 
         {/* Filters & Controls */}
         <div className="space-y-4">
-          <PropertyFilters />
+          <PropertyFilters onFiltersChange={handleFiltersChange} />
           
           {/* Sort & View Controls */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -170,7 +271,13 @@ const Index = () => {
               
               <div className="text-sm text-muted-foreground flex items-center gap-2">
                 <Globe className="w-3 h-3" />
-                {properties.length} propriétés trouvées en {selectedCountry.name}
+                {totalItems > 0 ? (
+                  <span>
+                    Affichage {startIndex}-{endIndex} de {totalItems} propriétés en {selectedCountry.name}
+                  </span>
+                ) : (
+                  <span>Aucune propriété trouvée en {selectedCountry.name}</span>
+                )}
               </div>
             </div>
 
@@ -216,7 +323,7 @@ const Index = () => {
               ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" 
               : "grid-cols-1"
           }`}>
-            {properties.map((property) => {
+            {paginatedProperties.map((property) => {
               const profile = property.profiles;
               const agentName = profile?.full_name || "Propriétaire";
               const agentType = profile?.user_type === 'proprietaire' ? 'individual' : 
@@ -241,7 +348,9 @@ const Index = () => {
                     type: agentType,
                     rating: 4.5,
                     verified: true,
-                    avatar_url: (profile as any)?.avatar_url
+                    avatar_url: (profile as any)?.avatar_url,
+                    user_id: property.user_id,
+                    phone: profile?.phone
                   }}
                   features={property.features || ["Moderne", "Bien situé"]}
                   isSponsored={property.is_sponsored && property.sponsored_until && new Date(property.sponsored_until) > new Date()}
@@ -267,11 +376,70 @@ const Index = () => {
           </div>
         )}
 
-        {/* Load More */}
-        {!loading && properties.length > 0 && (
-          <div className="text-center">
-            <Button variant="outline" size="lg">
-              Voir plus de propriétés en {selectedCountry.name}
+        {/* Pagination */}
+        {!loading && totalItems > 12 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8">
+            <div className="text-sm text-muted-foreground">
+              Page {currentPage} sur {totalPages} ({totalItems} propriétés)
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToPreviousPage}
+                disabled={!hasPreviousPage}
+                className="flex items-center gap-1"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Précédent
+              </Button>
+              
+              {/* Page numbers */}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                  if (pageNum <= totalPages) {
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => goToPage(pageNum)}
+                        className="w-8 h-8 p-0"
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={goToNextPage}
+                disabled={!hasNextPage}
+                className="flex items-center gap-1"
+              >
+                Suivant
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Load More for smaller screens */}
+        {!loading && properties.length > 0 && totalPages > 1 && (
+          <div className="text-center sm:hidden">
+            <Button 
+              variant="outline" 
+              size="lg"
+              onClick={goToNextPage}
+              disabled={!hasNextPage}
+            >
+              {hasNextPage ? 'Voir plus de propriétés' : 'Toutes les propriétés affichées'}
             </Button>
           </div>
         )}
