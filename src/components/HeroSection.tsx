@@ -45,7 +45,7 @@ const HeroSection = () => {
           </div>
 
           {/* Search Form */}
-          <div className="bg-background/95 backdrop-blur-sm rounded-2xl p-6 shadow-warm max-w-4xl mx-auto">
+          <div className="bg-background/95 backdrop-blur-sm rounded-2xl p-4 shadow-warm max-w-3xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {/* Location */}
               <div className="space-y-2">
