@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Zap, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import SponsorshipDialog from "./SponsorshipDialog";
+import { useNavigate } from "react-router-dom";
 
 interface SponsorButtonProps {
   listingId: string;
@@ -11,6 +11,7 @@ interface SponsorButtonProps {
 }
 
 const SponsorButton = ({ listingId, userId }: SponsorButtonProps) => {
+  const navigate = useNavigate();
   const [isSponsored, setIsSponsored] = useState(false);
   const [sponsoredUntil, setSponsoredUntil] = useState<string | null>(null);
   const { user } = useAuth();
@@ -48,23 +49,23 @@ const SponsorButton = ({ listingId, userId }: SponsorButtonProps) => {
           <Crown className="h-4 w-4 text-yellow-500" />
           Sponsorisée ({daysLeft}j restants)
         </Button>
-        <SponsorshipDialog listingId={listingId}>
-          <Button variant="outline" size="sm" className="flex items-center gap-2">
-            <Zap className="h-4 w-4" />
-            Prolonger le boost
-          </Button>
-        </SponsorshipDialog>
+        <Button variant="outline" size="sm" className="flex items-center gap-2" onClick={() => navigate(`/sponsorship/${listingId}`)}>
+          <Zap className="h-4 w-4" />
+          Prolonger le boost
+        </Button>
       </div>
     );
   }
 
   return (
-    <SponsorshipDialog listingId={listingId}>
-      <Button variant="default" className="flex items-center gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
-        <Zap className="h-4 w-4" />
-        Booster cette annonce
-      </Button>
-    </SponsorshipDialog>
+    <Button 
+      variant="default" 
+      className="flex items-center gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+      onClick={() => navigate(`/sponsorship/${listingId}`)}
+    >
+      <Zap className="h-4 w-4" />
+      Booster cette annonce
+    </Button>
   );
 };
 

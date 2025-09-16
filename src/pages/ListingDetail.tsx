@@ -256,10 +256,10 @@ const ListingDetail = () => {
                 <h3 className="text-lg font-semibold mb-2">Annonce non trouvée</h3>
                 <p className="text-muted-foreground">{error}</p>
                 <Button 
-                  onClick={() => navigate('/')}
+                  onClick={() => navigate(-1)}
                   className="mt-4"
                 >
-                  Retour à l'accueil
+                  Retour
                 </Button>
               </CardContent>
             </Card>

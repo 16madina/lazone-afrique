@@ -133,11 +133,11 @@ const Auth = () => {
         {/* Bouton retour */}
         <Button 
           variant="ghost" 
-          onClick={() => navigate('/')}
+          onClick={() => navigate(-1)}
           className="mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Retour à l'accueil
+          Retour
         </Button>
         
         <Card className="w-full">

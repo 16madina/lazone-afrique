@@ -14,6 +14,7 @@ import Messages from "./pages/Messages";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import Sponsorship from "./pages/Sponsorship";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,6 +37,7 @@ const AppContent = () => {
       <Route path="/messages" element={<Messages />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/sponsorship/:listingId" element={<Sponsorship />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
