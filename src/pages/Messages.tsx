@@ -399,13 +399,13 @@ const Messages = () => {
                       )}
 
                       <div className={`
-                        max-w-[80%] px-4 py-2 rounded-2xl break-words
+                        max-w-[85%] px-3 py-2 rounded-2xl break-words
                         ${isMyMessage(msg.sender_id)
                           ? 'bg-gradient-primary text-primary-foreground rounded-br-md' 
                           : 'bg-muted text-foreground rounded-bl-md'
                         }
                       `}>
-                        <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                        <p className="text-xs leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>
                         <div className="flex items-center justify-between mt-1">
                           <p className={`
                             text-xs 
