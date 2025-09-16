@@ -45,8 +45,8 @@ const HeroSection = () => {
           </div>
 
           {/* Search Form */}
-          <div className="bg-background/95 backdrop-blur-sm rounded-2xl p-3 shadow-warm max-w-2xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+          <div className="bg-background/95 backdrop-blur-sm rounded-xl p-2 shadow-warm max-w-xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-1">
               {/* Location */}
               <div className="space-y-1">
                 <label className="text-sm font-medium text-muted-foreground">Localisation</label>
@@ -104,7 +104,7 @@ const HeroSection = () => {
             </div>
 
             {/* Quick Filters */}
-            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border">
+            <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-border">
               <span className="text-sm text-muted-foreground">Recherches populaires en {selectedCountry.name}:</span>
               <Button variant="outline" size="sm" className="text-xs">Villa {selectedCountry.cities[0]}</Button>
               <Button variant="outline" size="sm" className="text-xs">Appartement 2 chambres</Button>
