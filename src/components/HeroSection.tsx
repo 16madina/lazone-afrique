@@ -45,10 +45,10 @@ const HeroSection = () => {
           </div>
 
           {/* Search Form */}
-          <div className="bg-background/95 backdrop-blur-sm rounded-2xl p-4 shadow-warm max-w-3xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-background/95 backdrop-blur-sm rounded-2xl p-3 shadow-warm max-w-2xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
               {/* Location */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <label className="text-sm font-medium text-muted-foreground">Localisation</label>
                 <Select value={location} onValueChange={setLocation}>
                   <SelectTrigger>
@@ -66,7 +66,7 @@ const HeroSection = () => {
               </div>
 
               {/* Property Type */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <label className="text-sm font-medium text-muted-foreground">Type de bien</label>
                 <Select value={propertyType} onValueChange={setPropertyType}>
                   <SelectTrigger>
@@ -83,7 +83,7 @@ const HeroSection = () => {
               </div>
 
               {/* Search Input */}
-              <div className="space-y-2 md:col-span-1">
+              <div className="space-y-1 md:col-span-1">
                 <label className="text-sm font-medium text-muted-foreground">Recherche</label>
                 <Input
                   placeholder="Mots-clés..."
@@ -94,7 +94,7 @@ const HeroSection = () => {
               </div>
 
               {/* Search Button */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <label className="text-sm font-medium text-muted-foreground opacity-0">Action</label>
                 <Button className="w-full h-10 bg-gradient-primary hover:opacity-90 transition-all duration-300">
                   <Search className="w-4 h-4 mr-2" />
