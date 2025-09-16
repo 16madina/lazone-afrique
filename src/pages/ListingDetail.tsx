@@ -274,13 +274,13 @@ const ListingDetail = () => {
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       
-      <main className="flex-1 p-4">
-        <div className="max-w-4xl mx-auto space-y-6">
+      <main className="flex-1 p-6">
+        <div className="max-w-4xl mx-auto space-y-8">
           {/* Navigation */}
           <Button 
             variant="ghost" 
             onClick={() => navigate(-1)}
-            className="mb-4"
+            className="mb-6"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Retour
