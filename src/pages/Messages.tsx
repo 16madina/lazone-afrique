@@ -384,7 +384,7 @@ const Messages = () => {
             </div>
 
             {/* Message Input */}
-            <div className="p-4 border-t border-border bg-background/95 backdrop-blur-sm">
+            <div className="p-4 pb-20 md:pb-4 border-t border-border bg-background/95 backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <div className="flex-1">
                   <Input
