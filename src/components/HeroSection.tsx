@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCountry } from "@/contexts/CountryContext";
 import { Search, MapPin, Filter, Star, Info } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import heroImage from "@/assets/hero-african-villa.jpg";
 import propertyHouse from "@/assets/property-house.jpg";
 import propertyApartment from "@/assets/property-apartment.jpg";
@@ -20,11 +21,68 @@ interface HeroSectionProps {
   }) => void;
 }
 
+interface SponsoredListing {
+  id: string;
+  title: string;
+  price: number;
+  city: string;
+  image?: string;
+  photos?: string[];
+  bedrooms?: number;
+  bathrooms?: number;
+  property_type?: string;
+}
+
 const HeroSection = ({ onSearch }: HeroSectionProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [propertyType, setPropertyType] = useState("");
   const [location, setLocation] = useState("");
-  const { selectedCountry } = useCountry();
+  const [sponsoredListings, setSponsoredListings] = useState<SponsoredListing[]>([]);
+  const { selectedCountry, formatPrice } = useCountry();
+
+  // Fetch sponsored listings
+  useEffect(() => {
+    const fetchSponsoredListings = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('listings')
+          .select(`
+            id,
+            title,
+            price,
+            city,
+            image,
+            photos,
+            bedrooms,
+            bathrooms,
+            property_type,
+            is_sponsored,
+            sponsored_until
+          `)
+          .eq('country_code', selectedCountry.code.toUpperCase())
+          .eq('status', 'published')
+          .eq('is_sponsored', true)
+          .not('sponsored_until', 'is', null)
+          .limit(3);
+
+        if (error) {
+          console.error('Error fetching sponsored listings:', error);
+          return;
+        }
+
+        // Filter active sponsorships
+        const activeSponsored = (data || []).filter(listing => 
+          listing.sponsored_until && new Date(listing.sponsored_until) > new Date()
+        );
+
+        setSponsoredListings(activeSponsored);
+      } catch (error) {
+        console.error('Error fetching sponsored listings:', error);
+      }
+    };
+
+    fetchSponsoredListings();
+  }, [selectedCountry.code]);
 
   const handleSearch = () => {
     if (onSearch) {
@@ -33,6 +91,24 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
         propertyType,
         searchQuery
       });
+    }
+  };
+
+  const getPropertyImage = (listing: SponsoredListing) => {
+    if (listing.photos && listing.photos.length > 0) {
+      return listing.photos[0];
+    }
+    if (listing.image) {
+      return listing.image;
+    }
+    // Default images based on property type
+    switch (listing.property_type) {
+      case 'appartement':
+        return propertyApartment;
+      case 'terrain':
+        return propertyLand;
+      default:
+        return propertyHouse;
     }
   };
 
@@ -145,77 +221,43 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
           </div>
 
           {/* Featured Sponsored Properties */}
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-primary-foreground text-center">
-              🌟 Annonces Sponsorisées
-            </h3>
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 max-w-4xl mx-auto">
-              {/* Demo Sponsored Property 1 */}
-              <div className="bg-background/95 backdrop-blur-sm rounded-xl overflow-hidden shadow-warm hover:scale-105 transition-transform duration-300">
-                <div className="relative h-32 w-full">
-                  <img 
-                    src={propertyHouse} 
-                    alt="Villa moderne Cocody"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-2 left-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                    ⭐ Sponsorisé
+          {sponsoredListings.length > 0 ? (
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-primary-foreground text-center">
+                🌟 Annonces Sponsorisées
+              </h3>
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 max-w-4xl mx-auto">
+                {sponsoredListings.map((listing) => (
+                  <div 
+                    key={listing.id}
+                    className="bg-background/95 backdrop-blur-sm rounded-xl overflow-hidden shadow-warm hover:scale-105 transition-transform duration-300 cursor-pointer"
+                    onClick={() => window.location.href = `/listing/${listing.id}`}
+                  >
+                    <div className="relative h-32 w-full">
+                      <img 
+                        src={getPropertyImage(listing)}
+                        alt={listing.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-2 left-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                        ⭐ Sponsorisé
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <h4 className="font-semibold text-xs mb-1 truncate">{listing.title}</h4>
+                      <p className="text-xs text-muted-foreground mb-2">{listing.city}</p>
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-primary text-xs">{formatPrice(listing.price)}</span>
+                        {listing.bedrooms && listing.bathrooms && (
+                          <span className="text-xs text-muted-foreground">
+                            {listing.bedrooms}ch • {listing.bathrooms}sdb
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="p-3">
-                  <h4 className="font-semibold text-xs mb-1">Villa Moderne Cocody</h4>
-                  <p className="text-xs text-muted-foreground mb-2">Cocody, Abidjan</p>
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-primary text-xs">85M FCFA</span>
-                    <span className="text-xs text-muted-foreground">4ch • 3sdb</span>
-                  </div>
-                </div>
+                ))}
               </div>
-
-              {/* Demo Sponsored Property 2 */}
-              <div className="bg-background/95 backdrop-blur-sm rounded-xl overflow-hidden shadow-warm hover:scale-105 transition-transform duration-300">
-                <div className="relative h-32 w-full">
-                  <img 
-                    src={propertyApartment} 
-                    alt="Appartement Plateau"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-2 left-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                    ⭐ Sponsorisé
-                  </div>
-                </div>
-                <div className="p-3">
-                  <h4 className="font-semibold text-xs mb-1">Appartement Haut Standing</h4>
-                  <p className="text-xs text-muted-foreground mb-2">Plateau, Abidjan</p>
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-primary text-xs">45M FCFA</span>
-                    <span className="text-xs text-muted-foreground">3ch • 2sdb</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Demo Sponsored Property 3 */}
-              <div className="bg-background/95 backdrop-blur-sm rounded-xl overflow-hidden shadow-warm hover:scale-105 transition-transform duration-300">
-                <div className="relative h-32 w-full">
-                  <img 
-                    src={propertyLand} 
-                    alt="Terrain Bingerville"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-2 left-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                    ⭐ Sponsorisé
-                  </div>
-                </div>
-                <div className="p-3">
-                  <h4 className="font-semibold text-xs mb-1">Terrain Titre Foncier</h4>
-                  <p className="text-xs text-muted-foreground mb-2">Bingerville</p>
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-primary text-xs">25M FCFA</span>
-                    <span className="text-xs text-muted-foreground">500m²</span>
-                  </div>
-                </div>
-              </div>
-            </div>
               <div className="text-center space-y-3">
                 <SponsorshipDialog listingId="demo">
                   <Button variant="default" className="bg-gradient-primary hover:opacity-90">
@@ -228,7 +270,28 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
                   Packages à partir de 15$ - Boost 3 à 30 jours
                 </div>
               </div>
-          </div>
+            </div>
+          ) : (
+            /* Fallback content when no sponsored listings */
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-primary-foreground text-center">
+                🌟 Annonces Sponsorisées
+              </h3>
+              <div className="text-center space-y-3">
+                <p className="text-primary-foreground/80">Aucune annonce sponsorisée pour le moment</p>
+                <SponsorshipDialog listingId="demo">
+                  <Button variant="default" className="bg-gradient-primary hover:opacity-90">
+                    <Star className="w-4 h-4 mr-2" />
+                    Voir tarifs & sponsoriser
+                  </Button>
+                </SponsorshipDialog>
+                <div className="text-xs text-primary-foreground/70 flex items-center justify-center gap-1">
+                  <Info className="w-3 h-3" />
+                  Packages à partir de 15$ - Boost 3 à 30 jours
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </section>
