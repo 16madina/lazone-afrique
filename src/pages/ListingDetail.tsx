@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRealTimeMessages } from "@/hooks/useRealTimeMessages";
 import { useCountry } from "@/contexts/CountryContext";
-import { ArrowLeft, MapPin, Calendar, Phone, MessageCircle, Play, Send } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Phone, MessageCircle, Play, Send, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface ListingData {
@@ -387,6 +387,14 @@ const ListingDetail = () => {
             <DialogContent className="max-w-full w-[100vw] h-[100vh] p-0 bg-background">
               <DialogHeader className="absolute top-0 left-0 right-0 z-20 p-4 pb-2 bg-background/95 backdrop-blur-sm border-b">
                 <DialogTitle className="text-center">Galerie photos - {listing.title}</DialogTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 hover:bg-background"
+                  onClick={() => setGalleryOpen(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
               </DialogHeader>
               <div className="w-full h-full pt-16 pb-20 flex items-center justify-center">
                 <Carousel className="w-full h-full" setApi={(api) => {
