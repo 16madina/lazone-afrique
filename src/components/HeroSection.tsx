@@ -46,12 +46,14 @@ const HeroSection = () => {
                   className="w-64 h-32 md:w-96 md:h-48 object-contain mt-4 -ml-12"
                 />
               </div>
-              <h1 className="text-2xl md:text-4xl font-fredoka text-primary-foreground font-bold mt-4 text-left leading-tight">
-                TROUVE TON CHEZ TOI DANS TA ZONE
-              </h1>
-              <p className="text-sm md:text-base text-primary-foreground/80 mt-2 text-left">
-                Prix en {selectedCountry.currency.name} ({selectedCountry.currency.symbol})
-              </p>
+              <div className="text-left">
+                <h1 className="text-2xl md:text-4xl font-fredoka text-primary-foreground font-bold leading-tight">
+                  TROUVE TON CHEZ TOI
+                </h1>
+                <h2 className="text-xl md:text-3xl font-fredoka text-primary-foreground font-bold leading-tight">
+                  DANS TA ZONE
+                </h2>
+              </div>
             </div>
           </div>
 
@@ -193,23 +195,18 @@ const HeroSection = () => {
                 </div>
               </div>
             </div>
-            <div className="text-center space-y-3">
-              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-                <Button variant="outline" className="bg-background/80 hover:bg-background text-foreground border-2">
-                  Voir toutes les annonces sponsorisées
-                </Button>
+              <div className="text-center space-y-3">
                 <SponsorshipDialog listingId="demo">
                   <Button variant="default" className="bg-gradient-primary hover:opacity-90">
                     <Star className="w-4 h-4 mr-2" />
                     Voir tarifs & sponsoriser
                   </Button>
                 </SponsorshipDialog>
+                <div className="text-xs text-primary-foreground/70 flex items-center justify-center gap-1">
+                  <Info className="w-3 h-3" />
+                  Packages à partir de 15$ - Boost 3 à 30 jours
+                </div>
               </div>
-              <div className="text-xs text-primary-foreground/70 flex items-center justify-center gap-1">
-                <Info className="w-3 h-3" />
-                Packages à partir de 15$ - Boost 3 à 30 jours
-              </div>
-            </div>
           </div>
         </div>
       </div>
