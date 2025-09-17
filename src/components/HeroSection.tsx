@@ -34,7 +34,7 @@ const HeroSection = () => {
           {/* Hero Logo */}
           <div className="flex justify-start items-center space-y-4">
             <div className="flex flex-col items-start max-w-4xl">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-0">
                 <img 
                   src={mainLogo} 
                   alt="Logo principal"
@@ -43,7 +43,7 @@ const HeroSection = () => {
                 <img 
                   src={lazoneTextLogo} 
                   alt="LaZone"
-                  className="w-64 h-32 md:w-96 md:h-48 object-contain mt-4"
+                  className="w-64 h-32 md:w-96 md:h-48 object-contain mt-4 -ml-4"
                 />
               </div>
               <p className="text-lg md:text-xl text-primary-foreground/90 mt-4 text-left">
