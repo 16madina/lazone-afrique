@@ -300,26 +300,43 @@ const AddProperty = () => {
       case 2:
         console.log('🔍 Validation étape 2:', {
           title: formData.title,
-          price: formData.price,
           area: formData.area,
           titleExists: !!formData.title,
-          priceExists: !!formData.price,
-          areaExists: !!formData.area
+          areaExists: !!formData.area,
+          isLandProperty: isLandProperty()
         });
         
-        // Vérifications spécifiques avec messages d'erreur détaillés
+        // À l'étape 2, on valide seulement le titre et la surface (pas le prix qui est à l'étape 3)
         if (!formData.title) {
           toast.error("Veuillez saisir le titre de l'annonce");
           return;
         }
         
-        if (!formData.price) {
-          toast.error("Veuillez saisir le prix");
+        // Pour les biens non-terrain, la surface est requise à l'étape 2
+        if (!isLandProperty() && !formData.area) {
+          toast.error("Veuillez saisir la surface");
           return;
         }
         
-        if (!formData.area) {
-          toast.error("Veuillez saisir la surface");
+        // Validation de la surface si elle est renseignée
+        if (formData.area) {
+          const area = parseFloat(formData.area);
+          if (isNaN(area) || area <= 0) {
+            toast.error("Veuillez entrer une surface valide");
+            return;
+          }
+        }
+        
+        break;
+      case 3:
+        console.log('🔍 Validation étape 3:', {
+          price: formData.price,
+          priceExists: !!formData.price
+        });
+        
+        // À l'étape 3, on valide le prix qui est saisi à cette étape
+        if (!formData.price) {
+          toast.error("Veuillez saisir le prix");
           return;
         }
         
@@ -330,15 +347,9 @@ const AddProperty = () => {
           return;
         }
         
-        // Validation de la surface
-        const area = parseFloat(formData.area);
-        if (isNaN(area) || area <= 0) {
-          toast.error("Veuillez entrer une surface valide");
-          return;
-        }
-        
         break;
-      case 3:
+      case 4:
+        // À l'étape 4, on valide les photos
         if (uploadedPhotos.length === 0) {
           toast.error("Veuillez ajouter au moins une photo");
           return;
