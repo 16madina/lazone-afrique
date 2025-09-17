@@ -28,12 +28,7 @@ const queryClient = new QueryClient({
 });
 
 const AppContent = () => {
-  const [showSplash, setShowSplash] = useState(true);
   useCapacitor();
-
-  if (showSplash) {
-    return <SplashScreen onFinish={() => setShowSplash(false)} />;
-  }
   
   return (
     <Routes>
@@ -51,20 +46,37 @@ const AppContent = () => {
   );
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <CountryProvider>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppContent />
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </CountryProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const [showSplash, setShowSplash] = useState(() => {
+    // Check if splash has already been shown in this session
+    const hasShownSplash = sessionStorage.getItem('splashShown');
+    return !hasShownSplash;
+  });
+
+  const handleSplashFinish = () => {
+    setShowSplash(false);
+    sessionStorage.setItem('splashShown', 'true');
+  };
+
+  if (showSplash) {
+    return <SplashScreen onFinish={handleSplashFinish} />;
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <CountryProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppContent />
+            </BrowserRouter>
+          </TooltipProvider>
+        </AuthProvider>
+      </CountryProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
