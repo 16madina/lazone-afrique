@@ -114,9 +114,35 @@ const PropertyFilters = ({ onFiltersChange }: PropertyFiltersProps) => {
       {/* Active Filters Display */}
       {activeFiltersCount > 0 && (
         <div className="flex flex-wrap gap-2">
+          {filters.location && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              📍 {filters.location}
+              <X 
+                className="w-3 h-3 cursor-pointer" 
+                onClick={() => {
+                  const newFilters = { ...filters, location: "" };
+                  setFilters(newFilters);
+                  onFiltersChange(newFilters);
+                }}
+              />
+            </Badge>
+          )}
+          {filters.searchQuery && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              🔍 "{filters.searchQuery}"
+              <X 
+                className="w-3 h-3 cursor-pointer" 
+                onClick={() => {
+                  const newFilters = { ...filters, searchQuery: "" };
+                  setFilters(newFilters);
+                  onFiltersChange(newFilters);
+                }}
+              />
+            </Badge>
+          )}
           {filters.type && (
             <Badge variant="secondary" className="flex items-center gap-1">
-              Type: {filters.type}
+              Type: {filters.type === 'sale' ? 'Vente' : filters.type === 'rent' ? 'Location' : 'Commercial'}
               <X 
                 className="w-3 h-3 cursor-pointer" 
                 onClick={() => {
@@ -129,11 +155,67 @@ const PropertyFilters = ({ onFiltersChange }: PropertyFiltersProps) => {
           )}
           {filters.propertyType && (
             <Badge variant="secondary" className="flex items-center gap-1">
-              {filters.propertyType}
+              {filters.propertyType === 'apartment' ? 'Appartement' : 
+               filters.propertyType === 'house' ? 'Maison' : 
+               filters.propertyType === 'villa' ? 'Villa' : 
+               filters.propertyType === 'land' ? 'Terrain' : 
+               filters.propertyType === 'commercial' ? 'Commercial' : filters.propertyType}
               <X 
                 className="w-3 h-3 cursor-pointer" 
                 onClick={() => {
                   const newFilters = { ...filters, propertyType: "" };
+                  setFilters(newFilters);
+                  onFiltersChange(newFilters);
+                }}
+              />
+            </Badge>
+          )}
+          {filters.bedrooms && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              {filters.bedrooms}+ chambres
+              <X 
+                className="w-3 h-3 cursor-pointer" 
+                onClick={() => {
+                  const newFilters = { ...filters, bedrooms: "" };
+                  setFilters(newFilters);
+                  onFiltersChange(newFilters);
+                }}
+              />
+            </Badge>
+          )}
+          {filters.bathrooms && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              {filters.bathrooms}+ salles de bain
+              <X 
+                className="w-3 h-3 cursor-pointer" 
+                onClick={() => {
+                  const newFilters = { ...filters, bathrooms: "" };
+                  setFilters(newFilters);
+                  onFiltersChange(newFilters);
+                }}
+              />
+            </Badge>
+          )}
+          {(filters.priceRange[0] > 0 || filters.priceRange[1] < 1000000000) && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              Prix: {formatPrice(filters.priceRange[0])} - {formatPrice(filters.priceRange[1])}
+              <X 
+                className="w-3 h-3 cursor-pointer" 
+                onClick={() => {
+                  const newFilters = { ...filters, priceRange: [0, 1000000000] };
+                  setFilters(newFilters);
+                  onFiltersChange(newFilters);
+                }}
+              />
+            </Badge>
+          )}
+          {(filters.surface[0] > 0 || filters.surface[1] < 1000) && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              Surface: {filters.surface[0]}m² - {filters.surface[1]}m²
+              <X 
+                className="w-3 h-3 cursor-pointer" 
+                onClick={() => {
+                  const newFilters = { ...filters, surface: [0, 1000] };
                   setFilters(newFilters);
                   onFiltersChange(newFilters);
                 }}
