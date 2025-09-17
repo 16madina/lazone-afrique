@@ -8,7 +8,7 @@ import heroImage from "@/assets/hero-african-villa.jpg";
 import propertyHouse from "@/assets/property-house.jpg";
 import propertyApartment from "@/assets/property-apartment.jpg";
 import propertyLand from "@/assets/property-land.jpg";
-import mainLogo from "@/assets/main-logo.jpeg";
+import mainLogo from "@/assets/main-logo.png";
 import SponsorshipDialog from "@/components/SponsorshipDialog";
 
 const HeroSection = () => {
