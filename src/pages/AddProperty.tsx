@@ -18,6 +18,7 @@ import { useCountry } from "@/contexts/CountryContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import CountrySelector from "@/components/CountrySelector";
+import CitySelector from "@/components/CitySelector";
 
 const AddProperty = () => {
   const navigate = useNavigate();
@@ -494,31 +495,12 @@ const AddProperty = () => {
                     <CountrySelector />
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label>Localisation</Label>
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <Input 
-                          placeholder="Ville ou commune" 
-                          value={formData.city}
-                          onChange={(e) => updateFormData('city', e.target.value)}
-                        />
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="icon"
-                        onClick={handleGeolocation}
-                        disabled={isGeolocating}
-                        title="Utiliser ma position actuelle"
-                      >
-                        {isGeolocating ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <MapPin className="w-4 h-4" />
-                        )}
-                      </Button>
-                    </div>
-                  </div>
+                  <CitySelector
+                    value={formData.city}
+                    onChange={(city) => updateFormData('city', city)}
+                    onGeolocation={handleGeolocation}
+                    isGeolocating={isGeolocating}
+                  />
                 </div>
               </div>
             )}
