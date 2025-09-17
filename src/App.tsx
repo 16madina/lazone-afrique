@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CountryProvider } from "@/contexts/CountryContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useCapacitor } from "@/hooks/useCapacitor";
+import { SplashScreen } from "@/components/SplashScreen";
 import Index from "./pages/Index";
 import Map from "./pages/Map";
 import ListingDetail from "./pages/ListingDetail";
@@ -26,7 +28,12 @@ const queryClient = new QueryClient({
 });
 
 const AppContent = () => {
+  const [showSplash, setShowSplash] = useState(true);
   useCapacitor();
+
+  if (showSplash) {
+    return <SplashScreen onFinish={() => setShowSplash(false)} />;
+  }
   
   return (
     <Routes>
