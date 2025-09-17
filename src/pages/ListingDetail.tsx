@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRealTimeMessages } from "@/hooks/useRealTimeMessages";
@@ -384,11 +384,11 @@ const ListingDetail = () => {
 
           {/* Dialog galerie plein écran */}
           <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
-            <DialogContent className="max-w-7xl w-[95vw] h-[95vh] p-0 bg-black/95">
-              <DialogHeader className="p-4 pb-2 bg-background/80 backdrop-blur-sm">
+            <DialogContent className="max-w-full w-[100vw] h-[100vh] p-0 bg-background">
+              <DialogHeader className="absolute top-0 left-0 right-0 z-20 p-4 pb-2 bg-background/95 backdrop-blur-sm border-b">
                 <DialogTitle className="text-center">Galerie photos - {listing.title}</DialogTitle>
               </DialogHeader>
-              <div className="flex-1 flex items-center justify-center p-2">
+              <div className="w-full h-full pt-16 pb-20 flex items-center justify-center">
                 <Carousel className="w-full h-full" setApi={(api) => {
                   if (api) {
                     api.scrollTo(currentImageIndex, false);
@@ -397,41 +397,50 @@ const ListingDetail = () => {
                   <CarouselContent className="h-full">
                     {getAllImages().map((imgSrc, index) => (
                       <CarouselItem key={index} className="h-full">
-                        <div className="h-full flex items-center justify-center p-4">
+                        <div className="h-full w-full flex items-center justify-center">
                           <img 
                             src={imgSrc} 
                             alt={`${listing.title} - Image ${index + 1}`}
-                            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                            className="w-full h-full object-contain"
+                            style={{ maxHeight: '100%', maxWidth: '100%' }}
                           />
                         </div>
                       </CarouselItem>
                     ))}
                   </CarouselContent>
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
+                    <CarouselPrevious className="bg-background/80 hover:bg-background border shadow-lg" />
+                  </div>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10">
+                    <CarouselNext className="bg-background/80 hover:bg-background border shadow-lg" />
+                  </div>
                 </Carousel>
               </div>
-              <div className="flex justify-center gap-2 p-4 pt-0 overflow-x-auto">
-                {getAllImages().map((imgSrc, index) => (
-                  <div
-                    key={index}
-                    className={`flex-shrink-0 w-12 h-12 rounded overflow-hidden cursor-pointer border-2 transition-colors ${
-                      currentImageIndex === index ? 'border-primary' : 'border-transparent hover:border-primary'
-                    }`}
-                    onClick={() => {
-                      setCurrentImageIndex(index);
-                      // Force carousel to navigate to selected image
-                      const carouselApi = document.querySelector('[data-carousel-api]') as any;
-                      if (carouselApi?.scrollTo) {
-                        carouselApi.scrollTo(index, false);
-                      }
-                    }}
-                  >
-                    <img 
-                      src={imgSrc} 
-                      alt={`Miniature ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ))}
+              <div className="absolute bottom-0 left-0 right-0 z-20 bg-background/95 backdrop-blur-sm border-t">
+                <div className="flex justify-center gap-2 p-4 overflow-x-auto">
+                  {getAllImages().map((imgSrc, index) => (
+                    <div
+                      key={index}
+                      className={`flex-shrink-0 w-16 h-16 rounded overflow-hidden cursor-pointer border-2 transition-colors ${
+                        currentImageIndex === index ? 'border-primary' : 'border-transparent hover:border-primary'
+                      }`}
+                      onClick={() => {
+                        setCurrentImageIndex(index);
+                        // Force carousel to navigate to selected image
+                        const carouselApi = document.querySelector('[data-carousel-api]') as any;
+                        if (carouselApi?.scrollTo) {
+                          carouselApi.scrollTo(index, false);
+                        }
+                      }}
+                    >
+                      <img 
+                        src={imgSrc} 
+                        alt={`Miniature ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </DialogContent>
           </Dialog>
