@@ -298,8 +298,28 @@ const AddProperty = () => {
         
         break;
       case 2:
-        if (!formData.title || !formData.price || !formData.area) {
-          toast.error("Veuillez remplir tous les champs obligatoires");
+        console.log('🔍 Validation étape 2:', {
+          title: formData.title,
+          price: formData.price,
+          area: formData.area,
+          titleExists: !!formData.title,
+          priceExists: !!formData.price,
+          areaExists: !!formData.area
+        });
+        
+        // Vérifications spécifiques avec messages d'erreur détaillés
+        if (!formData.title) {
+          toast.error("Veuillez saisir le titre de l'annonce");
+          return;
+        }
+        
+        if (!formData.price) {
+          toast.error("Veuillez saisir le prix");
+          return;
+        }
+        
+        if (!formData.area) {
+          toast.error("Veuillez saisir la surface");
           return;
         }
         
