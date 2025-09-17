@@ -9,6 +9,7 @@ import propertyHouse from "@/assets/property-house.jpg";
 import propertyApartment from "@/assets/property-apartment.jpg";
 import propertyLand from "@/assets/property-land.jpg";
 import mainLogo from "@/assets/main-logo.png";
+import lazoneLogo from "@/assets/lazone-logo.png";
 import SponsorshipDialog from "@/components/SponsorshipDialog";
 
 const HeroSection = () => {
@@ -33,11 +34,18 @@ const HeroSection = () => {
           {/* Hero Logo */}
           <div className="flex justify-start items-center space-y-4">
             <div className="flex flex-col items-start max-w-4xl">
-              <img 
-                src={mainLogo} 
-                alt="Logo LaZone"
-                className="w-32 h-32 md:w-48 md:h-48 object-contain"
-              />
+              <div className="flex items-center gap-4">
+                <img 
+                  src={mainLogo} 
+                  alt="Logo principal"
+                  className="w-32 h-32 md:w-48 md:h-48 object-contain"
+                />
+                <img 
+                  src={lazoneLogo} 
+                  alt="LaZone"
+                  className="w-24 h-12 md:w-32 md:h-16 object-contain"
+                />
+              </div>
               <p className="text-lg md:text-xl text-primary-foreground/90 mt-4 text-left">
                 Découvrez les meilleures opportunités immobilières en {selectedCountry.name}. 
                 Prix en {selectedCountry.currency.name} ({selectedCountry.currency.symbol}).
