@@ -54,29 +54,15 @@ const AdminSponsorshipPanel = () => {
       const { data, error } = await supabase
         .from('sponsorship_transactions')
         .select(`
-          id,
-          amount_paid,
-          payment_method,
-          approval_status,
-          admin_notes,
-          created_at,
-          approval_date,
-          listing_id,
-          user_id,
-          package_id,
-          listings!listing_id (
+          *,
+          listings!inner (
             id,
             title,
             city,
             image,
             photos
           ),
-          profiles!user_id (
-            full_name,
-            email,
-            phone
-          ),
-          sponsorship_packages!package_id (
+          sponsorship_packages!inner (
             name,
             duration_days,
             description
@@ -90,6 +76,22 @@ const AdminSponsorshipPanel = () => {
         return;
       }
 
+      // Fetch user profiles separately 
+      const userIds = [...new Set((data || []).map(item => item.user_id))];
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, email, phone')
+        .in('user_id', userIds);
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+      }
+
+      const profilesMap = (profiles || []).reduce((acc, profile) => {
+        acc[profile.user_id] = profile;
+        return acc;
+      }, {} as Record<string, any>);
+
       const formattedRequests = (data || []).map(item => ({
         id: item.id,
         amount_paid: item.amount_paid,
@@ -99,7 +101,7 @@ const AdminSponsorshipPanel = () => {
         created_at: item.created_at,
         approval_date: item.approval_date,
         listing: Array.isArray(item.listings) ? item.listings[0] : item.listings,
-        user: Array.isArray(item.profiles) ? item.profiles[0] : item.profiles,
+        user: profilesMap[item.user_id] || { email: 'Utilisateur inconnu' },
         package: Array.isArray(item.sponsorship_packages) ? item.sponsorship_packages[0] : item.sponsorship_packages,
       }));
 
