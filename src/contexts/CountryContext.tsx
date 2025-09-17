@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext } from 'react';
 
 export interface Country {
   code: string;
@@ -225,8 +225,8 @@ interface CountryProviderProps {
 }
 
 export const CountryProvider: React.FC<CountryProviderProps> = ({ children }) => {
-  // Default to Côte d'Ivoire
-  const [selectedCountry, setSelectedCountry] = useState<Country>(africanCountries[0]);
+  // Default to Côte d'Ivoire - using a more defensive approach
+  const [selectedCountry, setSelectedCountry] = React.useState<Country>(africanCountries[0]);
 
   // Detect user's country by geolocation
   const detectUserCountry = async () => {
@@ -297,7 +297,7 @@ export const CountryProvider: React.FC<CountryProviderProps> = ({ children }) =>
   };
 
   // Load saved country from localStorage or detect automatically
-  useEffect(() => {
+  React.useEffect(() => {
     const savedCountryCode = localStorage.getItem('selectedCountry');
     if (savedCountryCode) {
       const country = africanCountries.find(c => c.code === savedCountryCode);
