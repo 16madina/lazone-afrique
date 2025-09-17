@@ -12,11 +12,29 @@ import mainLogo from "@/assets/main-logo.png";
 import lazoneTextLogo from "@/assets/lazone-text-logo.png";
 import SponsorshipDialog from "@/components/SponsorshipDialog";
 
-const HeroSection = () => {
+interface HeroSectionProps {
+  onSearch?: (filters: {
+    location: string;
+    propertyType: string;
+    searchQuery: string;
+  }) => void;
+}
+
+const HeroSection = ({ onSearch }: HeroSectionProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [propertyType, setPropertyType] = useState("");
   const [location, setLocation] = useState("");
   const { selectedCountry } = useCountry();
+
+  const handleSearch = () => {
+    if (onSearch) {
+      onSearch({
+        location,
+        propertyType,
+        searchQuery
+      });
+    }
+  };
 
   return (
     <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden">
@@ -109,7 +127,10 @@ const HeroSection = () => {
               {/* Search Button */}
               <div className="space-y-1">
                 <label className="text-sm font-medium text-muted-foreground opacity-0">Action</label>
-                <Button className="w-full h-10 bg-gradient-primary hover:opacity-90 transition-all duration-300">
+                <Button 
+                  onClick={handleSearch}
+                  className="w-full h-10 bg-gradient-primary hover:opacity-90 transition-all duration-300"
+                >
                   <Search className="w-4 h-4 mr-2" />
                   Rechercher
                 </Button>

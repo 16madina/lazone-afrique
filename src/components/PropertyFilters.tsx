@@ -14,6 +14,8 @@ interface FilterState {
   bathrooms: string;
   surface: number[];
   features: string[];
+  location: string;
+  searchQuery: string;
 }
 
 interface PropertyFiltersProps {
@@ -29,7 +31,9 @@ const PropertyFilters = ({ onFiltersChange }: PropertyFiltersProps) => {
     bedrooms: "",
     bathrooms: "",
     surface: [0, 1000],
-    features: []
+    features: [],
+    location: "",
+    searchQuery: ""
   });
 
   const availableFeatures = [
@@ -65,7 +69,9 @@ const PropertyFilters = ({ onFiltersChange }: PropertyFiltersProps) => {
       bedrooms: "",
       bathrooms: "",
       surface: [0, 1000],
-      features: []
+      features: [],
+      location: "",
+      searchQuery: ""
     };
     setFilters(clearedFilters);
     onFiltersChange(clearedFilters);
@@ -75,6 +81,7 @@ const PropertyFilters = ({ onFiltersChange }: PropertyFiltersProps) => {
     if (key === 'priceRange') return value[0] > 0 || value[1] < 1000000000;
     if (key === 'surface') return value[0] > 0 || value[1] < 1000;
     if (key === 'features') return (value as string[]).length > 0;
+    if (key === 'location' || key === 'searchQuery') return value !== "";
     return value !== "";
   }).length;
 

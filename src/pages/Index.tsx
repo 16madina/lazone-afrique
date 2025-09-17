@@ -61,7 +61,9 @@ const Index = () => {
     bedrooms: "",
     bathrooms: "",
     surface: [0, 1000],
-    features: []
+    features: [],
+    location: "",
+    searchQuery: ""
   });
   const { selectedCountry, formatPrice } = useCountry();
   const { isFavorite } = useFavorites();
@@ -195,6 +197,20 @@ const Index = () => {
         if (!hasAllFeatures) return false;
       }
       
+      // Filter by location (city)
+      if (filters.location) {
+        const locationLower = filters.location.toLowerCase();
+        if (!property.city.toLowerCase().includes(locationLower)) return false;
+      }
+      
+      // Filter by search query (title and description)
+      if (filters.searchQuery) {
+        const searchLower = filters.searchQuery.toLowerCase();
+        const titleMatch = property.title.toLowerCase().includes(searchLower);
+        const cityMatch = property.city.toLowerCase().includes(searchLower);
+        if (!titleMatch && !cityMatch) return false;
+      }
+      
       return true;
     });
   };
@@ -203,6 +219,23 @@ const Index = () => {
   const handleFiltersChange = (filters: FilterState) => {
     setCurrentFilters(filters);
     const filteredProperties = filterProperties(allProperties, filters);
+    setProperties(filteredProperties);
+  };
+
+  // Handle search from HeroSection
+  const handleHeroSearch = (searchFilters: {
+    location: string;
+    propertyType: string;
+    searchQuery: string;
+  }) => {
+    const newFilters = {
+      ...currentFilters,
+      location: searchFilters.location,
+      propertyType: searchFilters.propertyType,
+      searchQuery: searchFilters.searchQuery
+    };
+    setCurrentFilters(newFilters);
+    const filteredProperties = filterProperties(allProperties, newFilters);
     setProperties(filteredProperties);
   };
 
@@ -232,7 +265,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <HeroSection />
+      <HeroSection onSearch={handleHeroSearch} />
       
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 space-y-8">
