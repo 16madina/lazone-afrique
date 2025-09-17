@@ -179,10 +179,9 @@ const Index = () => {
         return false;
       }
       
-      // Filter by property type - gérer les valeurs null
+      // Filter by property type
       if (filters.propertyType) {
-        // Si property_type est null/undefined, on l'ignore plutôt que de filtrer
-        if (property.property_type && property.property_type !== filters.propertyType) {
+        if (property.property_type !== filters.propertyType) {
           console.log('❌ Filtré par property type:', property.title, property.property_type, 'vs', filters.propertyType);
           return false;
         }
