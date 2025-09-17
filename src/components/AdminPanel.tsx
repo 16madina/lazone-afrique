@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import AdminSponsorshipPanel from '@/components/AdminSponsorshipPanel';
 import { 
   Shield, 
   Users, 
@@ -429,6 +430,8 @@ const AdminPanel = () => {
 
         {/* Sponsorship Management */}
         <TabsContent value="sponsorship" className="space-y-6">
+          <AdminSponsorshipPanel />
+          
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Package Management */}
             <Card>

@@ -62,7 +62,7 @@ const Sponsorship = () => {
     
     setLoading(true);
     try {
-      // Create transaction record
+      // Create transaction record with pending approval status
       const { data: transaction, error: transactionError } = await supabase
         .from('sponsorship_transactions')
         .insert({
@@ -70,42 +70,17 @@ const Sponsorship = () => {
           user_id: (await supabase.auth.getUser()).data.user?.id,
           package_id: selectedPackage.id,
           amount_paid: selectedPackage.price_usd,
-          payment_status: 'pending',
-          payment_method: selectedPaymentMethod
+          payment_status: 'completed',
+          payment_method: selectedPaymentMethod,
+          approval_status: 'pending' // New: requires admin approval
         })
         .select()
         .single();
 
       if (transactionError) throw transactionError;
 
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Update transaction status
-      const { error: updateTransactionError } = await supabase
-        .from('sponsorship_transactions')
-        .update({ payment_status: 'completed' })
-        .eq('id', transaction.id);
-
-      if (updateTransactionError) throw updateTransactionError;
-
-      // Update listing with sponsorship
-      const sponsorUntil = new Date();
-      sponsorUntil.setDate(sponsorUntil.getDate() + selectedPackage.duration_days);
-
-      const { error: updateError } = await supabase
-        .from('listings')
-        .update({
-          is_sponsored: true,
-          sponsored_until: sponsorUntil.toISOString(),
-          sponsor_amount: selectedPackage.price_usd,
-          sponsored_at: new Date().toISOString()
-        })
-        .eq('id', listingId);
-
-      if (updateError) throw updateError;
-
-      toast.success(`🎉 Paiement confirmé ! Votre annonce sera mise en avant pendant ${selectedPackage.duration_days} jours.`);
+      // Don't update the listing immediately - wait for admin approval
+      toast.success(`💰 Paiement confirmé ! Votre demande de sponsoring est en attente d'approbation par l'administrateur. Vous recevrez une notification une fois approuvée.`);
 
       // Retourner à la page précédente
       navigate(-1);

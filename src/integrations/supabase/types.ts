@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          message: string
+          read_at: string | null
+          related_id: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message: string
+          read_at?: string | null
+          related_id?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          read_at?: string | null
+          related_id?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       admin_roles: {
         Row: {
           created_at: string
@@ -372,7 +405,11 @@ export type Database = {
       }
       sponsorship_transactions: {
         Row: {
+          admin_notes: string | null
           amount_paid: number
+          approval_date: string | null
+          approval_status: string
+          approved_by: string | null
           created_at: string
           id: string
           listing_id: string
@@ -384,7 +421,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_notes?: string | null
           amount_paid: number
+          approval_date?: string | null
+          approval_status?: string
+          approved_by?: string | null
           created_at?: string
           id?: string
           listing_id: string
@@ -396,7 +437,11 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_notes?: string | null
           amount_paid?: number
+          approval_date?: string | null
+          approval_status?: string
+          approved_by?: string | null
           created_at?: string
           id?: string
           listing_id?: string
@@ -454,6 +499,15 @@ export type Database = {
       can_user_view_participants: {
         Args: { target_conversation_id: string }
         Returns: boolean
+      }
+      create_admin_notification: {
+        Args: {
+          notification_message: string
+          notification_title: string
+          notification_type: string
+          related_transaction_id?: string
+        }
+        Returns: string
       }
       is_admin: {
         Args: { user_uuid?: string }
