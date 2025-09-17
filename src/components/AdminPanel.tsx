@@ -109,17 +109,33 @@ const AdminPanel = () => {
     try {
       const { data, error } = await supabase
         .from('listings')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setListings((data as any) || []);
+
+      // Fetch user profiles separately
+      const userIds = [...new Set((data || []).map(listing => listing.user_id).filter(Boolean))];
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', userIds);
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+      }
+
+      const profilesMap = (profiles || []).reduce((acc, profile) => {
+        acc[profile.user_id] = profile;
+        return acc;
+      }, {} as Record<string, any>);
+
+      const listingsWithProfiles = (data || []).map(listing => ({
+        ...listing,
+        profiles: profilesMap[listing.user_id] || { full_name: 'Utilisateur inconnu', email: 'Inconnu' }
+      }));
+
+      setListings(listingsWithProfiles);
     } catch (error: any) {
       console.error('Error fetching listings:', error);
       toast({
