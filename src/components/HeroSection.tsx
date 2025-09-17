@@ -44,6 +44,8 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
   useEffect(() => {
     const fetchSponsoredListings = async () => {
       try {
+        console.log('🔍 Fetching sponsored listings for country:', selectedCountry.code);
+        
         const { data, error } = await supabase
           .from('listings')
           .select(`
@@ -63,7 +65,10 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
           .eq('status', 'published')
           .eq('is_sponsored', true)
           .not('sponsored_until', 'is', null)
+          .order('sponsored_at', { ascending: false })
           .limit(3);
+
+        console.log('📊 Sponsored listings query result:', { data, error });
 
         if (error) {
           console.error('Error fetching sponsored listings:', error);
@@ -71,10 +76,15 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
         }
 
         // Filter active sponsorships
-        const activeSponsored = (data || []).filter(listing => 
-          listing.sponsored_until && new Date(listing.sponsored_until) > new Date()
-        );
+        const now = new Date();
+        const activeSponsored = (data || []).filter(listing => {
+          const sponsoredUntil = new Date(listing.sponsored_until);
+          const isActive = sponsoredUntil > now;
+          console.log(`📅 Listing ${listing.title}: sponsored until ${listing.sponsored_until}, active: ${isActive}`);
+          return isActive;
+        });
 
+        console.log('✅ Active sponsored listings:', activeSponsored.length);
         setSponsoredListings(activeSponsored);
       } catch (error) {
         console.error('Error fetching sponsored listings:', error);
