@@ -10,6 +10,7 @@ import { Zap, Star, TrendingUp, Award, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useCountry } from "@/contexts/CountryContext";
+import PaymentMethodSelector from "@/components/PaymentMethodSelector";
 
 interface SponsorshipPackage {
   id: string;
@@ -26,6 +27,10 @@ const Sponsorship = () => {
   const [packages, setPackages] = useState<SponsorshipPackage[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<SponsorshipPackage | null>(null);
+  const [showPayment, setShowPayment] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
   const { formatPrice } = useCountry();
 
   useEffect(() => {
@@ -47,8 +52,13 @@ const Sponsorship = () => {
     setPackages(data || []);
   };
 
-  const handleSponsor = async (pkg: SponsorshipPackage) => {
-    if (!listingId) return;
+  const handlePackageSelect = (pkg: SponsorshipPackage) => {
+    setSelectedPackage(pkg);
+    setShowPayment(true);
+  };
+
+  const handlePayment = async () => {
+    if (!listingId || !selectedPackage) return;
     
     setLoading(true);
     try {
@@ -58,39 +68,50 @@ const Sponsorship = () => {
         .insert({
           listing_id: listingId,
           user_id: (await supabase.auth.getUser()).data.user?.id,
-          package_id: pkg.id,
-          amount_paid: pkg.price_usd,
-          payment_status: 'completed', // Simplified for demo
-          payment_method: 'demo'
+          package_id: selectedPackage.id,
+          amount_paid: selectedPackage.price_usd,
+          payment_status: 'pending',
+          payment_method: selectedPaymentMethod
         })
         .select()
         .single();
 
       if (transactionError) throw transactionError;
 
+      // Simulate payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Update transaction status
+      const { error: updateTransactionError } = await supabase
+        .from('sponsorship_transactions')
+        .update({ payment_status: 'completed' })
+        .eq('id', transaction.id);
+
+      if (updateTransactionError) throw updateTransactionError;
+
       // Update listing with sponsorship
       const sponsorUntil = new Date();
-      sponsorUntil.setDate(sponsorUntil.getDate() + pkg.duration_days);
+      sponsorUntil.setDate(sponsorUntil.getDate() + selectedPackage.duration_days);
 
       const { error: updateError } = await supabase
         .from('listings')
         .update({
           is_sponsored: true,
           sponsored_until: sponsorUntil.toISOString(),
-          sponsor_amount: pkg.price_usd,
+          sponsor_amount: selectedPackage.price_usd,
           sponsored_at: new Date().toISOString()
         })
         .eq('id', listingId);
 
       if (updateError) throw updateError;
 
-      toast.success(`🎉 Annonce sponsorisée ! Votre annonce sera mise en avant pendant ${pkg.duration_days} jours.`);
+      toast.success(`🎉 Paiement confirmé ! Votre annonce sera mise en avant pendant ${selectedPackage.duration_days} jours.`);
 
       // Retourner à la page précédente
       navigate(-1);
     } catch (error) {
-      console.error('Error sponsoring listing:', error);
-      toast.error("Une erreur est survenue lors du sponsoring.");
+      console.error('Error processing payment:', error);
+      toast.error("Une erreur est survenue lors du paiement.");
     } finally {
       setLoading(false);
     }
@@ -142,87 +163,87 @@ const Sponsorship = () => {
 
           <Separator />
 
-          {/* Packages */}
-          <div className="grid md:grid-cols-2 gap-6">
-            {packages.map((pkg, index) => (
-              <Card 
-                key={pkg.id} 
-                className={`transition-all duration-200 hover:shadow-lg cursor-pointer ${
-                  selectedPackage?.id === pkg.id ? 'ring-2 ring-primary' : ''
-                } ${index === 1 ? 'border-primary bg-primary/5' : ''}`}
-                onClick={() => setSelectedPackage(pkg)}
+          {!showPayment ? (
+            <>
+              {/* Packages */}
+              <div className="grid md:grid-cols-2 gap-6">
+                {packages.map((pkg, index) => (
+                  <Card 
+                    key={pkg.id} 
+                    className={`transition-all duration-200 hover:shadow-lg cursor-pointer ${
+                      index === 1 ? 'border-primary bg-primary/5' : ''
+                    }`}
+                    onClick={() => handlePackageSelect(pkg)}
+                  >
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {getPackageIcon(index)}
+                          <CardTitle className="text-xl">{pkg.name}</CardTitle>
+                        </div>
+                        {index === 1 && (
+                          <Badge variant="secondary" className="bg-primary text-primary-foreground">
+                            Populaire
+                          </Badge>
+                        )}
+                      </div>
+                      <CardDescription className="text-base">{pkg.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      <div className="text-center">
+                        <div className="text-4xl font-bold text-primary">
+                          {formatPrice(pkg.price_usd)}
+                        </div>
+                        <div className="text-base text-muted-foreground">
+                          pour {pkg.duration_days} jours
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="text-base font-medium">Avantages inclus :</div>
+                        <ul className="space-y-2">
+                          {pkg.features.map((feature, idx) => (
+                            <li key={idx} className="flex items-center gap-2 text-sm">
+                              <div className="h-2 w-2 rounded-full bg-primary" />
+                              {feature}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      
+                      <Button className="w-full" size="lg">
+                        Choisir ce package
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Payment Method Selection */}
+              <Button 
+                variant="ghost" 
+                onClick={() => setShowPayment(false)}
+                className="mb-4"
               >
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {getPackageIcon(index)}
-                      <CardTitle className="text-xl">{pkg.name}</CardTitle>
-                    </div>
-                    {index === 1 && (
-                      <Badge variant="secondary" className="bg-primary text-primary-foreground">
-                        Populaire
-                      </Badge>
-                    )}
-                  </div>
-                  <CardDescription className="text-base">{pkg.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="text-center">
-                    <div className="text-4xl font-bold text-primary">
-                      {formatPrice(pkg.price_usd)}
-                    </div>
-                    <div className="text-base text-muted-foreground">
-                      pour {pkg.duration_days} jours
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="text-base font-medium">Avantages inclus :</div>
-                    <ul className="space-y-2">
-                      {pkg.features.map((feature, idx) => (
-                        <li key={idx} className="flex items-center gap-2 text-sm">
-                          <div className="h-2 w-2 rounded-full bg-primary" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Order Summary */}
-          {selectedPackage && (
-            <Card className="max-w-md mx-auto">
-              <CardHeader>
-                <CardTitle>Récapitulatif de votre commande</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span>{selectedPackage.name}</span>
-                  <span className="font-medium">{formatPrice(selectedPackage.price_usd)}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm text-muted-foreground">
-                  <span>Durée</span>
-                  <span>{selectedPackage.duration_days} jours</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between items-center font-medium text-lg">
-                  <span>Total</span>
-                  <span className="text-primary">{formatPrice(selectedPackage.price_usd)}</span>
-                </div>
-                
-                <Button 
-                  onClick={() => handleSponsor(selectedPackage)}
-                  disabled={loading}
-                  className="w-full"
-                  size="lg"
-                >
-                  {loading ? "Traitement..." : "Confirmer le sponsoring"}
-                </Button>
-              </CardContent>
-            </Card>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Retour aux packages
+              </Button>
+              
+              <PaymentMethodSelector
+                selectedMethod={selectedPaymentMethod}
+                onMethodSelect={setSelectedPaymentMethod}
+                phoneNumber={phoneNumber}
+                onPhoneNumberChange={setPhoneNumber}
+                cardNumber={cardNumber}
+                onCardNumberChange={setCardNumber}
+                onConfirm={handlePayment}
+                loading={loading}
+                amount={selectedPackage?.price_usd || 0}
+                formatPrice={formatPrice}
+              />
+            </>
           )}
         </div>
       </main>
