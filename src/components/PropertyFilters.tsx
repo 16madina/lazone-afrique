@@ -104,9 +104,14 @@ const PropertyFilters = ({ onFiltersChange }: PropertyFiltersProps) => {
         </Button>
 
         {activeFiltersCount > 0 && (
-          <Button variant="ghost" onClick={clearFilters} className="text-muted-foreground">
+          <Button 
+            variant="default" 
+            onClick={clearFilters} 
+            className="bg-red-500 hover:bg-red-600 text-white"
+            size="sm"
+          >
             <X className="w-4 h-4 mr-1" />
-            Effacer tout
+            Effacer tous les filtres
           </Button>
         )}
       </div>
