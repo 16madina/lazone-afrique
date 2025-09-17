@@ -228,14 +228,29 @@ const Index = () => {
     propertyType: string;
     searchQuery: string;
   }) => {
+    console.log('🔍 Recherche depuis HeroSection:', searchFilters);
+    
     const newFilters = {
       ...currentFilters,
       location: searchFilters.location,
       propertyType: searchFilters.propertyType,
       searchQuery: searchFilters.searchQuery
     };
+    
+    console.log('📋 Nouveaux filtres:', newFilters);
+    console.log('🏠 Propriétés avant filtrage:', allProperties.length);
+    
     setCurrentFilters(newFilters);
     const filteredProperties = filterProperties(allProperties, newFilters);
+    
+    console.log('🏠 Propriétés après filtrage:', filteredProperties.length);
+    console.log('🏠 Propriétés filtrées:', filteredProperties.map(p => ({ 
+      title: p.title, 
+      city: p.city, 
+      propertyType: p.property_type, 
+      transactionType: p.transaction_type 
+    })));
+    
     setProperties(filteredProperties);
   };
 
