@@ -36,6 +36,13 @@ const CitySelector: React.FC<CitySelectorProps> = ({
   );
 
   const handleSelect = (city: string) => {
+    // Validation : vérifier si la ville appartient vraiment au pays sélectionné
+    const isValidCity = selectedCountry.cities.includes(city);
+    if (!isValidCity) {
+      // Afficher une alerte pour les villes personnalisées
+      console.warn(`Ville "${city}" ajoutée pour ${selectedCountry.name} - Vérification requise`);
+    }
+    
     onChange(city);
     setSearchValue(city);
     setOpen(false);
@@ -87,6 +94,9 @@ const CitySelector: React.FC<CitySelectorProps> = ({
                       <p className="text-sm text-muted-foreground mb-2">
                         Aucune ville trouvée pour "{searchValue}"
                       </p>
+                      <p className="text-xs text-yellow-600 mb-2">
+                        ⚠️ Attention : Assurez-vous que cette ville appartient à {selectedCountry.name}
+                      </p>
                       <Button
                         variant="outline"
                         size="sm"
@@ -122,10 +132,13 @@ const CitySelector: React.FC<CitySelectorProps> = ({
                       <CommandItem
                         value={searchValue}
                         onSelect={() => handleSelect(searchValue)}
-                        className="cursor-pointer border-t"
+                        className="cursor-pointer border-t bg-yellow-50 hover:bg-yellow-100"
                       >
                         <Check className="mr-2 h-4 w-4 opacity-0" />
-                        Ajouter "{searchValue}"
+                        <div className="flex flex-col">
+                          <span>Ajouter "{searchValue}"</span>
+                          <span className="text-xs text-yellow-600">⚠️ Vérifiez que cette ville est en {selectedCountry.name}</span>
+                        </div>
                       </CommandItem>
                     </CommandGroup>
                   )}

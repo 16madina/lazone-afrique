@@ -11,6 +11,7 @@ import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carouse
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRealTimeMessages } from "@/hooks/useRealTimeMessages";
+import { useCountry } from "@/contexts/CountryContext";
 import { ArrowLeft, MapPin, Calendar, Phone, MessageCircle, Play, Send } from "lucide-react";
 import { toast } from "sonner";
 
@@ -47,6 +48,7 @@ const ListingDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const { formatPrice: formatPriceWithCurrency } = useCountry();
   const [listing, setListing] = useState<ListingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -104,7 +106,8 @@ const ListingDetail = () => {
   }, [id, user, authLoading]);
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
+    // Le prix en base est en USD, on le convertit en devise locale
+    return formatPriceWithCurrency ? formatPriceWithCurrency(price) : new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
   };
 
   const formatDate = (dateString: string) => {
@@ -410,8 +413,17 @@ const ListingDetail = () => {
                 {getAllImages().map((imgSrc, index) => (
                   <div
                     key={index}
-                    className="flex-shrink-0 w-12 h-12 rounded overflow-hidden cursor-pointer border-2 border-transparent hover:border-primary transition-colors"
-                    onClick={() => setCurrentImageIndex(index)}
+                    className={`flex-shrink-0 w-12 h-12 rounded overflow-hidden cursor-pointer border-2 transition-colors ${
+                      currentImageIndex === index ? 'border-primary' : 'border-transparent hover:border-primary'
+                    }`}
+                    onClick={() => {
+                      setCurrentImageIndex(index);
+                      // Force carousel to navigate to selected image
+                      const carouselApi = document.querySelector('[data-carousel-api]') as any;
+                      if (carouselApi?.scrollTo) {
+                        carouselApi.scrollTo(index, false);
+                      }
+                    }}
                   >
                     <img 
                       src={imgSrc} 

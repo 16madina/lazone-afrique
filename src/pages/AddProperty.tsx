@@ -275,6 +275,57 @@ const AddProperty = () => {
   };
 
   const nextStep = () => {
+    // Validation avant de passer à l'étape suivante
+    switch (currentStep) {
+      case 1:
+        if (!transactionType || !formData.propertyType) {
+          toast.error("Veuillez sélectionner le type de transaction et de bien");
+          return;
+        }
+        
+        // Validation stricte ville/pays
+        if (!formData.city) {
+          toast.error("Veuillez sélectionner une ville");
+          return;
+        }
+        
+        // Vérifier si la ville appartient au pays sélectionné
+        const isValidCity = selectedCountry.cities.includes(formData.city);
+        if (!isValidCity) {
+          toast.error(`⚠️ La ville "${formData.city}" ne correspond pas au pays sélectionné (${selectedCountry.name}). Veuillez vérifier votre sélection.`);
+          return;
+        }
+        
+        break;
+      case 2:
+        if (!formData.title || !formData.price || !formData.area) {
+          toast.error("Veuillez remplir tous les champs obligatoires");
+          return;
+        }
+        
+        // Validation du prix
+        const price = parseFloat(formData.price);
+        if (isNaN(price) || price <= 0) {
+          toast.error("Veuillez entrer un prix valide");
+          return;
+        }
+        
+        // Validation de la surface
+        const area = parseFloat(formData.area);
+        if (isNaN(area) || area <= 0) {
+          toast.error("Veuillez entrer une surface valide");
+          return;
+        }
+        
+        break;
+      case 3:
+        if (uploadedPhotos.length === 0) {
+          toast.error("Veuillez ajouter au moins une photo");
+          return;
+        }
+        break;
+    }
+    
     if (currentStep < 4) setCurrentStep(currentStep + 1);
   };
 
