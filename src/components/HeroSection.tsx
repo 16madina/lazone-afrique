@@ -46,7 +46,7 @@ const HeroSection = () => {
                   className="w-64 h-32 md:w-96 md:h-48 object-contain mt-4 -ml-12"
                 />
               </div>
-              <div className="text-left">
+              <div className="text-center">
                 <h1 className="text-2xl md:text-4xl font-fredoka text-primary-foreground font-bold leading-tight">
                   TROUVE TON CHEZ TOI
                 </h1>

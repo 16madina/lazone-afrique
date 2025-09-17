@@ -236,18 +236,6 @@ const Index = () => {
       
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 space-y-8">
-        {/* Page Title */}
-        <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <h2 className="text-3xl font-bold">Propriétés en {selectedCountry.name}</h2>
-            <Badge className="bg-gradient-primary text-primary-foreground">
-              {selectedCountry.flag} {selectedCountry.currency.name}
-            </Badge>
-          </div>
-          <p className="text-muted-foreground">
-            Découvrez les meilleures offres immobilières en {selectedCountry.name}
-          </p>
-        </div>
 
         {/* Filters & Controls */}
         <div className="space-y-4">
