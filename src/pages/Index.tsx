@@ -162,31 +162,62 @@ const Index = () => {
 
   // Filter properties based on current filters
   const filterProperties = (properties: Listing[], filters: FilterState) => {
+    console.log('🔍 Début du filtrage:', { 
+      totalProperties: properties.length, 
+      filters,
+      sampleProperty: properties[0] ? {
+        city: properties[0].city,
+        property_type: properties[0].property_type,
+        transaction_type: properties[0].transaction_type
+      } : 'aucune propriété'
+    });
+
     return properties.filter(property => {
       // Filter by transaction type
-      if (filters.type && property.transaction_type !== filters.type) return false;
+      if (filters.type && property.transaction_type !== filters.type) {
+        console.log('❌ Filtré par transaction type:', property.title, property.transaction_type, 'vs', filters.type);
+        return false;
+      }
       
-      // Filter by property type  
-      if (filters.propertyType && property.property_type !== filters.propertyType) return false;
+      // Filter by property type - gérer les valeurs null
+      if (filters.propertyType) {
+        // Si property_type est null/undefined, on l'ignore plutôt que de filtrer
+        if (property.property_type && property.property_type !== filters.propertyType) {
+          console.log('❌ Filtré par property type:', property.title, property.property_type, 'vs', filters.propertyType);
+          return false;
+        }
+      }
       
       // Filter by price range
-      if (property.price < filters.priceRange[0] || property.price > filters.priceRange[1]) return false;
+      if (property.price < filters.priceRange[0] || property.price > filters.priceRange[1]) {
+        console.log('❌ Filtré par prix:', property.title, property.price);
+        return false;
+      }
       
       // Filter by bedrooms
       if (filters.bedrooms) {
         const minBedrooms = parseInt(filters.bedrooms);
-        if (!property.bedrooms || property.bedrooms < minBedrooms) return false;
+        if (property.bedrooms && property.bedrooms < minBedrooms) {
+          console.log('❌ Filtré par chambres:', property.title, property.bedrooms, 'vs', minBedrooms);
+          return false;
+        }
       }
       
       // Filter by bathrooms
       if (filters.bathrooms) {
         const minBathrooms = parseInt(filters.bathrooms);
-        if (!property.bathrooms || property.bathrooms < minBathrooms) return false;
+        if (property.bathrooms && property.bathrooms < minBathrooms) {
+          console.log('❌ Filtré par salles de bain:', property.title, property.bathrooms, 'vs', minBathrooms);
+          return false;
+        }
       }
       
       // Filter by surface area
       if (property.surface_area) {
-        if (property.surface_area < filters.surface[0] || property.surface_area > filters.surface[1]) return false;
+        if (property.surface_area < filters.surface[0] || property.surface_area > filters.surface[1]) {
+          console.log('❌ Filtré par surface:', property.title, property.surface_area);
+          return false;
+        }
       }
       
       // Filter by features
@@ -194,23 +225,34 @@ const Index = () => {
         const hasAllFeatures = filters.features.every(feature => 
           property.features?.includes(feature)
         );
-        if (!hasAllFeatures) return false;
+        if (!hasAllFeatures) {
+          console.log('❌ Filtré par features:', property.title);
+          return false;
+        }
       }
       
-      // Filter by location (city)
+      // Filter by location (city) - case insensitive
       if (filters.location) {
         const locationLower = filters.location.toLowerCase();
-        if (!property.city.toLowerCase().includes(locationLower)) return false;
+        const cityLower = property.city.toLowerCase();
+        if (!cityLower.includes(locationLower)) {
+          console.log('❌ Filtré par localisation:', property.title, property.city, 'vs', filters.location);
+          return false;
+        }
       }
       
-      // Filter by search query (title and description)
+      // Filter by search query (title and description) - case insensitive
       if (filters.searchQuery) {
         const searchLower = filters.searchQuery.toLowerCase();
         const titleMatch = property.title.toLowerCase().includes(searchLower);
         const cityMatch = property.city.toLowerCase().includes(searchLower);
-        if (!titleMatch && !cityMatch) return false;
+        if (!titleMatch && !cityMatch) {
+          console.log('❌ Filtré par recherche:', property.title, 'recherche:', filters.searchQuery);
+          return false;
+        }
       }
       
+      console.log('✅ Propriété acceptée:', property.title);
       return true;
     });
   };
