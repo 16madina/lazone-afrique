@@ -46,9 +46,11 @@ const HeroSection = () => {
                   className="w-64 h-32 md:w-96 md:h-48 object-contain mt-4 -ml-12"
                 />
               </div>
-              <p className="text-lg md:text-xl text-primary-foreground/90 mt-4 text-left">
-                Découvrez les meilleures opportunités immobilières en {selectedCountry.name}. 
-                Prix en {selectedCountry.currency.name} ({selectedCountry.currency.symbol}).
+              <h1 className="text-2xl md:text-4xl font-fredoka text-primary-foreground font-bold mt-4 text-left leading-tight">
+                TROUVE TON CHEZ TOI DANS TA ZONE
+              </h1>
+              <p className="text-sm md:text-base text-primary-foreground/80 mt-2 text-left">
+                Prix en {selectedCountry.currency.name} ({selectedCountry.currency.symbol})
               </p>
             </div>
           </div>
