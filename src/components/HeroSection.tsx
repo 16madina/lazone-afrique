@@ -8,6 +8,7 @@ import heroImage from "@/assets/hero-african-villa.jpg";
 import propertyHouse from "@/assets/property-house.jpg";
 import propertyApartment from "@/assets/property-apartment.jpg";
 import propertyLand from "@/assets/property-land.jpg";
+import mainLogo from "@/assets/main-logo.jpeg";
 import SponsorshipDialog from "@/components/SponsorshipDialog";
 
 const HeroSection = () => {
@@ -29,19 +30,19 @@ const HeroSection = () => {
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 text-center">
         <div className="max-w-4xl mx-auto space-y-8">
-          {/* Hero Text */}
-          <div className="space-y-4">
-            <h1 className="text-4xl md:text-6xl font-bold text-primary-foreground leading-tight">
-              Trouvez votre
-              <span className="block bg-gradient-to-r from-african-gold to-primary bg-clip-text text-transparent">
-                Maison Idéale
-              </span>
-              en {selectedCountry.name}
-            </h1>
-            <p className="text-lg md:text-xl text-primary-foreground/90 max-w-2xl mx-auto">
-              Découvrez les meilleures opportunités immobilières en {selectedCountry.name}. 
-              Prix en {selectedCountry.currency.name} ({selectedCountry.currency.symbol}).
-            </p>
+          {/* Hero Logo */}
+          <div className="flex justify-start items-center space-y-4">
+            <div className="flex flex-col items-start max-w-4xl">
+              <img 
+                src={mainLogo} 
+                alt="Logo LaZone"
+                className="w-32 h-32 md:w-48 md:h-48 object-contain"
+              />
+              <p className="text-lg md:text-xl text-primary-foreground/90 mt-4 text-left">
+                Découvrez les meilleures opportunités immobilières en {selectedCountry.name}. 
+                Prix en {selectedCountry.currency.name} ({selectedCountry.currency.symbol}).
+              </p>
+            </div>
           </div>
 
           {/* Search Form */}
