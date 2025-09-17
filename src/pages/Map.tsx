@@ -247,11 +247,11 @@ const Map = () => {
         </div>
 
         {/* Map Controls */}
-        <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
+        <div className="absolute top-20 right-4 z-10 flex flex-col gap-3">
           <Button 
             variant="outline" 
             size="icon" 
-            className="bg-background/95 backdrop-blur-sm"
+            className="bg-background/95 backdrop-blur-sm shadow-lg"
             onClick={toggleMapStyle}
             title={mapStyle === "light" ? "Vue satellite" : "Vue carte"}
           >
@@ -260,7 +260,7 @@ const Map = () => {
           <Button 
             variant="outline" 
             size="icon" 
-            className="bg-background/95 backdrop-blur-sm"
+            className="bg-background/95 backdrop-blur-sm shadow-lg"
             onClick={() => {
               // Recentrer sur l'Afrique
               setSelectedCityCoords(null);
