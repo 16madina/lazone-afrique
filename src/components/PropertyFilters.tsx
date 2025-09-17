@@ -26,11 +26,24 @@ interface PropertyFiltersProps {
 
 const PropertyFilters = ({ onFiltersChange, currentFilters }: PropertyFiltersProps) => {
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState<FilterState>(currentFilters);
+  const defaultFilters: FilterState = {
+    type: "",
+    propertyType: "",
+    priceRange: [0, 1000000000],
+    bedrooms: "",
+    bathrooms: "",
+    surface: [0, 1000],
+    features: [],
+    location: "",
+    searchQuery: ""
+  };
+  const [filters, setFilters] = useState<FilterState>(currentFilters || defaultFilters);
 
   // Sync local state with currentFilters prop
   useEffect(() => {
-    setFilters(currentFilters);
+    if (currentFilters) {
+      setFilters(currentFilters);
+    }
   }, [currentFilters]);
 
   const availableFeatures = [
