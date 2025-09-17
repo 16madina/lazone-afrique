@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,21 +21,17 @@ interface FilterState {
 
 interface PropertyFiltersProps {
   onFiltersChange: (filters: FilterState) => void;
+  currentFilters: FilterState;
 }
 
-const PropertyFilters = ({ onFiltersChange }: PropertyFiltersProps) => {
+const PropertyFilters = ({ onFiltersChange, currentFilters }: PropertyFiltersProps) => {
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState<FilterState>({
-    type: "",
-    propertyType: "",
-    priceRange: [0, 1000000000],
-    bedrooms: "",
-    bathrooms: "",
-    surface: [0, 1000],
-    features: [],
-    location: "",
-    searchQuery: ""
-  });
+  const [filters, setFilters] = useState<FilterState>(currentFilters);
+
+  // Sync local state with currentFilters prop
+  useEffect(() => {
+    setFilters(currentFilters);
+  }, [currentFilters]);
 
   const availableFeatures = [
     "Piscine", "Garage", "Jardin", "Climatisation", "Sécurité 24h",

@@ -329,7 +329,7 @@ const Index = () => {
 
         {/* Filters & Controls */}
         <div className="space-y-4">
-          <PropertyFilters onFiltersChange={handleFiltersChange} />
+          <PropertyFilters onFiltersChange={handleFiltersChange} currentFilters={currentFilters} />
           
           {/* Sort & View Controls */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
