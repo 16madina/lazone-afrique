@@ -107,13 +107,11 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
       maxBounds: [[-30, -40], [60, 40]], // Limiter aux coordonnées de l'Afrique
     });
 
-    // Ajouter les contrôles de navigation
-    map.current.addControl(
-      new mapboxgl.NavigationControl({
-        visualizePitch: true,
-      }),
-      'top-right'
-    );
+    // Ajouter les contrôles de navigation avec position ajustée
+    const nav = new mapboxgl.NavigationControl({
+      visualizePitch: true,
+    });
+    map.current.addControl(nav, 'top-right');
 
     // Centrer sur l'Afrique quand la carte est chargée
     map.current.on('load', () => {
