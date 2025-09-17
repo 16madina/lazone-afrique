@@ -43,7 +43,7 @@ const HeroSection = () => {
                 <img 
                   src={lazoneLogo} 
                   alt="LaZone"
-                  className="w-24 h-12 md:w-32 md:h-16 object-contain"
+                  className="w-32 h-32 md:w-48 md:h-48 object-contain"
                 />
               </div>
               <p className="text-lg md:text-xl text-primary-foreground/90 mt-4 text-left">
