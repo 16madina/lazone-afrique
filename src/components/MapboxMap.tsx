@@ -130,39 +130,47 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
         markerElement.className = 'mapbox-price-marker';
         markerElement.innerHTML = `
           <div style="
-            background: #0E7490;
+            background: linear-gradient(135deg, #0E7490, #0891b2);
             color: white;
-            padding: 2px 6px;
-            border-radius: 12px;
-            font-size: 9px;
-            font-weight: 600;
-            box-shadow: 0 2px 8px rgba(14,116,144,0.3);
+            padding: 4px 8px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(14,116,144,0.4);
             white-space: nowrap;
             cursor: pointer;
-            border: 1px solid white;
-            transition: all 0.3s ease;
+            border: 2px solid white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             transform: scale(1);
-            min-width: 20px;
+            min-width: 28px;
             text-align: center;
+            position: relative;
+            z-index: 1;
           ">
             ${formatPrice(listing.price)}
           </div>
         `;
+        
+        // Ajouter un offset aléatoire léger pour éviter les chevauchements exacts
+        const offsetX = (Math.random() - 0.5) * 0.001; // Petit décalage aléatoire
+        const offsetY = (Math.random() - 0.5) * 0.001;
 
         // Effet hover sur le marqueur
         markerElement.addEventListener('mouseenter', () => {
-          markerElement.style.transform = 'scale(1.1)';
-          markerElement.style.boxShadow = '0 6px 20px rgba(14,116,144,0.6)';
+          markerElement.style.transform = 'scale(1.15)';
+          markerElement.style.boxShadow = '0 8px 25px rgba(14,116,144,0.7)';
+          markerElement.style.zIndex = '1000';
         });
         
         markerElement.addEventListener('mouseleave', () => {
           markerElement.style.transform = 'scale(1)';
-          markerElement.style.boxShadow = '0 4px 15px rgba(14,116,144,0.4)';
+          markerElement.style.boxShadow = '0 4px 12px rgba(14,116,144,0.4)';
+          markerElement.style.zIndex = '1';
         });
 
-        // Créer le marqueur
+        // Créer le marqueur avec un léger offset pour éviter les chevauchements
         const marker = new mapboxgl.Marker(markerElement)
-          .setLngLat([listing.lng, listing.lat])
+          .setLngLat([listing.lng + offsetX, listing.lat + offsetY])
           .addTo(map.current!);
 
         // Créer le popup avec un design amélioré

@@ -28,8 +28,11 @@ const Map = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [listings, setListings] = useState<Listing[]>([]);
+  const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedCityCoords, setSelectedCityCoords] = useState<{lat: number, lng: number} | null>(null);
+  const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [mapStyle, setMapStyle] = useState<string>("light");
   const { selectedCountry } = useCountry();
 
   console.log("Map component rendering, listings count:", listings.length);
@@ -86,9 +89,58 @@ const Map = () => {
       console.log("Fetched listings:", data);
       console.log("Number of listings:", data?.length);
       setListings(data || []);
+      setFilteredListings(data || []);
     } catch (error) {
       console.error('Error:', error);
     }
+  };
+
+  // Filtrer les annonces selon le filtre actif
+  const handleFilterChange = (filter: string) => {
+    setActiveFilter(filter);
+    let filtered = listings;
+    
+    switch (filter) {
+      case "sale":
+        filtered = listings.filter(l => l.transaction_type === "sale");
+        break;
+      case "rent":
+        filtered = listings.filter(l => l.transaction_type === "rent");
+        break;
+      case "apartment":
+        filtered = listings.filter(l => l.title.toLowerCase().includes("appartement") || l.title.toLowerCase().includes("apartment"));
+        break;
+      case "house":
+        filtered = listings.filter(l => l.title.toLowerCase().includes("maison") || l.title.toLowerCase().includes("villa"));
+        break;
+      default:
+        filtered = listings;
+    }
+    
+    setFilteredListings(filtered);
+  };
+
+  // Géolocalisation de l'utilisateur
+  const handleLocateUser = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setSelectedCityCoords({ lat: latitude, lng: longitude });
+        },
+        (error) => {
+          console.error("Erreur de géolocalisation:", error);
+          alert("Impossible d'obtenir votre position");
+        }
+      );
+    } else {
+      alert("La géolocalisation n'est pas supportée par votre navigateur");
+    }
+  };
+
+  // Changer le style de carte
+  const toggleMapStyle = () => {
+    setMapStyle(prev => prev === "light" ? "satellite" : "light");
   };
 
   return (
@@ -137,10 +189,16 @@ const Map = () => {
                 variant="outline" 
                 size="icon"
                 onClick={() => setShowFilters(!showFilters)}
+                className={showFilters ? "bg-primary text-primary-foreground" : ""}
               >
                 <Filter className="w-4 h-4" />
               </Button>
-              <Button variant="outline" size="icon">
+              <Button 
+                variant="outline" 
+                size="icon"
+                onClick={handleLocateUser}
+                title="Ma position"
+              >
                 <Locate className="w-4 h-4" />
               </Button>
             </div>
@@ -148,10 +206,41 @@ const Map = () => {
             {/* Quick Filters */}
             {showFilters && (
               <div className="flex flex-wrap gap-2 pt-2 border-t border-border animate-slide-up">
-                <Button variant="outline" size="sm">Vente</Button>
-                <Button variant="outline" size="sm">Location</Button>
-                <Button variant="outline" size="sm">Appartements</Button>
-                <Button variant="outline" size="sm">Maisons</Button>
+                <Button 
+                  variant={activeFilter === "all" ? "default" : "outline"} 
+                  size="sm"
+                  onClick={() => handleFilterChange("all")}
+                >
+                  Tout ({listings.length})
+                </Button>
+                <Button 
+                  variant={activeFilter === "sale" ? "default" : "outline"} 
+                  size="sm"
+                  onClick={() => handleFilterChange("sale")}
+                >
+                  Vente
+                </Button>
+                <Button 
+                  variant={activeFilter === "rent" ? "default" : "outline"} 
+                  size="sm"
+                  onClick={() => handleFilterChange("rent")}
+                >
+                  Location
+                </Button>
+                <Button 
+                  variant={activeFilter === "apartment" ? "default" : "outline"} 
+                  size="sm"
+                  onClick={() => handleFilterChange("apartment")}
+                >
+                  Appartements
+                </Button>
+                <Button 
+                  variant={activeFilter === "house" ? "default" : "outline"} 
+                  size="sm"
+                  onClick={() => handleFilterChange("house")}
+                >
+                  Maisons
+                </Button>
               </div>
             )}
           </div>
@@ -159,25 +248,46 @@ const Map = () => {
 
         {/* Map Controls */}
         <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
-          <Button variant="outline" size="icon" className="bg-background/95 backdrop-blur-sm">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="bg-background/95 backdrop-blur-sm"
+            onClick={toggleMapStyle}
+            title={mapStyle === "light" ? "Vue satellite" : "Vue carte"}
+          >
             <Layers className="w-4 h-4" />
           </Button>
-          <Button variant="outline" size="icon" className="bg-background/95 backdrop-blur-sm">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="bg-background/95 backdrop-blur-sm"
+            onClick={() => {
+              // Recentrer sur l'Afrique
+              setSelectedCityCoords(null);
+              setSearchQuery("");
+            }}
+            title="Recentrer sur l'Afrique"
+          >
             <Navigation className="w-4 h-4" />
           </Button>
         </div>
 
         {/* Carte Mapbox avec les marqueurs de prix */}
         <div className="w-full h-full">
-          <MapboxMap listings={listings} selectedCityCoords={selectedCityCoords} />
+          <MapboxMap listings={filteredListings} selectedCityCoords={selectedCityCoords} />
         </div>
 
         {/* Listings Counter */}
         <div className="absolute bottom-24 right-4 z-10 bg-background/95 backdrop-blur-sm rounded-lg p-3 shadow-lg">
           <div className="flex items-center gap-2 text-sm font-medium">
             <MapPin className="w-4 h-4 text-primary" />
-            <span>{listings.length} annonce{listings.length !== 1 ? 's' : ''}</span>
+            <span>{filteredListings.length} annonce{filteredListings.length !== 1 ? 's' : ''}</span>
           </div>
+          {activeFilter !== "all" && (
+            <div className="text-xs text-muted-foreground mt-1">
+              sur {listings.length} au total
+            </div>
+          )}
         </div>
 
         {/* Legend */}
