@@ -12,7 +12,7 @@
 
 /* Ajuster la position des contrôles de navigation pour éviter les chevauchements */
 .mapboxgl-ctrl-top-right {
-  top: 120px !important;
+  top: 180px !important;
   right: 16px !important;
 }
 
