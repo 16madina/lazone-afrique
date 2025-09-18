@@ -720,6 +720,21 @@ export type Database = {
           paid_listings_used: number
         }[]
       }
+      get_public_profile: {
+        Args: { profile_user_id: string }
+        Returns: {
+          avatar_url: string
+          city: string
+          company_name: string
+          country: string
+          created_at: string
+          first_name: string
+          full_name: string
+          id: string
+          last_name: string
+          user_type: Database["public"]["Enums"]["user_type"]
+        }[]
+      }
       is_admin: {
         Args: { user_uuid?: string }
         Returns: boolean
