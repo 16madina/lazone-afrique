@@ -133,7 +133,7 @@ const Auth = () => {
         {/* Bouton retour */}
         <Button 
           variant="ghost" 
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/')}
           className="mb-4"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
