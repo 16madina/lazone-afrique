@@ -161,12 +161,11 @@ const PropertyCard = ({
         <Button 
           size="icon" 
           variant="ghost" 
-          className={`absolute top-3 right-3 w-8 h-8 rounded-full bg-background/80 hover:bg-background ${
+          className={`absolute top-3 left-3 w-8 h-8 rounded-full bg-background/80 hover:bg-background ${
             isInFavorites(id) ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-red-500'
           } z-20 transition-colors`}
           onClick={handleFavoriteClick}
           disabled={favLoading}
-          style={{ marginTop: isSponsored ? '4.5rem' : '0' }}
         >
           <Heart className={`w-4 h-4 ${isInFavorites(id) ? 'fill-current' : ''}`} />
         </Button>
