@@ -720,6 +720,10 @@ export type Database = {
           paid_listings_used: number
         }[]
       }
+      get_listing_owner_profile: {
+        Args: { owner_user_id: string }
+        Returns: Json
+      }
       get_public_profile: {
         Args: { profile_user_id: string }
         Returns: {
@@ -734,6 +738,10 @@ export type Database = {
           last_name: string
           user_type: Database["public"]["Enums"]["user_type"]
         }[]
+      }
+      get_public_profile_safe: {
+        Args: { profile_user_id: string }
+        Returns: Json
       }
       is_admin: {
         Args: { user_uuid?: string }
