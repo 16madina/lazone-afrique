@@ -15,6 +15,10 @@ import { useMediaUpload } from "@/hooks/useMediaUpload";
 import { supabase } from "@/integrations/supabase/client";
 import { useCountry } from "@/contexts/CountryContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ListingLimitsStatus } from '@/components/ListingLimitsStatus';
+import { useListingLimits } from '@/hooks/useListingLimits';
+import { useToast } from '@/hooks/use-toast';
 import { toast } from "sonner";
 import CountrySelector from "@/components/CountrySelector";
 import CitySelector from "@/components/CitySelector";
@@ -23,8 +27,11 @@ const AddProperty = () => {
   const navigate = useNavigate();
   const { selectedCountry } = useCountry();
   const { user } = useAuth();
+  const { canCreateListing, incrementUsage, config } = useListingLimits();
+  const { toast: toastAction } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   
   // Form states
   const [transactionType, setTransactionType] = useState("");
@@ -377,6 +384,12 @@ const AddProperty = () => {
       return;
     }
 
+    // Vérifier les limites avant de créer l'annonce
+    if (!canCreateListing) {
+      setShowPaymentDialog(true);
+      return;
+    }
+
     if (!formData.title || !formData.price || !formData.city || !transactionType || !formData.propertyType) {
       toast.error("Veuillez remplir tous les champs obligatoires");
       return;
@@ -453,6 +466,9 @@ const AddProperty = () => {
 
       if (error) throw error;
 
+      // Incrémenter l'utilisation après création réussie
+      await incrementUsage(false); // false = annonce gratuite
+
       toast.success("Annonce publiée avec succès!");
       navigate("/");
     } catch (error) {
@@ -468,6 +484,14 @@ const AddProperty = () => {
       <Header />
       
       <main className="flex-1 container mx-auto px-4 py-6 pb-20 animate-fade-in">
+        {/* Statut des limites d'annonces */}
+        <div className="mb-6">
+          <ListingLimitsStatus 
+            onUpgrade={() => setShowPaymentDialog(true)}
+            onPayPerListing={() => setShowPaymentDialog(true)}
+          />
+        </div>
+        
         {/* Progress Steps */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
@@ -1042,6 +1066,57 @@ const AddProperty = () => {
           </CardContent>
         </Card>
       </main>
+
+      {/* Dialog de paiement pour les limites */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Options de paiement</DialogTitle>
+            <DialogDescription>
+              Vous avez atteint votre limite d'annonces gratuites ce mois-ci. 
+              Choisissez une option pour continuer.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {config && (
+              <>
+                <div className="p-4 border rounded-lg">
+                  <h3 className="font-medium mb-2">Paiement par annonce</h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Payez pour cette annonce uniquement
+                  </p>
+                  <div className="text-2xl font-bold text-primary">
+                    {config.price_per_extra_listing} {config.currency}
+                  </div>
+                </div>
+                
+                <div className="p-4 border rounded-lg">
+                  <h3 className="font-medium mb-2">Abonnement mensuel illimité</h3>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    Annonces illimitées pour ce mois
+                  </p>
+                  <div className="text-2xl font-bold text-primary">
+                    {config.unlimited_monthly_price} {config.currency}/mois
+                  </div>
+                </div>
+              </>
+            )}
+            
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>
+                Annuler
+              </Button>
+              <Button onClick={() => {
+                toast.error("Fonctionnalité de paiement en cours de développement");
+                setShowPaymentDialog(false);
+              }}>
+                Procéder au paiement
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <BottomNavigation />
     </div>

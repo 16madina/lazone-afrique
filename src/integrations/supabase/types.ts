@@ -189,6 +189,84 @@ export type Database = {
           },
         ]
       }
+      listing_limits_config: {
+        Row: {
+          created_at: string
+          currency: string
+          free_listings_per_month: number
+          id: string
+          is_active: boolean
+          price_per_extra_listing: number
+          unlimited_monthly_price: number
+          updated_at: string
+          user_type: Database["public"]["Enums"]["user_type"]
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          free_listings_per_month?: number
+          id?: string
+          is_active?: boolean
+          price_per_extra_listing?: number
+          unlimited_monthly_price?: number
+          updated_at?: string
+          user_type: Database["public"]["Enums"]["user_type"]
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          free_listings_per_month?: number
+          id?: string
+          is_active?: boolean
+          price_per_extra_listing?: number
+          unlimited_monthly_price?: number
+          updated_at?: string
+          user_type?: Database["public"]["Enums"]["user_type"]
+        }
+        Relationships: []
+      }
+      listing_payments: {
+        Row: {
+          amount_paid: number
+          created_at: string
+          currency: string
+          id: string
+          listing_id: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          payment_status: string
+          payment_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_paid: number
+          created_at?: string
+          currency?: string
+          id?: string
+          listing_id?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string
+          payment_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_paid?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          listing_id?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string
+          payment_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       listings: {
         Row: {
           bathrooms: number | null
@@ -335,6 +413,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      monthly_listing_usage: {
+        Row: {
+          created_at: string
+          free_listings_used: number
+          id: string
+          month: number
+          paid_listings_used: number
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          free_listings_used?: number
+          id?: string
+          month: number
+          paid_listings_used?: number
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          free_listings_used?: number
+          id?: string
+          month?: number
+          paid_listings_used?: number
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -539,11 +650,51 @@ export type Database = {
           },
         ]
       }
+      user_subscriptions: {
+        Row: {
+          auto_renew: boolean
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          starts_at: string
+          subscription_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_renew?: boolean
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          starts_at?: string
+          subscription_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_renew?: boolean
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          starts_at?: string
+          subscription_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      can_create_listing: {
+        Args: { target_user_id?: string }
+        Returns: boolean
+      }
       can_user_add_participant: {
         Args: { target_conversation_id: string; target_user_id: string }
         Returns: boolean
@@ -560,6 +711,14 @@ export type Database = {
           related_transaction_id?: string
         }
         Returns: string
+      }
+      get_current_month_usage: {
+        Args: { target_user_id?: string }
+        Returns: {
+          free_listings_remaining: number
+          free_listings_used: number
+          paid_listings_used: number
+        }[]
       }
       is_admin: {
         Args: { user_uuid?: string }

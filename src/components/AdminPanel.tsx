@@ -25,8 +25,10 @@ import {
   DollarSign,
   Edit,
   Plus,
-  Crown
+  Crown,
+  Settings
 } from 'lucide-react';
+import { ListingLimitsAdmin } from './admin/ListingLimitsAdmin';
 
 interface User {
   user_id: string;
@@ -298,10 +300,11 @@ const AdminPanel = () => {
       </div>
 
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="users">Utilisateurs</TabsTrigger>
           <TabsTrigger value="listings">Annonces</TabsTrigger>
           <TabsTrigger value="sponsorship">Sponsoring</TabsTrigger>
+          <TabsTrigger value="limits">Limites</TabsTrigger>
           <TabsTrigger value="actions">Actions</TabsTrigger>
         </TabsList>
 
@@ -565,6 +568,16 @@ const AdminPanel = () => {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Limits Management */}
+        <TabsContent value="limits" className="space-y-4">
+          <ListingLimitsAdmin />
+        </TabsContent>
+
+        {/* Limits Management */}
+        <TabsContent value="limits" className="space-y-4">
+          <ListingLimitsAdmin />
         </TabsContent>
 
         {/* Admin Actions Log */}
