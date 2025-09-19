@@ -64,6 +64,20 @@ const AddProperty = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeolocating, setIsGeolocating] = useState(false);
 
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const { 
+    uploadedPhotos, 
+    uploadedVideo, 
+    uploading, 
+    uploadPhoto, 
+    uploadVideo, 
+    removePhoto, 
+    removeVideo,
+    loadExistingMedia,
+    clearAllMedia
+  } = useMediaUpload();
+
   // Load existing listing data if in edit mode
   useEffect(() => {
     const loadExistingListing = async () => {
@@ -86,6 +100,8 @@ const AddProperty = () => {
         }
 
         if (listing) {
+          console.log('Loading existing listing for editing:', listing);
+          
           // Populate form with existing data
           setFormData({
             propertyType: listing.property_type || "",
@@ -111,6 +127,11 @@ const AddProperty = () => {
           setSelectedFeatures(listing.features || []);
           setSelectedDocuments(listing.property_documents || []);
           setIsNegotiable(listing.is_negotiable || false);
+
+          // Load existing media
+          if (listing.photos || listing.video_url) {
+            loadExistingMedia(listing.photos || [], listing.video_url);
+          }
         }
       } catch (error) {
         console.error('Error loading listing:', error);
@@ -122,7 +143,14 @@ const AddProperty = () => {
     };
 
     loadExistingListing();
-  }, [isEditMode, editId, user, toast, navigate]);
+  }, [isEditMode, editId, user, toast, navigate, loadExistingMedia]);
+
+  // Clear media when not in edit mode or when component mounts
+  useEffect(() => {
+    if (!isEditMode) {
+      clearAllMedia();
+    }
+  }, [isEditMode, clearAllMedia]);
 
   // Load user profile data
   useEffect(() => {
@@ -151,18 +179,6 @@ const AddProperty = () => {
 
     loadUserProfile();
   }, [user]);
-  
-  const photoInputRef = useRef<HTMLInputElement>(null);
-  const videoInputRef = useRef<HTMLInputElement>(null);
-  const { 
-    uploadedPhotos, 
-    uploadedVideo, 
-    uploading, 
-    uploadPhoto, 
-    uploadVideo, 
-    removePhoto, 
-    removeVideo 
-  } = useMediaUpload();
 
   const steps = [
     { number: 1, title: "Type de bien", icon: Home },

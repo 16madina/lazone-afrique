@@ -14,6 +14,37 @@ export const useMediaUpload = () => {
   const [uploadedVideo, setUploadedVideo] = useState<UploadedMedia | null>(null);
   const [uploading, setUploading] = useState(false);
 
+  // Function to load existing media from URLs
+  const loadExistingMedia = (photos: string[], video?: string) => {
+    // Load existing photos
+    if (photos && photos.length > 0) {
+      const existingPhotos: UploadedMedia[] = photos.map((url, index) => ({
+        id: `existing-photo-${index}`,
+        url,
+        type: 'photo' as const,
+        file: new File([], `existing-photo-${index}.jpg`, { type: 'image/jpeg' })
+      }));
+      setUploadedPhotos(existingPhotos);
+    }
+
+    // Load existing video
+    if (video) {
+      const existingVideo: UploadedMedia = {
+        id: 'existing-video',
+        url: video,
+        type: 'video' as const,
+        file: new File([], 'existing-video.mp4', { type: 'video/mp4' })
+      };
+      setUploadedVideo(existingVideo);
+    }
+  };
+
+  // Function to clear all media
+  const clearAllMedia = () => {
+    setUploadedPhotos([]);
+    setUploadedVideo(null);
+  };
+
   const uploadPhoto = async (file: File): Promise<void> => {
     if (uploadedPhotos.length >= 20) {
       toast({
@@ -227,6 +258,10 @@ export const useMediaUpload = () => {
     uploadPhoto,
     uploadVideo,
     removePhoto,
-    removeVideo
+    removeVideo,
+    loadExistingMedia,
+    clearAllMedia,
+    setUploadedPhotos,
+    setUploadedVideo
   };
 };
