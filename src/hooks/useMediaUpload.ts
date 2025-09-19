@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -15,7 +15,7 @@ export const useMediaUpload = () => {
   const [uploading, setUploading] = useState(false);
 
   // Function to load existing media from URLs
-  const loadExistingMedia = (photos: string[], video?: string) => {
+  const loadExistingMedia = useCallback((photos: string[], video?: string) => {
     // Load existing photos
     if (photos && photos.length > 0) {
       const existingPhotos: UploadedMedia[] = photos.map((url, index) => ({
@@ -37,13 +37,13 @@ export const useMediaUpload = () => {
       };
       setUploadedVideo(existingVideo);
     }
-  };
+  }, []);
 
   // Function to clear all media
-  const clearAllMedia = () => {
+  const clearAllMedia = useCallback(() => {
     setUploadedPhotos([]);
     setUploadedVideo(null);
-  };
+  }, []);
 
   const uploadPhoto = async (file: File): Promise<void> => {
     if (uploadedPhotos.length >= 20) {

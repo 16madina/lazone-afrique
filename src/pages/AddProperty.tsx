@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
@@ -28,6 +28,7 @@ const AddProperty = () => {
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('edit');
   const isEditMode = !!editId;
+  const loadedRef = useRef(false); // Prevent loading multiple times
   
   const { selectedCountry } = useCountry();
   const { user } = useAuth();
@@ -79,71 +80,72 @@ const AddProperty = () => {
   } = useMediaUpload();
 
   // Load existing listing data if in edit mode
-  useEffect(() => {
-    const loadExistingListing = async () => {
-      if (!isEditMode || !editId || !user) return;
-      
-      setIsLoadingListing(true);
-      try {
-        const { data: listing, error } = await supabase
-          .from('listings')
-          .select('*')
-          .eq('id', editId)
-          .eq('user_id', user.id) // Ensure user can only edit their own listings
-          .single();
+  const loadExistingListing = useCallback(async () => {
+    if (!isEditMode || !editId || !user || loadedRef.current) return;
+    
+    loadedRef.current = true; // Mark as loaded to prevent multiple loads
+    setIsLoadingListing(true);
+    try {
+      const { data: listing, error } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('id', editId)
+        .eq('user_id', user.id) // Ensure user can only edit their own listings
+        .single();
 
-        if (error) {
-          console.error('Error loading listing:', error);
-          toast.error("Impossible de charger l'annonce");
-          navigate('/profile');
-          return;
-        }
-
-        if (listing) {
-          console.log('Loading existing listing for editing:', listing);
-          
-          // Populate form with existing data
-          setFormData({
-            propertyType: listing.property_type || "",
-            title: listing.title || "",
-            description: listing.description || "",
-            price: listing.price?.toString() || "",
-            city: listing.city || "",
-            location: "", // This field doesn't exist in database
-            bedrooms: listing.bedrooms?.toString() || "",
-            bathrooms: listing.bathrooms?.toString() || "",
-            area: listing.surface_area?.toString() || "",
-            floorNumber: listing.floor_number || "",
-            landType: listing.land_type || "",
-            landShape: listing.land_shape || "",
-            fullName: "",
-            email: "",
-            phone: "",
-            whatsapp: ""
-          });
-
-          // Set other form states
-          setTransactionType(listing.transaction_type || "");
-          setSelectedFeatures(listing.features || []);
-          setSelectedDocuments(listing.property_documents || []);
-          setIsNegotiable(listing.is_negotiable || false);
-
-          // Load existing media
-          if (listing.photos || listing.video_url) {
-            loadExistingMedia(listing.photos || [], listing.video_url);
-          }
-        }
-      } catch (error) {
+      if (error) {
         console.error('Error loading listing:', error);
-        toast.error("Erreur lors du chargement de l'annonce");
+        toast.error("Impossible de charger l'annonce");
         navigate('/profile');
-      } finally {
-        setIsLoadingListing(false);
+        return;
       }
-    };
 
+      if (listing) {
+        console.log('Loading existing listing for editing:', listing);
+        
+        // Populate form with existing data
+        setFormData({
+          propertyType: listing.property_type || "",
+          title: listing.title || "",
+          description: listing.description || "",
+          price: listing.price?.toString() || "",
+          city: listing.city || "",
+          location: "", // This field doesn't exist in database
+          bedrooms: listing.bedrooms?.toString() || "",
+          bathrooms: listing.bathrooms?.toString() || "",
+          area: listing.surface_area?.toString() || "",
+          floorNumber: listing.floor_number || "",
+          landType: listing.land_type || "",
+          landShape: listing.land_shape || "",
+          fullName: "",
+          email: "",
+          phone: "",
+          whatsapp: ""
+        });
+
+        // Set other form states
+        setTransactionType(listing.transaction_type || "");
+        setSelectedFeatures(listing.features || []);
+        setSelectedDocuments(listing.property_documents || []);
+        setIsNegotiable(listing.is_negotiable || false);
+
+        // Load existing media
+        if (listing.photos || listing.video_url) {
+          loadExistingMedia(listing.photos || [], listing.video_url);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading listing:', error);
+      toast.error("Erreur lors du chargement de l'annonce");
+      navigate('/profile');
+    } finally {
+      setIsLoadingListing(false);
+    }
+  }, [isEditMode, editId, user, navigate, loadExistingMedia]);
+
+  useEffect(() => {
     loadExistingListing();
-  }, [isEditMode, editId, user, toast, navigate, loadExistingMedia]);
+  }, [loadExistingListing]);
 
   // Clear media when not in edit mode or when component mounts
   useEffect(() => {
