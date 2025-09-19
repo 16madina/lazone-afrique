@@ -29,14 +29,55 @@ serve(async (req) => {
       )
     }
 
-    // Chercher l'utilisateur par numéro de téléphone
-    const { data: profile, error: profileError } = await supabaseClient
-      .from('profiles')
-      .select('email, user_id')
-      .eq('phone', phone)
-      .single()
+    // Normaliser le numéro de téléphone pour la recherche
+    const normalizePhone = (phoneNumber: string) => {
+      // Supprimer tous les espaces, tirets et caractères spéciaux
+      let cleaned = phoneNumber.replace(/[\s\-\(\)]/g, '');
+      
+      // Si le numéro commence par +225, enlever le préfixe
+      if (cleaned.startsWith('+225')) {
+        cleaned = cleaned.substring(4);
+      }
+      
+      // Si le numéro commence par 225, enlever le préfixe
+      if (cleaned.startsWith('225')) {
+        cleaned = cleaned.substring(3);
+      }
+      
+      return cleaned;
+    };
 
-    if (profileError || !profile) {
+    const normalizedPhone = normalizePhone(phone);
+    console.log('Numéro original:', phone);
+    console.log('Numéro normalisé:', normalizedPhone);
+
+    // Chercher l'utilisateur par numéro de téléphone (recherche flexible)
+    const { data: profiles, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('email, user_id, phone')
+
+    if (profileError) {
+      console.error('Erreur lors de la recherche:', profileError);
+      return new Response(
+        JSON.stringify({ error: 'Erreur lors de la recherche du profil' }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500 
+        }
+      )
+    }
+
+    // Trouver le profil correspondant en normalisant tous les numéros
+    const matchingProfile = profiles?.find(profile => {
+      if (!profile.phone) return false;
+      const normalizedDbPhone = normalizePhone(profile.phone);
+      console.log('Comparaison:', normalizedDbPhone, 'vs', normalizedPhone);
+      return normalizedDbPhone === normalizedPhone;
+    });
+
+    if (!matchingProfile) {
+      console.log('Aucun profil trouvé pour le numéro:', normalizedPhone);
+      console.log('Numéros disponibles:', profiles?.map(p => p.phone));
       return new Response(
         JSON.stringify({ error: 'Aucun compte trouvé avec ce numéro de téléphone' }),
         { 
@@ -48,7 +89,7 @@ serve(async (req) => {
 
     // Utiliser l'email trouvé pour l'authentification
     const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
-      email: profile.email,
+      email: matchingProfile.email,
       password: password,
     })
 
