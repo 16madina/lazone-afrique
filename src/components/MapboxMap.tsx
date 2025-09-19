@@ -244,13 +244,22 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
 
       // Fonction pour obtenir l'image de listing
       const getListingImage = (listing: any) => {
+        // Vérifier d'abord les photos uploadées
         if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
           return listing.photos[0];
         }
+        // Vérifier l'image mais ignorer les placeholders
         if (listing.image && listing.image !== '/placeholder.svg' && !listing.image.includes('placeholder')) {
           return listing.image;
         }
-        return 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=280&h=160&fit=crop&auto=format';
+        // Image par défaut plus fiable basée sur le type de transaction
+        if (listing.transaction_type === 'rent') {
+          return 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=280&h=160&fit=crop&auto=format&q=80';
+        } else if (listing.transaction_type === 'commercial') {
+          return 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=280&h=160&fit=crop&auto=format&q=80';
+        } else {
+          return 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=280&h=160&fit=crop&auto=format&q=80';
+        }
       };
 
       // Événement de clic sur les clusters
