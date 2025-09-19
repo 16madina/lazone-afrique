@@ -33,6 +33,7 @@ const Map = () => {
   const [selectedCityCoords, setSelectedCityCoords] = useState<{lat: number, lng: number} | null>(null);
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [mapStyle, setMapStyle] = useState<string>("light");
+  const [hasAutoLocated, setHasAutoLocated] = useState(false);
   const { selectedCountry } = useCountry();
 
   console.log("Map component rendering, listings count:", listings.length);
@@ -64,6 +65,14 @@ const Map = () => {
       console.error('Erreur lors du géocodage:', error);
     }
   };
+
+  // Auto-locate user when map loads (only once)
+  useEffect(() => {
+    if (!hasAutoLocated) {
+      handleLocateUser();
+      setHasAutoLocated(true);
+    }
+  }, [hasAutoLocated]);
 
   // Fetch listings from Supabase
   useEffect(() => {
@@ -126,15 +135,34 @@ const Map = () => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          setSelectedCityCoords({ lat: latitude, lng: longitude });
+          
+          // Vérifier si la position est en Afrique (bounds approximatifs)
+          const isInAfrica = latitude >= -35 && latitude <= 37 && longitude >= -20 && longitude <= 52;
+          
+          if (isInAfrica) {
+            setSelectedCityCoords({ lat: latitude, lng: longitude });
+          } else {
+            // Si l'utilisateur n'est pas en Afrique, centrer sur le pays sélectionné
+            const { lat, lng } = selectedCountry.coordinates;
+            setSelectedCityCoords({ lat, lng });
+          }
         },
         (error) => {
           console.error("Erreur de géolocalisation:", error);
-          alert("Impossible d'obtenir votre position");
+          // En cas d'erreur, centrer sur le pays sélectionné
+          const { lat, lng } = selectedCountry.coordinates;
+          setSelectedCityCoords({ lat, lng });
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutes de cache
         }
       );
     } else {
-      alert("La géolocalisation n'est pas supportée par votre navigateur");
+      // Si la géolocalisation n'est pas supportée, centrer sur le pays sélectionné
+      const { lat, lng } = selectedCountry.coordinates;
+      setSelectedCityCoords({ lat, lng });
     }
   };
 
