@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MapPin, Search, Filter, Locate, Layers, Navigation } from "lucide-react";
@@ -35,7 +34,6 @@ const Map = () => {
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [mapStyle, setMapStyle] = useState<string>("light");
   const { selectedCountry } = useCountry();
-  const location = useLocation();
 
   console.log("Map component rendering, listings count:", listings.length);
 
@@ -72,12 +70,6 @@ const Map = () => {
     fetchListings();
   }, []);
 
-  // Forcer le rechargement quand on arrive sur la page
-  useEffect(() => {
-    console.log("🗺️ Page Map montée, rechargement des annonces...");
-    fetchListings();
-  }, [location.pathname]); // Recharger quand l'URL change
-
   const fetchListings = async () => {
     try {
       console.log("Fetching all listings for map...");
@@ -87,21 +79,15 @@ const Map = () => {
         .eq('status', 'published')
         .not('lat', 'is', null)
         .not('lng', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(200); // Augmenter encore la limite
+        .limit(50); // Increase limit to 50
 
       if (error) {
         console.error('Error fetching listings:', error);
         return;
       }
 
-      console.log("✅ Fetched listings for map:", data?.map(l => ({ id: l.id, title: l.title, lat: l.lat, lng: l.lng })));
-
-      // Vérifier spécifiquement les annonces mentionnées par l'utilisateur
-      const targetListings = ['cave a cedez', 'Terrain test', 'Villa a louer'];
-      const foundListings = data?.filter(l => targetListings.includes(l.title)) || [];
-      console.log("🔍 Annonces recherchées trouvées:", foundListings.map(l => ({ title: l.title, hasCoords: !!(l.lat && l.lng) })));
-
+      console.log("Fetched listings:", data);
+      console.log("Number of listings:", data?.length);
       setListings(data || []);
       setFilteredListings(data || []);
     } catch (error) {

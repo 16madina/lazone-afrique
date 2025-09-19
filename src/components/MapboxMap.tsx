@@ -26,13 +26,20 @@ interface MapboxMapProps {
   selectedCityCoords?: {lat: number, lng: number} | null;
 }
 
+function formatPrice(price?: number | null) {
+  if (price == null) return '';
+  if (price >= 1_000_000) return (price/1_000_000).toFixed(1).replace('.0','') + 'M';
+  if (price >= 1_000) return Math.round(price/1_000) + 'k';
+  return String(price);
+}
+
 const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { selectedCountry, formatLocalPrice } = useCountry();
+  const { selectedCountry } = useCountry();
   const { user } = useAuth();
   const { toggleFavorite, isFavorite, loading: favoritesLoading } = useFavorites();
 
@@ -106,352 +113,77 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
     });
     map.current.addControl(nav, 'top-right');
 
-    // Centrer sur le pays de l'utilisateur quand la carte est chargée
+    // Centrer sur l'Afrique quand la carte est chargée
     map.current.on('load', () => {
-      // Centrer automatiquement sur le pays de l'utilisateur
-      const { lat, lng, zoom } = selectedCountry.coordinates;
-      map.current?.flyTo({
-        center: [lng, lat],
-        zoom: zoom,
-        duration: 1500
-      });
+      // Bounds approximatifs de l'Afrique
+      const africaBounds: [number, number, number, number] = [-20, -35, 52, 37];
+      map.current?.fitBounds(africaBounds, { padding: 50 });
 
-      // Fonction pour disperser les coordonnées identiques
-      const disperseIdenticalCoordinates = (listings: Listing[]) => {
-        const coordinateGroups: { [key: string]: Listing[] } = {};
+      // Ajouter les marqueurs pour chaque listing
+      listings.forEach(listing => {
+        if (!listing.lat || !listing.lng) return;
+
+        // Créer un élément DOM personnalisé pour le marqueur de prix
+        const markerElement = document.createElement('div');
+        markerElement.className = 'mapbox-price-marker';
+        markerElement.innerHTML = `
+          <div style="
+            background: linear-gradient(135deg, #0E7490, #0891b2);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(14,116,144,0.4);
+            white-space: nowrap;
+            cursor: pointer;
+            border: 2px solid white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: scale(1);
+            min-width: 28px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+          ">
+            ${formatPrice(listing.price)}
+          </div>
+        `;
         
-        // Grouper les annonces par coordonnées identiques
-        listings.forEach(listing => {
-          if (listing.lat && listing.lng) {
-            const key = `${listing.lat}_${listing.lng}`;
-            if (!coordinateGroups[key]) {
-              coordinateGroups[key] = [];
-            }
-            coordinateGroups[key].push(listing);
-          }
+        // Ajouter un offset aléatoire léger pour éviter les chevauchements exacts
+        const offsetX = (Math.random() - 0.5) * 0.001; // Petit décalage aléatoire
+        const offsetY = (Math.random() - 0.5) * 0.001;
+
+        // Effet hover sur le marqueur
+        markerElement.addEventListener('mouseenter', () => {
+          markerElement.style.transform = 'scale(1.15)';
+          markerElement.style.boxShadow = '0 8px 25px rgba(14,116,144,0.7)';
+          markerElement.style.zIndex = '1000';
+        });
+        
+        markerElement.addEventListener('mouseleave', () => {
+          markerElement.style.transform = 'scale(1)';
+          markerElement.style.boxShadow = '0 4px 12px rgba(14,116,144,0.4)';
+          markerElement.style.zIndex = '1';
         });
 
-        // Appliquer une légère dispersion aux groupes avec plus d'une annonce
-        return listings.map(listing => {
-          if (!listing.lat || !listing.lng) return listing;
-          
-          const key = `${listing.lat}_${listing.lng}`;
-          const group = coordinateGroups[key];
-          
-          if (group.length > 1) {
-            const index = group.findIndex(l => l.id === listing.id);
-            // Offset très petit pour créer une légère dispersion (max ~50m)
-            const offsetRange = 0.0005; // environ 50 mètres
-            const angle = (index * 2 * Math.PI) / group.length;
-            const radius = offsetRange * (0.3 + (index * 0.2)); // Radius progressif
-            
-            const offsetLat = listing.lat + Math.cos(angle) * radius;
-            const offsetLng = listing.lng + Math.sin(angle) * radius;
-            
-            console.log(`🎯 Dispersion appliquée à "${listing.title}": ${listing.lat},${listing.lng} → ${offsetLat},${offsetLng}`);
-            
-            return {
-              ...listing,
-              lat: offsetLat,
-              lng: offsetLng,
-              originalLat: listing.lat,
-              originalLng: listing.lng
-            };
+        // Créer le marqueur avec un léger offset pour éviter les chevauchements
+        const marker = new mapboxgl.Marker(markerElement)
+          .setLngLat([listing.lng + offsetX, listing.lat + offsetY])
+          .addTo(map.current!);
+
+        // Créer le popup avec un design amélioré
+        const getListingImage = (listing: Listing) => {
+          // Vérifier d'abord les photos
+          if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
+            return listing.photos[0];
           }
-          
-          return listing;
-        });
-      };
-
-      // Appliquer la dispersion aux listings
-      const dispersedListings = disperseIdenticalCoordinates(listings.filter(l => l.lat && l.lng));
-
-      // Préparer les données GeoJSON pour le clustering
-      const geojsonData = {
-        type: 'FeatureCollection' as const,
-        features: dispersedListings.map(listing => ({
-          type: 'Feature' as const,
-          properties: {
-            id: listing.id,
-            title: listing.title,
-            price: listing.price,
-            city: listing.city,
-            country_code: listing.country_code,
-            transaction_type: listing.transaction_type,
-            image: listing.image,
-            photos: listing.photos,
-            status: listing.status,
-            originalLat: (listing as any).originalLat || listing.lat,
-            originalLng: (listing as any).originalLng || listing.lng,
-          },
-          geometry: {
-            type: 'Point' as const,
-            coordinates: [listing.lng, listing.lat] as [number, number]
+          // Vérifier l'image mais ignorer les placeholders
+          if (listing.image && listing.image !== '/placeholder.svg' && !listing.image.includes('placeholder')) {
+            return listing.image;
           }
-        }))
-      };
-
-      console.log('📍 Listings total récupérés:', listings.length);
-      console.log('🗺️ Listings avec coordonnées valides:', geojsonData.features.length);
-      
-      // Logs spécifiques pour les annonces mentionnées par l'utilisateur
-      const targetTitles = ['cave a cedez', 'Terrain test', 'Villa a louer'];
-      const targetListings = geojsonData.features.filter(f => 
-        targetTitles.some(target => f.properties.title.toLowerCase().includes(target.toLowerCase()))
-      );
-      
-      console.log('🎯 ANNONCES RECHERCHÉES SUR LA CARTE:');
-      targetListings.forEach(listing => {
-        console.log(`  ✓ "${listing.properties.title}" à [${listing.geometry.coordinates[1]}, ${listing.geometry.coordinates[0]}]`);
-        if (listing.properties.originalLat && listing.properties.originalLng) {
-          console.log(`    📍 Coordonnées originales: [${listing.properties.originalLat}, ${listing.properties.originalLng}]`);
-        }
-      });
-      
-      console.log('📋 Détail des listings filtrés:', geojsonData.features.map(f => ({
-        title: f.properties.title,
-        coords: `[${f.geometry.coordinates[1]}, ${f.geometry.coordinates[0]}]`,
-        photos: f.properties.photos,
-        hasPhotos: f.properties.photos ? (Array.isArray(f.properties.photos) ? f.properties.photos.length : 'string') : 'null'
-      })));
-
-      // Ajouter la source de données avec clustering
-      map.current?.addSource('listings', {
-        type: 'geojson',
-        data: geojsonData,
-        cluster: true,
-        clusterMaxZoom: 16, // Niveau de zoom max pour les clusters (augmenté)
-        clusterRadius: 40 // Radius pour grouper les points (réduit pour moins grouper)
-      });
-
-      // Layer pour les clusters (groupes de marqueurs)
-      map.current?.addLayer({
-        id: 'clusters',
-        type: 'circle',
-        source: 'listings',
-        filter: ['has', 'point_count'],
-        paint: {
-          'circle-color': [
-            'step',
-            ['get', 'point_count'],
-            '#0E7490', // Couleur pour 1-9 points
-            10,
-            '#0891b2', // Couleur pour 10-29 points
-            30,
-            '#06b6d4'  // Couleur pour 30+ points
-          ],
-          'circle-radius': [
-            'step',
-            ['get', 'point_count'],
-            15, // Taille pour 1-9 points
-            10,
-            20, // Taille pour 10-29 points
-            30,
-            25  // Taille pour 30+ points
-          ],
-          'circle-stroke-width': 3,
-          'circle-stroke-color': '#ffffff'
-        }
-      });
-
-      // Layer pour les nombres dans les clusters
-      map.current?.addLayer({
-        id: 'cluster-count',
-        type: 'symbol',
-        source: 'listings',
-        filter: ['has', 'point_count'],
-        layout: {
-          'text-field': '{point_count_abbreviated}',
-          'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-          'text-size': 12
-        },
-        paint: {
-          'text-color': '#ffffff'
-        }
-      });
-
-      // Layer pour les marqueurs individuels (non-clustered)
-      map.current?.addLayer({
-        id: 'unclustered-point',
-        type: 'circle',
-        source: 'listings',
-        filter: ['!', ['has', 'point_count']],
-        paint: {
-          'circle-color': '#0E7490',
-          'circle-radius': 8,
-          'circle-stroke-width': 2,
-          'circle-stroke-color': '#ffffff'
-        }
-      });
-
-      // Layer pour les prix sur les marqueurs individuels - utiliser le formatage de devise uniforme
-      map.current?.addLayer({
-        id: 'unclustered-price',
-        type: 'symbol',
-        source: 'listings',
-        filter: ['!', ['has', 'point_count']],
-        layout: {
-          'text-field': [
-            'case',
-            // Pour les prix >= 1M, afficher en M
-            ['>=', ['get', 'price'], 1000000],
-            ['concat', ['to-string', ['round', ['/', ['get', 'price'], 1000000]]], 'M'],
-            // Pour les prix >= 1K, afficher en k
-            ['>=', ['get', 'price'], 1000],
-            ['concat', ['to-string', ['round', ['/', ['get', 'price'], 1000]]], 'k'],
-            // Sinon afficher le prix complet
-            ['to-string', ['get', 'price']]
-          ],
-          'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-          'text-size': 9
-        },
-        paint: {
-          'text-color': '#ffffff',
-          'text-halo-color': 'rgba(14, 116, 144, 0.8)',
-          'text-halo-width': 2
-        }
-      });
-
-      // Fonction pour obtenir l'image de listing
-      const getListingImage = (listing: any) => {
-        console.log('🖼️ Récupération image pour:', listing.title);
-        console.log('📸 Photos type:', typeof listing.photos, 'Photos:', listing.photos);
-        console.log('🎨 Image disponible:', listing.image);
-        
-        // Vérifier d'abord les photos uploadées (gérer le cas où c'est une string JSON)
-        let photos = listing.photos;
-        if (typeof photos === 'string') {
-          try {
-            photos = JSON.parse(photos);
-          } catch (e) {
-            console.log('❌ Erreur parsing photos JSON:', e);
-            photos = null;
-          }
-        }
-        
-        if (photos && Array.isArray(photos) && photos.length > 0) {
-          console.log('✅ Utilisation de la première photo uploadée:', photos[0]);
-          return photos[0];
-        }
-        
-        // Vérifier l'image mais ignorer les placeholders
-        if (listing.image && listing.image !== '/placeholder.svg' && !listing.image.includes('placeholder')) {
-          console.log('✅ Utilisation de l\'image principale:', listing.image);
-          return listing.image;
-        }
-        
-        // Image par défaut plus fiable basée sur le type de transaction
-        let defaultImage;
-        if (listing.transaction_type === 'rent') {
-          defaultImage = 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=280&h=160&fit=crop&auto=format&q=80';
-        } else if (listing.transaction_type === 'commercial') {
-          defaultImage = 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=280&h=160&fit=crop&auto=format&q=80';
-        } else {
-          defaultImage = 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=280&h=160&fit=crop&auto=format&q=80';
-        }
-        
-        console.log('⚠️ Utilisation de l\'image par défaut:', defaultImage);
-        return defaultImage;
-      };
-
-      // Événement de clic sur les clusters
-      map.current?.on('click', 'clusters', (e) => {
-        const features = map.current?.queryRenderedFeatures(e.point, {
-          layers: ['clusters']
-        });
-        const clusterId = features?.[0]?.properties?.cluster_id;
-        const pointCount = features?.[0]?.properties?.point_count;
-        
-        if (clusterId !== undefined) {
-          // Si le cluster contient peu d'éléments, montrer directement les annonces
-          if (pointCount <= 5) {
-            (map.current?.getSource('listings') as mapboxgl.GeoJSONSource)
-              ?.getClusterLeaves(clusterId, pointCount, 0, (err, clusterFeatures) => {
-                if (err || !clusterFeatures) return;
-                
-                console.log('🔍 Cluster cliqué contient:', clusterFeatures.map(f => f.properties?.title));
-                
-                // Créer un popup avec toutes les annonces du cluster
-                const coordinates = (features?.[0]?.geometry as any)?.coordinates;
-                if (!coordinates) return;
-                
-                const clusterPopupHTML = `
-                  <div style="padding: 0; max-width: 320px; font-family: system-ui, -apple-system, sans-serif;">
-                    <div style="padding: 16px; border-bottom: 1px solid #e5e7eb;">
-                      <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f2937;">
-                        ${pointCount} annonces à cet emplacement
-                      </h3>
-                    </div>
-                    <div style="max-height: 400px; overflow-y: auto;">
-                      ${clusterFeatures.map(feature => {
-                        const props = feature.properties;
-                        const imageUrl = getListingImage(props);
-                        return `
-                          <div style="border-bottom: 1px solid #f3f4f6; padding: 12px; cursor: pointer;" 
-                               onclick="window.location.href='/listing/${props?.id}'">
-                            <div style="display: flex; gap: 12px; align-items: center;">
-                              <img src="${imageUrl}" alt="${props?.title}" 
-                                   style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
-                              <div style="flex: 1; min-width: 0;">
-                                <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px; color: #1f2937; 
-                                           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                  ${props?.title}
-                                </div>
-                                <div style="color: #0E7490; font-size: 14px; font-weight: 700; margin-bottom: 4px;">
-                                  ${formatLocalPrice(props?.price)}
-                                </div>
-                                <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: #6b7280;">
-                                  <span>📍 ${props?.city}</span>
-                                  <span style="background: ${props?.transaction_type === 'rent' ? '#0E7490' : '#E11D48'}; 
-                                              color: white; padding: 2px 4px; border-radius: 4px; font-weight: 600;">
-                                    ${props?.transaction_type === 'rent' ? 'Location' : 'Vente'}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        `;
-                      }).join('')}
-                    </div>
-                  </div>
-                `;
-                
-                new mapboxgl.Popup({ 
-                  offset: 25,
-                  closeButton: true,
-                  closeOnClick: false,
-                  className: 'cluster-popup'
-                })
-                .setLngLat(coordinates)
-                .setHTML(clusterPopupHTML)
-                .addTo(map.current!);
-              });
-          } else {
-            // Pour les clusters plus grands, zoomer pour les séparer
-            (map.current?.getSource('listings') as mapboxgl.GeoJSONSource)
-              ?.getClusterExpansionZoom(clusterId, (err, zoom) => {
-                if (err) return;
-                
-                map.current?.easeTo({
-                  center: (features?.[0]?.geometry as any)?.coordinates,
-                  zoom: zoom
-                });
-              });
-          }
-        }
-      });
-
-      // Événement de clic sur les marqueurs individuels
-      map.current?.on('click', 'unclustered-point', (e) => {
-        const coordinates = (e.features?.[0]?.geometry as any)?.coordinates?.slice();
-        const properties = e.features?.[0]?.properties;
-        
-        if (!coordinates || !properties) return;
-
-        // S'assurer que les coordonnées ne sont pas modifiées par des panoramiques
-        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-          coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-        }
+          // Image par défaut avec un design plus attrayant
+          return 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=280&h=160&fit=crop&auto=format';
+        };
 
         const popup = new mapboxgl.Popup({ 
           offset: 25,
@@ -459,141 +191,153 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
           closeOnClick: false,
           className: 'custom-popup'
         })
-        .setLngLat(coordinates)
-        .setHTML(`
-          <div style="padding: 0; max-width: 280px; font-family: system-ui, -apple-system, sans-serif;">
-            <div style="position: relative;">
-              <img 
-                src="${getListingImage(properties)}" 
-                alt="${properties.title}"
-                style="width: 100%; height: 160px; object-fit: cover; border-radius: 8px 8px 0 0;"
-              />
-              <div style="
-                position: absolute; 
-                top: 8px; 
-                right: 8px; 
-                background: ${properties.transaction_type === 'rent' ? '#0E7490' : '#E11D48'}; 
-                color: white; 
-                padding: 4px 8px; 
-                border-radius: 12px; 
-                font-size: 11px; 
-                font-weight: 600;
-              ">
-                ${properties.transaction_type === 'rent' ? 'Location' : 'Vente'}
-              </div>
-              <button 
-                id="favorite-btn-${properties.id}"
-                style="
+          .setHTML(`
+            <div style="padding: 0; max-width: 280px; font-family: system-ui, -apple-system, sans-serif;">
+              <div style="position: relative;">
+                <img 
+                  src="${getListingImage(listing)}" 
+                  alt="${listing.title}"
+                  style="width: 100%; height: 160px; object-fit: cover; border-radius: 8px 8px 0 0;"
+                />
+                <div style="
                   position: absolute; 
                   top: 8px; 
-                  left: 8px; 
-                  background: rgba(255, 255, 255, 0.9);
-                  border: none;
-                  border-radius: 50%;
-                  width: 36px;
-                  height: 36px;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                  cursor: pointer;
-                  font-size: 16px;
-                  transition: all 0.3s ease;
-                  backdrop-filter: blur(10px);
-                "
-                onclick="window.toggleMapFavorite('${properties.id}')"
-                onmouseover="this.style.background='rgba(255, 255, 255, 1)'; this.style.transform='scale(1.1)'"
-                onmouseout="this.style.background='rgba(255, 255, 255, 0.9)'; this.style.transform='scale(1)'"
-              >
-                🤍
-              </button>
-            </div>
-            
-            <div style="padding: 16px;">
-              <div style="
-                font-weight: 600; 
-                font-size: 16px; 
-                margin-bottom: 8px; 
-                line-height: 1.3;
-                color: #1f2937;
-              ">
-                ${properties.title}
-              </div>
-              
-              <div style="
-                color: #0E7490; 
-                font-size: 18px; 
-                font-weight: 700; 
-                margin-bottom: 12px;
-              ">
-                ${formatLocalPrice(properties.price)}
-              </div>
-              
-              <div style="
-                display: flex; 
-                align-items: center; 
-                gap: 8px; 
-                margin-bottom: 12px;
-                font-size: 12px;
-                color: #6b7280;
-              ">
-                <span>📍 ${properties.city}</span>
-                <span>•</span>
-                <span style="
-                  background: ${properties.transaction_type === 'rent' ? '#0E7490' : '#E11D48'}; 
+                  right: 8px; 
+                  background: ${listing.transaction_type === 'rent' ? '#0E7490' : '#E11D48'}; 
                   color: white; 
-                  padding: 2px 6px; 
-                  border-radius: 8px; 
+                  padding: 4px 8px; 
+                  border-radius: 12px; 
+                  font-size: 11px; 
                   font-weight: 600;
                 ">
-                  ${properties.transaction_type === 'rent' ? 'Location' : 'Vente'}
-                </span>
+                  ${listing.transaction_type === 'rent' ? 'Location' : 'Vente'}
+                </div>
+                <button 
+                  id="favorite-btn-${listing.id}"
+                  style="
+                    position: absolute; 
+                    top: 8px; 
+                    left: 8px; 
+                    background: rgba(255, 255, 255, 0.9);
+                    border: none;
+                    border-radius: 50%;
+                    width: 36px;
+                    height: 36px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    font-size: 16px;
+                    transition: all 0.3s ease;
+                    backdrop-filter: blur(10px);
+                  "
+                  onclick="window.toggleMapFavorite('${listing.id}')"
+                  onmouseover="this.style.background='rgba(255, 255, 255, 1)'; this.style.transform='scale(1.1)'"
+                  onmouseout="this.style.background='rgba(255, 255, 255, 0.9)'; this.style.transform='scale(1)'"
+                >
+                  🤍
+                </button>
               </div>
-             
-              <button 
-                onclick="window.location.href='/listing/${properties.id}'"
-                style="
-                  background: linear-gradient(135deg, #0E7490, #0891b2);
-                  color: white;
-                  border: none;
-                  padding: 10px 20px;
-                  border-radius: 8px;
-                  font-size: 14px;
-                  font-weight: 600;
-                  cursor: pointer;
-                  width: 100%;
-                  transition: all 0.3s ease;
-                "
-                onmouseover="this.style.background='linear-gradient(135deg, #0891b2, #06b6d4)'; this.style.transform='translateY(-1px)'"
-                onmouseout="this.style.background='linear-gradient(135deg, #0E7490, #0891b2)'; this.style.transform='translateY(0px)'"
-              >
-                📍 Voir les détails
-              </button>
+              
+              <div style="padding: 16px;">
+                <div style="
+                  font-weight: 600; 
+                  font-size: 16px; 
+                  margin-bottom: 8px; 
+                  line-height: 1.3;
+                  color: #1f2937;
+                ">
+                  ${listing.title}
+                </div>
+                
+                 <div style="
+                   color: #0E7490; 
+                   font-size: 18px; 
+                   font-weight: 700; 
+                   margin-bottom: 12px;
+                 ">
+                   ${formatPrice(listing.price)} FCFA
+                 </div>
+                 
+                 <div style="
+                   display: flex; 
+                   align-items: center; 
+                   gap: 8px; 
+                   margin-bottom: 12px;
+                   font-size: 12px;
+                   color: #6b7280;
+                 ">
+                   <span>📍 ${listing.city}</span>
+                   <span>•</span>
+                   <span style="
+                     background: ${listing.transaction_type === 'rent' ? '#0E7490' : '#E11D48'}; 
+                     color: white; 
+                     padding: 2px 6px; 
+                     border-radius: 8px; 
+                     font-weight: 600;
+                   ">
+                     ${listing.transaction_type === 'rent' ? 'Location' : 'Vente'}
+                   </span>
+                 </div>
+                
+                <button 
+                  onclick="window.location.href='/listing/${listing.id}'"
+                  style="
+                    background: linear-gradient(135deg, #0E7490, #0891b2);
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 8px;
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    width: 100%;
+                    transition: all 0.3s ease;
+                  "
+                  onmouseover="this.style.background='linear-gradient(135deg, #0891b2, #06b6d4)'; this.style.transform='translateY(-1px)'"
+                  onmouseout="this.style.background='linear-gradient(135deg, #0E7490, #0891b2)'; this.style.transform='translateY(0px)'"
+                >
+                  📍 Voir les détails
+                </button>
+              </div>
             </div>
-          </div>
-        `)
-        .addTo(map.current!);
+          `);
 
-        // Update favorite button state after popup is added
-        setTimeout(() => {
-          const btn = document.getElementById(`favorite-btn-${properties.id}`);
-          if (btn) {
-            btn.innerHTML = isFavorite(properties.id) ? '❤️' : '🤍';
-          }
-        }, 100);
-      });
+        // Attacher le popup au marqueur avec animation
+        markerElement.addEventListener('click', (e) => {
+          e.stopPropagation();
+          
+          // Fermer tous les autres popups
+          document.querySelectorAll('.mapboxgl-popup').forEach(popup => {
+            if (popup.parentNode) {
+              popup.parentNode.removeChild(popup);
+            }
+          });
+          
+          // Ouvrir le nouveau popup
+          popup.addTo(map.current!);
+          popup.setLngLat([listing.lng, listing.lat]);
+          
+          // Update favorite button state after popup is added
+          setTimeout(() => {
+            const btn = document.getElementById(`favorite-btn-${listing.id}`);
+            if (btn) {
+              btn.innerHTML = isFavorite(listing.id) ? '❤️' : '🤍';
+            }
+          }, 100);
+          
+          // Animation du marqueur
+          markerElement.style.transform = 'scale(1.2)';
+          setTimeout(() => {
+            markerElement.style.transform = 'scale(1.1)';
+          }, 150);
+        });
 
-      // Curseur pointer sur les éléments cliquables
-      map.current?.on('mouseenter', 'clusters', () => {
-        if (map.current) map.current.getCanvas().style.cursor = 'pointer';
-      });
-      map.current?.on('mouseleave', 'clusters', () => {
-        if (map.current) map.current.getCanvas().style.cursor = '';
-      });
-      map.current?.on('mouseenter', 'unclustered-point', () => {
-        if (map.current) map.current.getCanvas().style.cursor = 'pointer';
-      });
-      map.current?.on('mouseleave', 'unclustered-point', () => {
-        if (map.current) map.current.getCanvas().style.cursor = '';
+        // Fermer le popup quand on clique sur la carte
+        map.current?.on('click', () => {
+          popup.remove();
+          markerElement.style.transform = 'scale(1)';
+        });
       });
     });
 
