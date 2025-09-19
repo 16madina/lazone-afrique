@@ -26,11 +26,27 @@ interface MapboxMapProps {
   selectedCityCoords?: {lat: number, lng: number} | null;
 }
 
-function formatPrice(price?: number | null) {
-  if (price == null) return '';
-  if (price >= 1_000_000) return (price/1_000_000).toFixed(1).replace('.0','') + 'M';
-  if (price >= 1_000) return Math.round(price/1_000) + 'k';
-  return String(price);
+// Format price for map display (convert from USD to local currency)
+function formatMapPrice(priceInUSD?: number | null, formatPrice?: (priceInUSD: number) => string) {
+  if (priceInUSD == null || !formatPrice) return '';
+  
+  // Use the context formatPrice function to properly convert USD to local currency
+  const formattedPrice = formatPrice(priceInUSD);
+  
+  // Extract just the number part for compact display
+  const numberMatch = formattedPrice.match(/[\d\s,\.]+/);
+  if (!numberMatch) return formattedPrice;
+  
+  const numberPart = numberMatch[0].replace(/\s/g, '');
+  const numericValue = parseFloat(numberPart.replace(/,/g, ''));
+  
+  if (numericValue >= 1_000_000) {
+    return (numericValue / 1_000_000).toFixed(1).replace('.0', '') + 'M';
+  }
+  if (numericValue >= 1_000) {
+    return Math.round(numericValue / 1_000) + 'k';
+  }
+  return numberPart;
 }
 
 const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) => {
@@ -39,7 +55,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { selectedCountry } = useCountry();
+  const { selectedCountry, formatPrice } = useCountry();
   const { user } = useAuth();
   const { toggleFavorite, isFavorite, loading: favoritesLoading } = useFavorites();
 
@@ -256,7 +272,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
                    font-weight: 700; 
                    margin-bottom: 12px;
                  ">
-                   ${formatPrice(listing.price)} FCFA
+                   ${formatPrice(listing.price)}
                  </div>
                  
                  <div style="
