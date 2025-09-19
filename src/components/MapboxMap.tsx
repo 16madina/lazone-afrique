@@ -113,11 +113,15 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
     });
     map.current.addControl(nav, 'top-right');
 
-    // Centrer sur l'Afrique quand la carte est chargée
+    // Centrer sur le pays de l'utilisateur quand la carte est chargée
     map.current.on('load', () => {
-      // Bounds approximatifs de l'Afrique
-      const africaBounds: [number, number, number, number] = [-20, -35, 52, 37];
-      map.current?.fitBounds(africaBounds, { padding: 50 });
+      // Centrer automatiquement sur le pays de l'utilisateur
+      const { lat, lng, zoom } = selectedCountry.coordinates;
+      map.current?.flyTo({
+        center: [lng, lat],
+        zoom: zoom,
+        duration: 1500
+      });
 
       // Ajouter les marqueurs pour chaque listing
       listings.forEach(listing => {
