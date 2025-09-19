@@ -205,9 +205,10 @@ interface CountryContextType {
   selectedCountry: Country;
   setSelectedCountry: (country: Country) => void;
   countries: Country[];
-  formatPrice: (priceInUSD: number) => string;
-  formatLocalPrice: (priceInLocalCurrency: number) => string;
-  convertPrice: (priceInUSD: number, targetCountry?: Country) => number;
+  formatPrice: (priceInLocalCurrency: number, currencyCode?: string) => string;
+  formatLocalPrice: (priceInLocalCurrency: number, currencyCode?: string) => string;
+  convertToUSD: (priceInLocalCurrency: number, fromCountry?: Country) => number;
+  convertFromUSD: (priceInUSD: number, targetCountry?: Country) => number;
 }
 
 const CountryContext = createContext<CountryContextType | undefined>(undefined);
@@ -317,31 +318,33 @@ export const CountryProvider: React.FC<CountryProviderProps> = ({ children }) =>
     localStorage.setItem('selectedCountry', country.code);
   };
 
-  // Convert price from USD to local currency
-  const convertPrice = (priceInUSD: number, targetCountry?: Country): number => {
+  // Convert price from local currency to USD (pour les paiements seulement)
+  const convertToUSD = (priceInLocalCurrency: number, fromCountry?: Country): number => {
+    const country = fromCountry || selectedCountry;
+    return Math.round(priceInLocalCurrency / country.exchangeRate);
+  };
+
+  // Convert price from USD to local currency (pour les paiements seulement)
+  const convertFromUSD = (priceInUSD: number, targetCountry?: Country): number => {
     const country = targetCountry || selectedCountry;
     return Math.round(priceInUSD * country.exchangeRate);
   };
 
-  // Format price with local currency
-  const formatPrice = (priceInUSD: number): string => {
-    const convertedPrice = convertPrice(priceInUSD);
-    const currency = selectedCountry.currency;
+  // Format price in local currency (pas de conversion, prix tel qu'entré)
+  const formatPrice = (priceInLocalCurrency: number, currencyCode?: string): string => {
+    const currency = currencyCode ? 
+      africanCountries.find(c => c.currency.code === currencyCode)?.currency || selectedCountry.currency :
+      selectedCountry.currency;
     
     // Format number with spaces for readability  
-    const formattedNumber = convertedPrice.toLocaleString('fr-FR');
+    const formattedNumber = priceInLocalCurrency.toLocaleString('fr-FR');
     
     return `${formattedNumber} ${currency.symbol}`;
   };
 
-  // Format price that's already in local currency
-  const formatLocalPrice = (priceInLocalCurrency: number): string => {
-    const currency = selectedCountry.currency;
-    
-    // Format number with spaces for readability
-    const formattedNumber = priceInLocalCurrency.toLocaleString('fr-FR');
-    
-    return `${formattedNumber} ${currency.symbol}`;
+  // Format price that's already in local currency (alias pour compatibilité)
+  const formatLocalPrice = (priceInLocalCurrency: number, currencyCode?: string): string => {
+    return formatPrice(priceInLocalCurrency, currencyCode);
   };
 
   const value: CountryContextType = {
@@ -350,7 +353,8 @@ export const CountryProvider: React.FC<CountryProviderProps> = ({ children }) =>
     countries: africanCountries,
     formatPrice,
     formatLocalPrice,
-    convertPrice
+    convertToUSD,
+    convertFromUSD
   };
 
   return (

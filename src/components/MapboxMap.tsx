@@ -26,12 +26,12 @@ interface MapboxMapProps {
   selectedCityCoords?: {lat: number, lng: number} | null;
 }
 
-// Format price for map display (convert from USD to local currency)
-function formatMapPrice(priceInUSD?: number | null, formatPrice?: (priceInUSD: number) => string) {
-  if (priceInUSD == null || !formatPrice) return '';
+// Format price for map display (price already in local currency)
+function formatMapPrice(priceInLocalCurrency?: number | null, currencyCode?: string | null, formatPriceFunc?: (price: number, currency?: string) => string) {
+  if (priceInLocalCurrency == null || !formatPriceFunc) return '';
   
-  // Use the context formatPrice function to properly convert USD to local currency
-  const formattedPrice = formatPrice(priceInUSD);
+  // Use the context formatPrice function with the currency code
+  const formattedPrice = formatPriceFunc(priceInLocalCurrency, currencyCode || undefined);
   
   // Extract just the number part for compact display
   const numberMatch = formattedPrice.match(/[\d\s,\.]+/);
@@ -161,7 +161,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
             position: relative;
             z-index: 1;
           ">
-            ${formatMapPrice(listing.price, formatPrice)}
+            ${formatMapPrice(listing.price, (listing as any).currency_code, formatPrice)}
           </div>
         `;
         
@@ -272,7 +272,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
                    font-weight: 700; 
                    margin-bottom: 12px;
                  ">
-                    ${formatPrice(listing.price)}
+                    ${formatPrice(listing.price, (listing as any).currency_code)}
                  </div>
                  
                  <div style="

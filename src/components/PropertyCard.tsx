@@ -13,7 +13,9 @@ import { useContactActions } from "@/hooks/useContactActions";
 interface PropertyCardProps {
   id: string;
   title: string;
-  priceUSD: number; // Price in USD for conversion
+  price: number; // Prix dans la devise locale
+  priceUSD?: number; // Prix en USD pour les paiements (optionnel)
+  currencyCode?: string; // Code de la devise (XOF, GNF, etc.)
   location: string;
   type: "sale" | "rent" | "commercial";
   propertyType: "apartment" | "house" | "villa" | "land" | "commercial";
@@ -39,7 +41,8 @@ interface PropertyCardProps {
 const PropertyCard = ({ 
   id,
   title, 
-  priceUSD, 
+  price, 
+  currencyCode,
   location, 
   type, 
   propertyType, 
@@ -179,7 +182,7 @@ const PropertyCard = ({
           </h3>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <p className="text-2xl font-bold text-primary">{formatPrice(priceUSD)}</p>
+              <p className="text-2xl font-bold text-primary">{formatPrice(price, currencyCode)}</p>
               {type === "rent" && (
                 <span className="text-sm text-muted-foreground">/mois</span>
               )}
@@ -189,7 +192,7 @@ const PropertyCard = ({
                 {propertyTypeLabels[propertyType]}
               </span>
               <Badge variant="outline" className="text-xs">
-                {selectedCountry.currency.code}
+                {currencyCode || selectedCountry.currency.code}
               </Badge>
             </div>
           </div>

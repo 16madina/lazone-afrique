@@ -596,7 +596,8 @@ const Profile = () => {
                     key={property.id}
                     id={property.id}
                     title={property.title}
-                    priceUSD={property.price}
+                    price={property.price}
+                    currencyCode={(property as any).currency_code || 'XOF'}
                     location={property.city}
                     type={property.transaction_type === 'rent' ? 'rent' : 'sale'}
                     propertyType={property.property_type}

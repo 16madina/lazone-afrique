@@ -274,6 +274,7 @@ export type Database = {
           city: string
           country_code: string
           created_at: string
+          currency_code: string
           description: string | null
           features: string[] | null
           floor_number: string | null
@@ -287,6 +288,7 @@ export type Database = {
           lng: number
           photos: string[] | null
           price: number
+          price_currency: string
           property_documents: string[] | null
           property_type: string | null
           sponsor_amount: number | null
@@ -306,6 +308,7 @@ export type Database = {
           city: string
           country_code?: string
           created_at?: string
+          currency_code?: string
           description?: string | null
           features?: string[] | null
           floor_number?: string | null
@@ -319,6 +322,7 @@ export type Database = {
           lng: number
           photos?: string[] | null
           price: number
+          price_currency?: string
           property_documents?: string[] | null
           property_type?: string | null
           sponsor_amount?: number | null
@@ -338,6 +342,7 @@ export type Database = {
           city?: string
           country_code?: string
           created_at?: string
+          currency_code?: string
           description?: string | null
           features?: string[] | null
           floor_number?: string | null
@@ -351,6 +356,7 @@ export type Database = {
           lng?: number
           photos?: string[] | null
           price?: number
+          price_currency?: string
           property_documents?: string[] | null
           property_type?: string | null
           sponsor_amount?: number | null

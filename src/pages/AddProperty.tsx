@@ -423,14 +423,15 @@ const AddProperty = () => {
         console.log(`Coordinates found: ${coordinates.lat}, ${coordinates.lng}`);
       }
 
-      // Prepare data for insertion - Convert local price to USD for storage
+      // Prepare data for insertion - Store price in local currency
       const priceInLocalCurrency = parseFloat(formData.price);
-      const priceInUSD = Math.round(priceInLocalCurrency / selectedCountry.exchangeRate);
       
       const insertData: any = {
         title: formData.title,
         description: formData.description,
-        price: priceInUSD,
+        price: priceInLocalCurrency, // Store in local currency
+        currency_code: selectedCountry.currency.code, // Store currency code
+        price_currency: selectedCountry.currency.code, // Store price currency
         city: formData.city,
         country_code: selectedCountry.code.toUpperCase(),
         user_id: user.id,
