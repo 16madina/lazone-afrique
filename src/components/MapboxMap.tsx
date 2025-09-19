@@ -116,35 +116,101 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
         duration: 1500
       });
 
+      // Fonction pour disperser les coordonnées identiques
+      const disperseIdenticalCoordinates = (listings: Listing[]) => {
+        const coordinateGroups: { [key: string]: Listing[] } = {};
+        
+        // Grouper les annonces par coordonnées identiques
+        listings.forEach(listing => {
+          if (listing.lat && listing.lng) {
+            const key = `${listing.lat}_${listing.lng}`;
+            if (!coordinateGroups[key]) {
+              coordinateGroups[key] = [];
+            }
+            coordinateGroups[key].push(listing);
+          }
+        });
+
+        // Appliquer une légère dispersion aux groupes avec plus d'une annonce
+        return listings.map(listing => {
+          if (!listing.lat || !listing.lng) return listing;
+          
+          const key = `${listing.lat}_${listing.lng}`;
+          const group = coordinateGroups[key];
+          
+          if (group.length > 1) {
+            const index = group.findIndex(l => l.id === listing.id);
+            // Offset très petit pour créer une légère dispersion (max ~50m)
+            const offsetRange = 0.0005; // environ 50 mètres
+            const angle = (index * 2 * Math.PI) / group.length;
+            const radius = offsetRange * (0.3 + (index * 0.2)); // Radius progressif
+            
+            const offsetLat = listing.lat + Math.cos(angle) * radius;
+            const offsetLng = listing.lng + Math.sin(angle) * radius;
+            
+            console.log(`🎯 Dispersion appliquée à "${listing.title}": ${listing.lat},${listing.lng} → ${offsetLat},${offsetLng}`);
+            
+            return {
+              ...listing,
+              lat: offsetLat,
+              lng: offsetLng,
+              originalLat: listing.lat,
+              originalLng: listing.lng
+            };
+          }
+          
+          return listing;
+        });
+      };
+
+      // Appliquer la dispersion aux listings
+      const dispersedListings = disperseIdenticalCoordinates(listings.filter(l => l.lat && l.lng));
+
       // Préparer les données GeoJSON pour le clustering
       const geojsonData = {
         type: 'FeatureCollection' as const,
-        features: listings
-          .filter(listing => listing.lat && listing.lng)
-          .map(listing => ({
-            type: 'Feature' as const,
-            properties: {
-              id: listing.id,
-              title: listing.title,
-              price: listing.price,
-              city: listing.city,
-              country_code: listing.country_code,
-              transaction_type: listing.transaction_type,
-              image: listing.image,
-              photos: listing.photos,
-              status: listing.status,
-            },
-            geometry: {
-              type: 'Point' as const,
-              coordinates: [listing.lng, listing.lat] as [number, number]
-            }
-          }))
+        features: dispersedListings.map(listing => ({
+          type: 'Feature' as const,
+          properties: {
+            id: listing.id,
+            title: listing.title,
+            price: listing.price,
+            city: listing.city,
+            country_code: listing.country_code,
+            transaction_type: listing.transaction_type,
+            image: listing.image,
+            photos: listing.photos,
+            status: listing.status,
+            originalLat: (listing as any).originalLat || listing.lat,
+            originalLng: (listing as any).originalLng || listing.lng,
+          },
+          geometry: {
+            type: 'Point' as const,
+            coordinates: [listing.lng, listing.lat] as [number, number]
+          }
+        }))
       };
 
       console.log('📍 Listings total récupérés:', listings.length);
       console.log('🗺️ Listings avec coordonnées valides:', geojsonData.features.length);
+      
+      // Logs spécifiques pour les annonces mentionnées par l'utilisateur
+      const targetTitles = ['cave a cedez', 'Terrain test', 'Villa a louer'];
+      const targetListings = geojsonData.features.filter(f => 
+        targetTitles.some(target => f.properties.title.toLowerCase().includes(target.toLowerCase()))
+      );
+      
+      console.log('🎯 ANNONCES RECHERCHÉES SUR LA CARTE:');
+      targetListings.forEach(listing => {
+        console.log(`  ✓ "${listing.properties.title}" à [${listing.geometry.coordinates[1]}, ${listing.geometry.coordinates[0]}]`);
+        if (listing.properties.originalLat && listing.properties.originalLng) {
+          console.log(`    📍 Coordonnées originales: [${listing.properties.originalLat}, ${listing.properties.originalLng}]`);
+        }
+      });
+      
       console.log('📋 Détail des listings filtrés:', geojsonData.features.map(f => ({
         title: f.properties.title,
+        coords: `[${f.geometry.coordinates[1]}, ${f.geometry.coordinates[0]}]`,
         photos: f.properties.photos,
         hasPhotos: f.properties.photos ? (Array.isArray(f.properties.photos) ? f.properties.photos.length : 'string') : 'null'
       })));
@@ -154,8 +220,8 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
         type: 'geojson',
         data: geojsonData,
         cluster: true,
-        clusterMaxZoom: 14, // Niveau de zoom max pour les clusters
-        clusterRadius: 50 // Radius pour grouper les points
+        clusterMaxZoom: 16, // Niveau de zoom max pour les clusters (augmenté)
+        clusterRadius: 40 // Radius pour grouper les points (réduit pour moins grouper)
       });
 
       // Layer pour les clusters (groupes de marqueurs)
@@ -294,17 +360,84 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
           layers: ['clusters']
         });
         const clusterId = features?.[0]?.properties?.cluster_id;
+        const pointCount = features?.[0]?.properties?.point_count;
         
         if (clusterId !== undefined) {
-          (map.current?.getSource('listings') as mapboxgl.GeoJSONSource)
-            ?.getClusterExpansionZoom(clusterId, (err, zoom) => {
-              if (err) return;
-              
-              map.current?.easeTo({
-                center: (features?.[0]?.geometry as any)?.coordinates,
-                zoom: zoom
+          // Si le cluster contient peu d'éléments, montrer directement les annonces
+          if (pointCount <= 5) {
+            (map.current?.getSource('listings') as mapboxgl.GeoJSONSource)
+              ?.getClusterLeaves(clusterId, pointCount, 0, (err, clusterFeatures) => {
+                if (err || !clusterFeatures) return;
+                
+                console.log('🔍 Cluster cliqué contient:', clusterFeatures.map(f => f.properties?.title));
+                
+                // Créer un popup avec toutes les annonces du cluster
+                const coordinates = (features?.[0]?.geometry as any)?.coordinates;
+                if (!coordinates) return;
+                
+                const clusterPopupHTML = `
+                  <div style="padding: 0; max-width: 320px; font-family: system-ui, -apple-system, sans-serif;">
+                    <div style="padding: 16px; border-bottom: 1px solid #e5e7eb;">
+                      <h3 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f2937;">
+                        ${pointCount} annonces à cet emplacement
+                      </h3>
+                    </div>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                      ${clusterFeatures.map(feature => {
+                        const props = feature.properties;
+                        const imageUrl = getListingImage(props);
+                        return `
+                          <div style="border-bottom: 1px solid #f3f4f6; padding: 12px; cursor: pointer;" 
+                               onclick="window.location.href='/listing/${props?.id}'">
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                              <img src="${imageUrl}" alt="${props?.title}" 
+                                   style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; flex-shrink: 0;">
+                              <div style="flex: 1; min-width: 0;">
+                                <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px; color: #1f2937; 
+                                           white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                  ${props?.title}
+                                </div>
+                                <div style="color: #0E7490; font-size: 14px; font-weight: 700; margin-bottom: 4px;">
+                                  ${formatLocalPrice(props?.price)}
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: #6b7280;">
+                                  <span>📍 ${props?.city}</span>
+                                  <span style="background: ${props?.transaction_type === 'rent' ? '#0E7490' : '#E11D48'}; 
+                                              color: white; padding: 2px 4px; border-radius: 4px; font-weight: 600;">
+                                    ${props?.transaction_type === 'rent' ? 'Location' : 'Vente'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        `;
+                      }).join('')}
+                    </div>
+                  </div>
+                `;
+                
+                new mapboxgl.Popup({ 
+                  offset: 25,
+                  closeButton: true,
+                  closeOnClick: false,
+                  className: 'cluster-popup'
+                })
+                .setLngLat(coordinates)
+                .setHTML(clusterPopupHTML)
+                .addTo(map.current!);
               });
-            });
+          } else {
+            // Pour les clusters plus grands, zoomer pour les séparer
+            (map.current?.getSource('listings') as mapboxgl.GeoJSONSource)
+              ?.getClusterExpansionZoom(clusterId, (err, zoom) => {
+                if (err) return;
+                
+                map.current?.easeTo({
+                  center: (features?.[0]?.geometry as any)?.coordinates,
+                  zoom: zoom
+                });
+              });
+          }
         }
       });
 
