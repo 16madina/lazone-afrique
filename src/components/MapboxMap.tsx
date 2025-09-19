@@ -161,7 +161,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
             position: relative;
             z-index: 1;
           ">
-            ${formatPrice(listing.price)}
+            ${formatMapPrice(listing.price, formatPrice)}
           </div>
         `;
         
@@ -272,7 +272,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
                    font-weight: 700; 
                    margin-bottom: 12px;
                  ">
-                   ${formatPrice(listing.price)}
+                    ${formatPrice(listing.price)}
                  </div>
                  
                  <div style="
