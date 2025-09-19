@@ -135,11 +135,54 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
       const africaBounds: [number, number, number, number] = [-20, -35, 52, 37];
       map.current?.fitBounds(africaBounds, { padding: 50 });
 
-      // Ajouter les marqueurs pour chaque listing
-      listings.forEach(listing => {
-        if (!listing.lat || !listing.lng) return;
+      // Fonction pour disperser les marqueurs qui sont trop proches
+      const disperseMarkers = (listings: Listing[]) => {
+        const processedListings: (Listing & { adjustedLat: number; adjustedLng: number })[] = [];
+        const threshold = 0.01; // Distance minimale entre les marqueurs (environ 1km)
+        
+        listings.forEach(listing => {
+          if (!listing.lat || !listing.lng) return;
+          
+          // Vérifier s'il y a d'autres marqueurs très proches
+          const nearbyListings = processedListings.filter(processed => {
+            const distance = Math.sqrt(
+              Math.pow(processed.lat - listing.lat, 2) + 
+              Math.pow(processed.lng - listing.lng, 2)
+            );
+            return distance < threshold;
+          });
+          
+          if (nearbyListings.length === 0) {
+            // Pas de marqueurs proches, utiliser la position originale
+            processedListings.push({
+              ...listing,
+              adjustedLat: listing.lat,
+              adjustedLng: listing.lng
+            });
+          } else {
+            // Il y a des marqueurs proches, disperser en cercle
+            const angle = (nearbyListings.length * 60) * (Math.PI / 180); // 60 degrés entre chaque marqueur
+            const radius = 0.005; // Rayon de dispersion (environ 500m)
+            
+            const adjustedLat = listing.lat + radius * Math.cos(angle);
+            const adjustedLng = listing.lng + radius * Math.sin(angle);
+            
+            processedListings.push({
+              ...listing,
+              adjustedLat,
+              adjustedLng
+            });
+          }
+        });
+        
+        return processedListings;
+      };
 
-        // Créer un élément DOM personnalisé pour le marqueur de prix
+      // Disperser les marqueurs avant de les ajouter à la carte
+      const dispersedListings = disperseMarkers(listings);
+
+      // Ajouter les marqueurs pour chaque listing dispersé
+      dispersedListings.forEach(listing => {
         const markerElement = document.createElement('div');
         markerElement.className = 'mapbox-price-marker';
         markerElement.innerHTML = `
@@ -164,11 +207,6 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
             ${formatMapPrice(listing.price, (listing as any).currency_code, formatPrice)}
           </div>
         `;
-        
-        // Ajouter un offset aléatoire léger pour éviter les chevauchements exacts
-        const offsetX = (Math.random() - 0.5) * 0.001; // Petit décalage aléatoire
-        const offsetY = (Math.random() - 0.5) * 0.001;
-
         // Effet hover sur le marqueur
         markerElement.addEventListener('mouseenter', () => {
           markerElement.style.transform = 'scale(1.15)';
@@ -182,9 +220,9 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
           markerElement.style.zIndex = '1';
         });
 
-        // Créer le marqueur avec un léger offset pour éviter les chevauchements
+        // Créer le marqueur avec les coordonnées ajustées
         const marker = new mapboxgl.Marker(markerElement)
-          .setLngLat([listing.lng + offsetX, listing.lat + offsetY])
+          .setLngLat([listing.adjustedLng, listing.adjustedLat])
           .addTo(map.current!);
 
         // Créer le popup avec un design amélioré
@@ -332,7 +370,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
           
           // Ouvrir le nouveau popup
           popup.addTo(map.current!);
-          popup.setLngLat([listing.lng, listing.lat]);
+          popup.setLngLat([listing.adjustedLng, listing.adjustedLat]);
           
           // Update favorite button state after popup is added
           setTimeout(() => {
