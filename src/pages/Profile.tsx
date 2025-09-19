@@ -278,6 +278,45 @@ const Profile = () => {
     }
   };
 
+  const handleDeleteProperty = async (propertyId: string, propertyTitle: string) => {
+    const confirmed = window.confirm(
+      `Êtes-vous sûr de vouloir supprimer l'annonce "${propertyTitle}" ?\n\nCette action est irréversible.`
+    );
+    
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase
+        .from('listings')
+        .delete()
+        .eq('id', propertyId)
+        .eq('user_id', user.id); // Sécurité: s'assurer que l'utilisateur ne peut supprimer que ses propres annonces
+
+      if (error) {
+        console.error('Error deleting property:', error);
+        toast({
+          title: "Erreur",
+          description: "Impossible de supprimer l'annonce",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Succès",
+          description: "Annonce supprimée avec succès",
+        });
+        // Recharger la liste des propriétés
+        fetchUserProperties();
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors de la suppression",
+        variant: "destructive",
+      });
+    }
+  };
+
   const { formatLocalPrice } = useCountry();
 
   const userStats = [
@@ -542,7 +581,7 @@ const Profile = () => {
                     <CardContent className="p-4">
                       <h4 className="font-semibold truncate">{property.title}</h4>
                       <p className="text-sm text-muted-foreground">{property.city}</p>
-                      <p className="text-lg font-bold text-primary">
+                       <p className="text-lg font-bold text-primary">
                         {formatLocalPrice(property.price)}
                       </p>
                       <div className="flex gap-2 mt-3">
@@ -555,9 +594,25 @@ const Profile = () => {
                           <Eye className="w-4 h-4 mr-1" />
                           Voir
                         </Button>
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate(`/add-property?edit=${property.id}`)}
+                        >
                           <Edit className="w-4 h-4 mr-1" />
                           Modifier
+                        </Button>
+                      </div>
+                      
+                      {/* Delete Button */}
+                      <div className="mt-2">
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          className="w-full"
+                          onClick={() => handleDeleteProperty(property.id, property.title)}
+                        >
+                          Supprimer l'annonce
                         </Button>
                       </div>
                       
