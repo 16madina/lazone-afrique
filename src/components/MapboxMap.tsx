@@ -32,7 +32,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { selectedCountry, formatPrice } = useCountry();
+  const { selectedCountry, formatLocalPrice } = useCountry();
   const { user } = useAuth();
   const { toggleFavorite, isFavorite, loading: favoritesLoading } = useFavorites();
 
@@ -384,7 +384,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
                 font-weight: 700; 
                 margin-bottom: 12px;
               ">
-                ${formatPrice(properties.price)}
+                ${formatLocalPrice(properties.price)}
               </div>
               
               <div style="
