@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,10 @@ import CitySelector from "@/components/CitySelector";
 
 const AddProperty = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('edit');
+  const isEditMode = !!editId;
+  
   const { selectedCountry } = useCountry();
   const { user } = useAuth();
   const { canCreateListing, incrementUsage, config } = useListingLimits();
@@ -32,6 +36,7 @@ const AddProperty = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [isLoadingListing, setIsLoadingListing] = useState(false);
   
   // Form states
   const [transactionType, setTransactionType] = useState("");
@@ -58,6 +63,66 @@ const AddProperty = () => {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeolocating, setIsGeolocating] = useState(false);
+
+  // Load existing listing data if in edit mode
+  useEffect(() => {
+    const loadExistingListing = async () => {
+      if (!isEditMode || !editId || !user) return;
+      
+      setIsLoadingListing(true);
+      try {
+        const { data: listing, error } = await supabase
+          .from('listings')
+          .select('*')
+          .eq('id', editId)
+          .eq('user_id', user.id) // Ensure user can only edit their own listings
+          .single();
+
+        if (error) {
+          console.error('Error loading listing:', error);
+          toast.error("Impossible de charger l'annonce");
+          navigate('/profile');
+          return;
+        }
+
+        if (listing) {
+          // Populate form with existing data
+          setFormData({
+            propertyType: listing.property_type || "",
+            title: listing.title || "",
+            description: listing.description || "",
+            price: listing.price?.toString() || "",
+            city: listing.city || "",
+            location: "", // This field doesn't exist in database
+            bedrooms: listing.bedrooms?.toString() || "",
+            bathrooms: listing.bathrooms?.toString() || "",
+            area: listing.surface_area?.toString() || "",
+            floorNumber: listing.floor_number || "",
+            landType: listing.land_type || "",
+            landShape: listing.land_shape || "",
+            fullName: "",
+            email: "",
+            phone: "",
+            whatsapp: ""
+          });
+
+          // Set other form states
+          setTransactionType(listing.transaction_type || "");
+          setSelectedFeatures(listing.features || []);
+          setSelectedDocuments(listing.property_documents || []);
+          setIsNegotiable(listing.is_negotiable || false);
+        }
+      } catch (error) {
+        console.error('Error loading listing:', error);
+        toast.error("Erreur lors du chargement de l'annonce");
+        navigate('/profile');
+      } finally {
+        setIsLoadingListing(false);
+      }
+    };
+
+    loadExistingListing();
+  }, [isEditMode, editId, user, toast, navigate]);
 
   // Load user profile data
   useEffect(() => {
@@ -384,8 +449,8 @@ const AddProperty = () => {
       return;
     }
 
-    // Vérifier les limites avant de créer l'annonce
-    if (!canCreateListing) {
+    // Skip listing limits check in edit mode
+    if (!isEditMode && !canCreateListing) {
       setShowPaymentDialog(true);
       return;
     }
@@ -461,37 +526,72 @@ const AddProperty = () => {
         if (selectedDocuments.length > 0) insertData.property_documents = selectedDocuments;
       }
 
-      const { data, error } = await supabase
-        .from('listings')
-        .insert(insertData);
+      if (isEditMode && editId) {
+        // Update existing listing
+        const { error } = await supabase
+          .from('listings')
+          .update(insertData)
+          .eq('id', editId)
+          .eq('user_id', user.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      // Incrémenter l'utilisation après création réussie
-      await incrementUsage(false); // false = annonce gratuite
+        toast.success("Annonce mise à jour avec succès!");
+        navigate("/profile");
+      } else {
+        // Create new listing
+        const { data, error } = await supabase
+          .from('listings')
+          .insert(insertData);
 
-      toast.success("Annonce publiée avec succès!");
-      navigate("/");
+        if (error) throw error;
+
+        // Incrémenter l'utilisation après création réussie
+        await incrementUsage(false); // false = annonce gratuite
+
+        toast.success("Annonce publiée avec succès!");
+        navigate("/");
+      }
     } catch (error) {
-      console.error("Error publishing listing:", error);
-      toast.error("Erreur lors de la publication de l'annonce");
+      console.error(isEditMode ? "Error updating listing:" : "Error publishing listing:", error);
+      toast.error(isEditMode ? "Erreur lors de la mise à jour de l'annonce" : "Erreur lors de la publication de l'annonce");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Show loading state when loading existing listing
+  if (isLoadingListing) {
+    return (
+      <div className="flex flex-col min-h-screen bg-background">
+        <Header />
+        <main className="flex-1 container mx-auto px-4 py-6 pb-20 animate-fade-in">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+              <p>Chargement de l'annonce...</p>
+            </div>
+          </div>
+        </main>
+        <BottomNavigation />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       
       <main className="flex-1 container mx-auto px-4 py-6 pb-20 animate-fade-in">
-        {/* Statut des limites d'annonces */}
-        <div className="mb-6">
-          <ListingLimitsStatus 
-            onUpgrade={() => setShowPaymentDialog(true)}
-            onPayPerListing={() => setShowPaymentDialog(true)}
-          />
-        </div>
+        {/* Statut des limites d'annonces - Hide in edit mode */}
+        {!isEditMode && (
+          <div className="mb-6">
+            <ListingLimitsStatus 
+              onUpgrade={() => setShowPaymentDialog(true)}
+              onPayPerListing={() => setShowPaymentDialog(true)}
+            />
+          </div>
+        )}
         
         {/* Progress Steps */}
         <div className="mb-8">
@@ -538,7 +638,7 @@ const AddProperty = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {React.createElement(steps[currentStep - 1].icon, { className: "w-5 h-5" })}
-              Étape {currentStep}: {steps[currentStep - 1].title}
+              {isEditMode ? `Modifier - Étape ${currentStep}: ${steps[currentStep - 1].title}` : `Étape ${currentStep}: ${steps[currentStep - 1].title}`}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -1060,7 +1160,7 @@ const AddProperty = () => {
                    onClick={handleSubmit}
                    disabled={isSubmitting || uploading}
                  >
-                   {isSubmitting ? "Publication..." : "Publier l'annonce"}
+                   {isSubmitting ? (isEditMode ? "Mise à jour..." : "Publication...") : (isEditMode ? "Mettre à jour l'annonce" : "Publier l'annonce")}
                  </Button>
                )}
             </div>
