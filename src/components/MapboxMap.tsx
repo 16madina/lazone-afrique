@@ -26,20 +26,13 @@ interface MapboxMapProps {
   selectedCityCoords?: {lat: number, lng: number} | null;
 }
 
-function formatPrice(price?: number | null) {
-  if (price == null) return '';
-  if (price >= 1_000_000) return (price/1_000_000).toFixed(1).replace('.0','') + 'M';
-  if (price >= 1_000) return Math.round(price/1_000) + 'k';
-  return String(price);
-}
-
 const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { selectedCountry } = useCountry();
+  const { selectedCountry, formatPrice } = useCountry();
   const { user } = useAuth();
   const { toggleFavorite, isFavorite, loading: favoritesLoading } = useFavorites();
 
@@ -217,7 +210,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
         }
       });
 
-      // Layer pour les prix sur les marqueurs individuels
+      // Layer pour les prix sur les marqueurs individuels - utiliser le formatage de devise uniforme
       map.current?.addLayer({
         id: 'unclustered-price',
         type: 'symbol',
@@ -226,10 +219,13 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
         layout: {
           'text-field': [
             'case',
+            // Pour les prix >= 1M, afficher en M
             ['>=', ['get', 'price'], 1000000],
             ['concat', ['to-string', ['round', ['/', ['get', 'price'], 1000000]]], 'M'],
+            // Pour les prix >= 1K, afficher en k
             ['>=', ['get', 'price'], 1000],
             ['concat', ['to-string', ['round', ['/', ['get', 'price'], 1000]]], 'k'],
+            // Sinon afficher le prix complet
             ['to-string', ['get', 'price']]
           ],
           'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
@@ -388,7 +384,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
                 font-weight: 700; 
                 margin-bottom: 12px;
               ">
-                ${formatPrice(properties.price)} FCFA
+                ${formatPrice(properties.price)}
               </div>
               
               <div style="
