@@ -107,24 +107,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithPhone = async (phone: string, password: string) => {
     try {
-      const response = await fetch(`https://ldlytdqspngpvfwtpula.supabase.co/functions/v1/phone-login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkbHl0ZHFzcG5ncHZmd3RwdWxhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3NTI0OTgsImV4cCI6MjA3MzMyODQ5OH0.kRFHyTxS1Ter_N2eZxQUo1RU7DmZCnmwkkjU_5KpcVc`,
-        },
-        body: JSON.stringify({ phone, password }),
+      const { data, error } = await supabase.functions.invoke('phone-login', {
+        body: { phone, password },
       });
 
-      const data = await response.json();
+      if (error) {
+        console.error('Edge function error:', error);
+        return { error: { message: error.message || 'Erreur de connexion' } };
+      }
 
-      if (!response.ok) {
+      if (data.error) {
+        console.error('Login error:', data.error);
         return { error: { message: data.error } };
       }
 
-      // La session sera automatiquement gérée par onAuthStateChange
+      // Si la connexion réussit, définir la session
+      if (data.success && data.session) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token
+        });
+
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          return { error: { message: 'Erreur lors de la définition de la session' } };
+        }
+      }
+
       return { error: null };
     } catch (error) {
+      console.error('SignInWithPhone error:', error);
       return { error: { message: 'Erreur de connexion' } };
     }
   };
