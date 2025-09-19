@@ -22,6 +22,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signInWithPhone: (phone: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, userData: { full_name: string; user_type: string; company_name?: string; license_number?: string }) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: any }>;
@@ -104,6 +105,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error };
   };
 
+  const signInWithPhone = async (phone: string, password: string) => {
+    try {
+      const response = await fetch(`https://ldlytdqspngpvfwtpula.supabase.co/functions/v1/phone-login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkbHl0ZHFzcG5ncHZmd3RwdWxhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3NTI0OTgsImV4cCI6MjA3MzMyODQ5OH0.kRFHyTxS1Ter_N2eZxQUo1RU7DmZCnmwkkjU_5KpcVc`,
+        },
+        body: JSON.stringify({ phone, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { error: { message: data.error } };
+      }
+
+      // La session sera automatiquement gérée par onAuthStateChange
+      return { error: null };
+    } catch (error) {
+      return { error: { message: 'Erreur de connexion' } };
+    }
+  };
+
   const signUp = async (
     email: string, 
     password: string, 
@@ -147,6 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     profile,
     loading,
     signIn,
+    signInWithPhone,
     signUp,
     signOut,
     updateProfile,

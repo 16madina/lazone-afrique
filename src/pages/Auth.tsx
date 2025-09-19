@@ -12,14 +12,16 @@ import { useToast } from '@/hooks/use-toast';
 import { Building2, User, Users, ArrowLeft } from 'lucide-react';
 
 const Auth = () => {
-  const { signIn, signUp, user, loading } = useAuth();
+  const { signIn, signInWithPhone, signUp, user, loading } = useAuth();
   const { countries, selectedCountry } = useCountry();
   const navigate = useNavigate();
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(false);
+  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
   const [loginForm, setLoginForm] = useState({
     email: '',
+    phone: '',
     password: '',
   });
   
@@ -49,12 +51,17 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    const { error } = await signIn(loginForm.email, loginForm.password);
+    let result;
+    if (loginMethod === 'email') {
+      result = await signIn(loginForm.email, loginForm.password);
+    } else {
+      result = await signInWithPhone(loginForm.phone, loginForm.password);
+    }
     
-    if (error) {
+    if (result.error) {
       toast({
         title: "Erreur de connexion",
-        description: error.message,
+        description: result.error.message,
         variant: "destructive",
       });
     } else {
@@ -155,16 +162,44 @@ const Auth = () => {
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
-                  <Input
-                    id="login-email"
-                    type="email"
-                    placeholder="votre@email.com"
-                    value={loginForm.email}
-                    onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                    required
-                  />
+                  <Label>Méthode de connexion</Label>
+                  <Select value={loginMethod} onValueChange={(value: 'email' | 'phone') => setLoginMethod(value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="email">Email</SelectItem>
+                      <SelectItem value="phone">Numéro de téléphone</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+                
+                {loginMethod === 'email' ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email">Email</Label>
+                    <Input
+                      id="login-email"
+                      type="email"
+                      placeholder="votre@email.com"
+                      value={loginForm.email}
+                      onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                      required
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="login-phone">Numéro de téléphone</Label>
+                    <Input
+                      id="login-phone"
+                      type="tel"
+                      placeholder="+225 XX XX XX XX XX"
+                      value={loginForm.phone}
+                      onChange={(e) => setLoginForm({ ...loginForm, phone: e.target.value })}
+                      required
+                    />
+                  </div>
+                )}
+                
                 <div className="space-y-2">
                   <Label htmlFor="login-password">Mot de passe</Label>
                   <Input
