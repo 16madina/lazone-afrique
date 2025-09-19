@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useSecureProfiles } from '@/hooks/useSecureProfiles';
 
 export interface Message {
   id: string;
@@ -48,6 +49,7 @@ export const useRealTimeMessages = () => {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { getPublicProfile } = useSecureProfiles();
 
   // Fetch conversations for the current user
   const fetchConversations = useCallback(async () => {
@@ -65,13 +67,7 @@ export const useRealTimeMessages = () => {
           updated_at,
           conversation_participants!conversation_participants_conversation_id_fkey!inner (
             user_id,
-            last_read_at,
-            profiles (
-              first_name,
-              last_name,
-              full_name,
-              avatar_url
-            )
+            last_read_at
           ),
           listings!conversations_property_id_fkey (
             title
@@ -99,11 +95,7 @@ export const useRealTimeMessages = () => {
 
           let latestMessage = undefined;
           if (latestMessageData?.[0]) {
-          const { data: senderProfile } = await supabase
-            .from('profiles')
-            .select('first_name, last_name, full_name, avatar_url')
-            .eq('user_id', latestMessageData[0].sender_id)
-            .single();
+          const senderProfile = await getPublicProfile(latestMessageData[0].sender_id);
 
             latestMessage = {
               ...latestMessageData[0],
@@ -141,10 +133,13 @@ export const useRealTimeMessages = () => {
             property_id: conv.property_id,
             created_at: conv.created_at,
             updated_at: conv.updated_at,
-            participants: conv.conversation_participants.map((p: any) => ({
-              user_id: p.user_id,
-              last_read_at: p.last_read_at,
-              profile: p.profiles
+            participants: await Promise.all(conv.conversation_participants.map(async (p: any) => {
+              const profile = await getPublicProfile(p.user_id);
+              return {
+                user_id: p.user_id,
+                last_read_at: p.last_read_at,
+                profile: profile
+              };
             })),
             latest_message: latestMessage,
             unread_count: unreadCount,
@@ -164,7 +159,7 @@ export const useRealTimeMessages = () => {
     } finally {
       setLoading(false);
     }
-  }, [toast]);
+  }, [toast, getPublicProfile]);
 
   // Fetch messages for a specific conversation
   const fetchMessages = useCallback(async (conversationId: string) => {
@@ -183,11 +178,7 @@ export const useRealTimeMessages = () => {
       // Get sender profiles for all messages
       const messagesWithProfiles = await Promise.all(
         (data || []).map(async (msg: any) => {
-          const { data: senderProfile } = await supabase
-            .from('profiles')
-            .select('first_name, last_name, full_name, avatar_url')
-            .eq('user_id', msg.sender_id)
-            .single();
+          const senderProfile = await getPublicProfile(msg.sender_id);
 
           return {
             ...msg,
@@ -205,7 +196,7 @@ export const useRealTimeMessages = () => {
         variant: "destructive",
       });
     }
-  }, [toast]);
+  }, [toast, getPublicProfile]);
 
   // Send a new message
   const sendMessage = useCallback(async (conversationId: string, content: string) => {
