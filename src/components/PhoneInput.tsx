@@ -45,6 +45,7 @@ interface PhoneInputProps {
   label?: string;
   required?: boolean;
   id?: string;
+  selectedCountryCode?: string; // Pays sélectionné depuis le parent
 }
 
 const PhoneInput: React.FC<PhoneInputProps> = ({
@@ -53,11 +54,30 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   placeholder = "XX XX XX XX XX",
   label = "Numéro de téléphone",
   required = false,
-  id = "phone-input"
+  id = "phone-input",
+  selectedCountryCode
 }) => {
   const { countries, selectedCountry } = useCountry();
   const [selectedPhoneCountry, setSelectedPhoneCountry] = useState(selectedCountry);
   const [open, setOpen] = useState(false);
+
+  // Synchroniser avec le pays sélectionné depuis le parent
+  React.useEffect(() => {
+    if (selectedCountryCode) {
+      const country = countries.find(c => c.code === selectedCountryCode);
+      if (country && country.code !== selectedPhoneCountry.code) {
+        setSelectedPhoneCountry(country);
+        // Mettre à jour le numéro de téléphone avec le nouvel indicatif
+        const newPhoneCode = countryPhoneCodes[country.code] || '+225';
+        const currentPhone = value.replace(/^\+\d+\s*/, '').trim();
+        if (currentPhone) {
+          onChange(`${newPhoneCode} ${currentPhone}`);
+        } else {
+          onChange('');
+        }
+      }
+    }
+  }, [selectedCountryCode, countries, selectedPhoneCountry.code, value, onChange]);
 
   const phoneCode = countryPhoneCodes[selectedPhoneCountry.code] || '+225';
 

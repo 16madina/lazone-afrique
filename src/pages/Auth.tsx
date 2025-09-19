@@ -300,6 +300,7 @@ const Auth = () => {
                   label="Téléphone"
                   value={signupForm.phone}
                   onChange={(value) => setSignupForm({ ...signupForm, phone: value })}
+                  selectedCountryCode={signupForm.country}
                   required
                 />
                 
