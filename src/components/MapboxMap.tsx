@@ -245,13 +245,23 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
       // Fonction pour obtenir l'image de listing
       const getListingImage = (listing: any) => {
         console.log('🖼️ Récupération image pour:', listing.title);
-        console.log('📸 Photos disponibles:', listing.photos);
+        console.log('📸 Photos type:', typeof listing.photos, 'Photos:', listing.photos);
         console.log('🎨 Image disponible:', listing.image);
         
-        // Vérifier d'abord les photos uploadées
-        if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
-          console.log('✅ Utilisation de la première photo uploadée:', listing.photos[0]);
-          return listing.photos[0];
+        // Vérifier d'abord les photos uploadées (gérer le cas où c'est une string JSON)
+        let photos = listing.photos;
+        if (typeof photos === 'string') {
+          try {
+            photos = JSON.parse(photos);
+          } catch (e) {
+            console.log('❌ Erreur parsing photos JSON:', e);
+            photos = null;
+          }
+        }
+        
+        if (photos && Array.isArray(photos) && photos.length > 0) {
+          console.log('✅ Utilisation de la première photo uploadée:', photos[0]);
+          return photos[0];
         }
         
         // Vérifier l'image mais ignorer les placeholders
