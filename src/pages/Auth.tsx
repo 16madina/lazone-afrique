@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Building2, User, Users, ArrowLeft } from 'lucide-react';
+import PhoneInput from '@/components/PhoneInput';
 
 const Auth = () => {
   const { signIn, signInWithPhone, signUp, user, loading } = useAuth();
@@ -187,17 +188,13 @@ const Auth = () => {
                     />
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <Label htmlFor="login-phone">Numéro de téléphone</Label>
-                    <Input
-                      id="login-phone"
-                      type="tel"
-                      placeholder="+225 XX XX XX XX XX"
-                      value={loginForm.phone}
-                      onChange={(e) => setLoginForm({ ...loginForm, phone: e.target.value })}
-                      required
-                    />
-                  </div>
+                  <PhoneInput
+                    id="login-phone"
+                    label="Numéro de téléphone"
+                    value={loginForm.phone}
+                    onChange={(value) => setLoginForm({ ...loginForm, phone: value })}
+                    required
+                  />
                 )}
                 
                 <div className="space-y-2">
@@ -298,17 +295,13 @@ const Auth = () => {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="signup-phone">Téléphone *</Label>
-                  <Input
-                    id="signup-phone"
-                    type="tel"
-                    placeholder="+225 XX XX XX XX XX"
-                    value={signupForm.phone}
-                    onChange={(e) => setSignupForm({ ...signupForm, phone: e.target.value })}
-                    required
-                  />
-                </div>
+                <PhoneInput
+                  id="signup-phone"
+                  label="Téléphone"
+                  value={signupForm.phone}
+                  onChange={(value) => setSignupForm({ ...signupForm, phone: value })}
+                  required
+                />
                 
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email *</Label>
