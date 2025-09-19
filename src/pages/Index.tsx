@@ -13,6 +13,7 @@ import { ArrowUpDown, Grid3X3, List, Globe, ChevronLeft, ChevronRight } from "lu
 import { useFavorites } from "@/hooks/useFavorites";
 import { usePagination } from "@/hooks/usePagination";
 import { toast } from "sonner";
+import { useSecureProfiles } from "@/hooks/useSecureProfiles";
 
 interface Listing {
   id: string;
@@ -67,6 +68,7 @@ const Index = () => {
   });
   const { selectedCountry, formatPrice } = useCountry();
   const { isFavorite } = useFavorites();
+  const { getPublicProfile } = useSecureProfiles();
   
   // Pagination for properties
   const {
@@ -121,11 +123,7 @@ const Index = () => {
           // Récupérer les profils pour chaque listing
           const listingsWithProfiles = await Promise.all((data || []).map(async (listing) => {
             if (listing.user_id) {
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('full_name, user_type, company_name, avatar_url, phone')
-                .eq('user_id', listing.user_id)
-                .single();
+              const profile = await getPublicProfile(listing.user_id);
               
               return {
                 ...listing,
