@@ -224,13 +224,21 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
         source: 'listings',
         filter: ['!', ['has', 'point_count']],
         layout: {
-          'text-field': ['concat', ['get', 'price'], 'k'],
+          'text-field': [
+            'case',
+            ['>=', ['get', 'price'], 1000000],
+            ['concat', ['to-string', ['round', ['/', ['get', 'price'], 1000000]]], 'M'],
+            ['>=', ['get', 'price'], 1000],
+            ['concat', ['to-string', ['round', ['/', ['get', 'price'], 1000]]], 'k'],
+            ['to-string', ['get', 'price']]
+          ],
           'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
-          'text-size': 10,
-          'text-offset': [0, -2]
+          'text-size': 9
         },
         paint: {
-          'text-color': '#ffffff'
+          'text-color': '#ffffff',
+          'text-halo-color': 'rgba(14, 116, 144, 0.8)',
+          'text-halo-width': 2
         }
       });
 
