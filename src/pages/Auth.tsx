@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Building2, User, Users, ArrowLeft } from 'lucide-react';
 import PhoneInput from '@/components/PhoneInput';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const { signIn, signInWithPhone, signUp, user, loading } = useAuth();
@@ -73,6 +74,36 @@ const Auth = () => {
       navigate('/');
     }
     
+    setIsLoading(false);
+  };
+
+  const handlePasswordReset = async () => {
+    if (!loginForm.email) {
+      toast({
+        title: "Email requis",
+        description: "Veuillez entrer votre email pour réinitialiser le mot de passe.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(loginForm.email, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+
+    if (error) {
+      toast({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Email envoyé",
+        description: "Un lien de réinitialisation a été envoyé à votre email.",
+      });
+    }
     setIsLoading(false);
   };
 
@@ -210,6 +241,20 @@ const Auth = () => {
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? 'Connexion...' : 'Se connecter'}
                 </Button>
+                
+                {loginMethod === 'email' && (
+                  <div className="text-center">
+                    <Button 
+                      type="button" 
+                      variant="link" 
+                      onClick={handlePasswordReset}
+                      disabled={isLoading}
+                      className="text-sm"
+                    >
+                      Mot de passe oublié ?
+                    </Button>
+                  </div>
+                )}
               </form>
             </TabsContent>
             
