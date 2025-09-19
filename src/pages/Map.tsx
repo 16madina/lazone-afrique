@@ -79,7 +79,7 @@ const Map = () => {
         .eq('status', 'published')
         .not('lat', 'is', null)
         .not('lng', 'is', null)
-        .limit(50); // Increase limit to 50
+        .limit(100); // Augmenter la limite à 100 pour voir plus d'annonces
 
       if (error) {
         console.error('Error fetching listings:', error);

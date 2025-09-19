@@ -141,6 +141,14 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
           }))
       };
 
+      console.log('📍 Listings total récupérés:', listings.length);
+      console.log('🗺️ Listings avec coordonnées valides:', geojsonData.features.length);
+      console.log('📋 Détail des listings filtrés:', geojsonData.features.map(f => ({
+        title: f.properties.title,
+        photos: f.properties.photos,
+        hasPhotos: f.properties.photos ? (Array.isArray(f.properties.photos) ? f.properties.photos.length : 'string') : 'null'
+      })));
+
       // Ajouter la source de données avec clustering
       map.current?.addSource('listings', {
         type: 'geojson',
