@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Zap, Star, TrendingUp, Award } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from 'sonner';
 import { useCountry } from "@/contexts/CountryContext";
+import { CinePayPaymentMethod } from '@/components/CinePayPaymentMethod';
 
 interface SponsorshipPackage {
   id: string;
@@ -27,7 +28,7 @@ const SponsorshipDialog = ({ listingId, children }: SponsorshipDialogProps) => {
   const [packages, setPackages] = useState<SponsorshipPackage[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<SponsorshipPackage | null>(null);
-  const { toast } = useToast();
+  const [showPayment, setShowPayment] = useState(false);
   const { formatPrice } = useCountry();
 
   useEffect(() => {
@@ -49,57 +50,19 @@ const SponsorshipDialog = ({ listingId, children }: SponsorshipDialogProps) => {
     setPackages(data || []);
   };
 
-  const handleSponsor = async (pkg: SponsorshipPackage) => {
-    setLoading(true);
-    try {
-      // Create transaction record
-      const { data: transaction, error: transactionError } = await supabase
-        .from('sponsorship_transactions')
-        .insert({
-          listing_id: listingId,
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          package_id: pkg.id,
-          amount_paid: pkg.price_usd,
-          payment_status: 'completed', // Simplified for demo
-          payment_method: 'demo'
-        })
-        .select()
-        .single();
+  const handleSponsor = (pkg: SponsorshipPackage) => {
+    setSelectedPackage(pkg);
+    setShowPayment(true);
+  };
 
-      if (transactionError) throw transactionError;
+  const handlePaymentSuccess = (transactionId: string) => {
+    toast.success('Demande de sponsoring envoyée avec succès!');
+    setSelectedPackage(null);
+    setShowPayment(false);
+  };
 
-      // Update listing with sponsorship
-      const sponsorUntil = new Date();
-      sponsorUntil.setDate(sponsorUntil.getDate() + pkg.duration_days);
-
-      const { error: updateError } = await supabase
-        .from('listings')
-        .update({
-          is_sponsored: true,
-          sponsored_until: sponsorUntil.toISOString(),
-          sponsor_amount: pkg.price_usd,
-          sponsored_at: new Date().toISOString()
-        })
-        .eq('id', listingId);
-
-      if (updateError) throw updateError;
-
-      toast({
-        title: "🎉 Annonce sponsorisée !",
-        description: `Votre annonce sera mise en avant pendant ${pkg.duration_days} jours.`,
-      });
-
-      setSelectedPackage(null);
-    } catch (error) {
-      console.error('Error sponsoring listing:', error);
-      toast({
-        title: "Erreur",
-        description: "Une erreur est survenue lors du sponsoring.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+  const handlePaymentError = (error: string) => {
+    toast.error(`Erreur de paiement: ${error}`);
   };
 
   const getPackageIcon = (index: number) => {
@@ -148,7 +111,7 @@ const SponsorshipDialog = ({ listingId, children }: SponsorshipDialogProps) => {
                 className={`transition-all duration-200 hover:shadow-lg cursor-pointer ${
                   selectedPackage?.id === pkg.id ? 'ring-2 ring-primary' : ''
                 } ${index === 1 ? 'border-primary bg-primary/5' : ''}`}
-                onClick={() => setSelectedPackage(pkg)}
+                onClick={() => handleSponsor(pkg)}
               >
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -190,7 +153,21 @@ const SponsorshipDialog = ({ listingId, children }: SponsorshipDialogProps) => {
             ))}
           </div>
 
-          {selectedPackage && (
+          {selectedPackage && showPayment ? (
+            <div className="space-y-4">
+              <Separator />
+              <CinePayPaymentMethod
+                amount={selectedPackage.price_usd}
+                description={`Sponsoring - ${selectedPackage.name}`}
+                paymentType="sponsorship"
+                relatedId={listingId}
+                packageId={selectedPackage.id}
+                currency="USD"
+                onSuccess={handlePaymentSuccess}
+                onError={handlePaymentError}
+              />
+            </div>
+          ) : selectedPackage ? (
             <div className="space-y-4">
               <Separator />
               <div className="bg-accent/50 rounded-lg p-4 space-y-3">
@@ -211,15 +188,15 @@ const SponsorshipDialog = ({ listingId, children }: SponsorshipDialogProps) => {
               </div>
               
               <Button 
-                onClick={() => handleSponsor(selectedPackage)}
+                onClick={() => setShowPayment(true)}
                 disabled={loading}
                 className="w-full"
                 size="lg"
               >
-                {loading ? "Traitement..." : "Confirmer le sponsoring"}
+                Procéder au paiement
               </Button>
             </div>
-          )}
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>

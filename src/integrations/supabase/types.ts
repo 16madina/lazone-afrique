@@ -235,6 +235,7 @@ export type Database = {
           payment_method: string | null
           payment_reference: string | null
           payment_status: string
+          payment_transaction_id: string | null
           payment_type: string
           updated_at: string
           user_id: string
@@ -248,6 +249,7 @@ export type Database = {
           payment_method?: string | null
           payment_reference?: string | null
           payment_status?: string
+          payment_transaction_id?: string | null
           payment_type: string
           updated_at?: string
           user_id: string
@@ -261,11 +263,20 @@ export type Database = {
           payment_method?: string | null
           payment_reference?: string | null
           payment_status?: string
+          payment_transaction_id?: string | null
           payment_type?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "listing_payments_payment_transaction_id_fkey"
+            columns: ["payment_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "payment_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       listings: {
         Row: {
@@ -453,6 +464,72 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          package_id: string | null
+          payment_method: string
+          payment_type: string
+          payment_url: string | null
+          phone_number: string | null
+          provider: string
+          provider_response: Json | null
+          provider_transaction_id: string | null
+          related_id: string | null
+          status: string
+          subscription_type: string | null
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id: string
+          package_id?: string | null
+          payment_method: string
+          payment_type: string
+          payment_url?: string | null
+          phone_number?: string | null
+          provider?: string
+          provider_response?: Json | null
+          provider_transaction_id?: string | null
+          related_id?: string | null
+          status?: string
+          subscription_type?: string | null
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          package_id?: string | null
+          payment_method?: string
+          payment_type?: string
+          payment_url?: string | null
+          phone_number?: string | null
+          provider?: string
+          provider_response?: Json | null
+          provider_transaction_id?: string | null
+          related_id?: string | null
+          status?: string
+          subscription_type?: string | null
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -562,6 +639,7 @@ export type Database = {
           package_id: string
           payment_method: string | null
           payment_status: string
+          payment_transaction_id: string | null
           transaction_date: string
           updated_at: string
           user_id: string
@@ -578,6 +656,7 @@ export type Database = {
           package_id: string
           payment_method?: string | null
           payment_status?: string
+          payment_transaction_id?: string | null
           transaction_date?: string
           updated_at?: string
           user_id: string
@@ -594,6 +673,7 @@ export type Database = {
           package_id?: string
           payment_method?: string | null
           payment_status?: string
+          payment_transaction_id?: string | null
           transaction_date?: string
           updated_at?: string
           user_id?: string
@@ -611,6 +691,13 @@ export type Database = {
             columns: ["package_id"]
             isOneToOne: false
             referencedRelation: "sponsorship_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sponsorship_transactions_payment_transaction_id_fkey"
+            columns: ["payment_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "payment_transactions"
             referencedColumns: ["id"]
           },
         ]
@@ -663,6 +750,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_active: boolean
+          payment_transaction_id: string | null
           starts_at: string
           subscription_type: string
           updated_at: string
@@ -674,6 +762,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean
+          payment_transaction_id?: string | null
           starts_at?: string
           subscription_type: string
           updated_at?: string
@@ -685,12 +774,21 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_active?: boolean
+          payment_transaction_id?: string | null
           starts_at?: string
           subscription_type?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_payment_transaction_id_fkey"
+            columns: ["payment_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "payment_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -729,6 +827,17 @@ export type Database = {
       get_listing_owner_profile: {
         Args: { owner_user_id: string }
         Returns: Json
+      }
+      get_payment_status: {
+        Args: { transaction_id: string }
+        Returns: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          payment_type: string
+          status: string
+        }[]
       }
       get_public_profile: {
         Args: { profile_user_id: string }

@@ -1,12 +1,13 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { CreditCard, Smartphone, Building, Wallet } from "lucide-react";
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Phone, CreditCard, Building2, Smartphone, Zap } from 'lucide-react';
+import { CinePayPaymentMethod } from '@/components/CinePayPaymentMethod';
 
-export interface PaymentMethod {
+interface PaymentMethod {
   id: string;
   name: string;
   description: string;
@@ -17,166 +18,176 @@ export interface PaymentMethod {
 
 interface PaymentMethodSelectorProps {
   selectedMethod: string;
-  onMethodSelect: (methodId: string) => void;
-  phoneNumber: string;
+  onMethodSelect: (method: string) => void;
   onPhoneNumberChange: (phone: string) => void;
-  cardNumber: string;
-  onCardNumberChange: (card: string) => void;
+  onCardNumberChange: (cardNumber: string) => void;
   onConfirm: () => void;
   loading: boolean;
   amount: number;
-  formatPrice: (amount: number) => string;
+  formatPrice?: (amount: number) => string;
+  // Nouvelles props pour CinePay
+  description?: string;
+  paymentType?: 'sponsorship' | 'subscription' | 'paid_listing';
+  relatedId?: string;
+  packageId?: string;
+  subscriptionType?: string;
+  currency?: string;
+  onPaymentSuccess?: (transactionId: string) => void;
+  // Props pour l'ancien système
+  phoneNumber?: string;
+  cardNumber?: string;
 }
 
 const paymentMethods: PaymentMethod[] = [
   {
-    id: "orange_money",
-    name: "Orange Money",
-    description: "Paiement via Orange Money",
-    icon: <Smartphone className="h-5 w-5 text-orange-500" />,
-    requiresPhone: true,
+    id: 'cinetpay_mobile',
+    name: 'Mobile Money (CinePay)',
+    description: 'Orange Money, Wave, MTN, Moov Money',
+    icon: <Phone className="h-5 w-5 text-orange-500" />,
+    requiresPhone: false // Géré par le composant CinePay
   },
   {
-    id: "mtn_money",
-    name: "MTN Mobile Money",
-    description: "Paiement via MTN Mobile Money",
-    icon: <Smartphone className="h-5 w-5 text-yellow-500" />,
-    requiresPhone: true,
+    id: 'card',
+    name: 'Carte Visa/Mastercard',
+    description: 'Paiement par carte bancaire via Stripe',
+    icon: <CreditCard className="h-5 w-5 text-gray-600" />,
+    requiresCard: true
   },
   {
-    id: "moov_money",
-    name: "Moov Money",
-    description: "Paiement via Moov Money",
-    icon: <Smartphone className="h-5 w-5 text-blue-500" />,
-    requiresPhone: true,
-  },
-  {
-    id: "wave",
-    name: "Wave",
-    description: "Paiement via Wave",
-    icon: <Wallet className="h-5 w-5 text-purple-500" />,
-    requiresPhone: true,
-  },
-  {
-    id: "visa_mastercard",
-    name: "Carte bancaire",
-    description: "Visa, Mastercard",
-    icon: <CreditCard className="h-5 w-5 text-blue-600" />,
-    requiresCard: true,
-  },
-  {
-    id: "bank_transfer",
-    name: "Virement bancaire",
-    description: "Virement bancaire direct",
-    icon: <Building className="h-5 w-5 text-gray-600" />,
-  },
+    id: 'bank_transfer',
+    name: 'Virement bancaire',
+    description: 'Paiement par virement',
+    icon: <Building2 className="h-5 w-5 text-green-600" />
+  }
 ];
 
-const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
+export const PaymentMethodSelector = ({
   selectedMethod,
   onMethodSelect,
-  phoneNumber,
   onPhoneNumberChange,
-  cardNumber,
   onCardNumberChange,
   onConfirm,
   loading,
   amount,
-  formatPrice,
-}) => {
+  formatPrice = (amount) => `${amount} FCFA`,
+  description = 'Paiement',
+  paymentType = 'sponsorship',
+  relatedId,
+  packageId,
+  subscriptionType,
+  currency = 'XOF',
+  onPaymentSuccess,
+  phoneNumber = '',
+  cardNumber = ''
+}: PaymentMethodSelectorProps) => {
+
   const selectedPaymentMethod = paymentMethods.find(m => m.id === selectedMethod);
   const canConfirm = selectedMethod && 
     (!selectedPaymentMethod?.requiresPhone || phoneNumber.trim()) &&
     (!selectedPaymentMethod?.requiresCard || cardNumber.trim());
 
+  // Si CinePay mobile money est sélectionné, afficher le composant CinePay
+  if (selectedMethod === 'cinetpay_mobile') {
+    return (
+      <CinePayPaymentMethod
+        amount={amount}
+        description={description}
+        paymentType={paymentType}
+        relatedId={relatedId}
+        packageId={packageId}
+        subscriptionType={subscriptionType}
+        currency={currency}
+        onSuccess={onPaymentSuccess}
+      />
+    );
+  }
+
   return (
-    <Card className="max-w-2xl mx-auto">
+    <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <CreditCard className="h-5 w-5" />
-          Choisir un mode de paiement
-        </CardTitle>
+        <CardTitle>Méthode de paiement</CardTitle>
         <CardDescription>
-          Sélectionnez votre mode de paiement préféré pour {formatPrice(amount)}
+          Choisissez votre méthode de paiement préférée pour {formatPrice(amount)}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <RadioGroup value={selectedMethod} onValueChange={onMethodSelect}>
-          <div className="grid gap-3">
+        <div>
+          <Label>Sélectionnez une méthode de paiement</Label>
+          <RadioGroup 
+            value={selectedMethod} 
+            onValueChange={onMethodSelect}
+            className="mt-2"
+          >
             {paymentMethods.map((method) => (
-              <div key={method.id} className="flex items-center space-x-3">
+              <div key={method.id} className="flex items-center space-x-2">
                 <RadioGroupItem value={method.id} id={method.id} />
-                <Label
-                  htmlFor={method.id}
-                  className="flex items-center gap-3 cursor-pointer flex-1 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                <Label 
+                  htmlFor={method.id} 
+                  className="flex items-center gap-2 cursor-pointer flex-1 p-2 rounded-lg hover:bg-accent"
                 >
                   {method.icon}
-                  <div className="flex-1">
+                  <div>
                     <div className="font-medium">{method.name}</div>
-                    <div className="text-sm text-muted-foreground">{method.description}</div>
+                    <div className="text-xs text-muted-foreground">{method.description}</div>
                   </div>
                 </Label>
               </div>
             ))}
-          </div>
-        </RadioGroup>
+          </RadioGroup>
+        </div>
 
-        {/* Phone number input for mobile money */}
-        {selectedPaymentMethod?.requiresPhone && (
-          <div className="space-y-2">
-            <Label htmlFor="phone">Numéro de téléphone</Label>
-            <Input
-              id="phone"
-              type="tel"
-              placeholder="Exemple: +225 07 12 34 56 78"
-              value={phoneNumber}
-              onChange={(e) => onPhoneNumberChange(e.target.value)}
-            />
-            <p className="text-sm text-muted-foreground">
-              Entrez le numéro associé à votre compte {selectedPaymentMethod.name}
-            </p>
-          </div>
+        {selectedMethod && selectedMethod !== 'cinetpay_mobile' && (
+          <>
+            {paymentMethods.find(m => m.id === selectedMethod)?.requiresPhone && (
+              <div>
+                <Label htmlFor="phone">Numéro de téléphone</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="Ex: +225 01 02 03 04 05"
+                  value={phoneNumber}
+                  onChange={(e) => onPhoneNumberChange(e.target.value)}
+                  className="mt-2"
+                />
+              </div>
+            )}
+
+            {paymentMethods.find(m => m.id === selectedMethod)?.requiresCard && (
+              <div>
+                <Label htmlFor="card">Numéro de carte</Label>
+                <Input
+                  id="card"
+                  type="text"
+                  placeholder="1234 5678 9012 3456"
+                  value={cardNumber}
+                  onChange={(e) => onCardNumberChange(e.target.value)}
+                  className="mt-2"
+                />
+              </div>
+            )}
+
+            {selectedMethod === 'bank_transfer' && (
+              <div className="p-4 bg-muted rounded-lg">
+                <h4 className="font-medium mb-2">Instructions de virement</h4>
+                <p className="text-sm text-muted-foreground">
+                  Effectuez le virement sur le compte suivant :<br />
+                  IBAN: CI05 CI000000000000000000<br />
+                  Titulaire: LAZONE SARL<br />
+                  Référence: Votre email
+                </p>
+              </div>
+            )}
+
+            <Button
+              onClick={onConfirm}
+              disabled={!canConfirm || loading}
+              className="w-full"
+              size="lg"
+            >
+              {loading ? "Traitement..." : `Confirmer ${formatPrice(amount)}`}
+            </Button>
+          </>
         )}
-
-        {/* Card number input for card payments */}
-        {selectedPaymentMethod?.requiresCard && (
-          <div className="space-y-2">
-            <Label htmlFor="card">Numéro de carte</Label>
-            <Input
-              id="card"
-              type="text"
-              placeholder="**** **** **** ****"
-              value={cardNumber}
-              onChange={(e) => onCardNumberChange(e.target.value)}
-              maxLength={19}
-            />
-            <p className="text-sm text-muted-foreground">
-              Entrez les 16 chiffres de votre carte bancaire
-            </p>
-          </div>
-        )}
-
-        {/* Bank transfer instructions */}
-        {selectedMethod === "bank_transfer" && (
-          <div className="p-4 bg-muted rounded-lg">
-            <h4 className="font-medium mb-2">Instructions pour le virement</h4>
-            <div className="text-sm space-y-1 text-muted-foreground">
-              <p><strong>Bénéficiaire:</strong> LaZone Real Estate</p>
-              <p><strong>Compte:</strong> 123456789</p>
-              <p><strong>Banque:</strong> Banque Atlantique CI</p>
-              <p><strong>Montant:</strong> {formatPrice(amount)}</p>
-            </div>
-          </div>
-        )}
-
-        <Button
-          onClick={onConfirm}
-          disabled={loading || !canConfirm}
-          className="w-full"
-          size="lg"
-        >
-          {loading ? "Traitement en cours..." : `Payer ${formatPrice(amount)}`}
-        </Button>
       </CardContent>
     </Card>
   );

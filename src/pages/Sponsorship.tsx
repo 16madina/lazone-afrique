@@ -1,16 +1,16 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import Header from "@/components/Header";
-import BottomNavigation from "@/components/BottomNavigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Zap, Star, TrendingUp, Award, ArrowLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useCountry } from "@/contexts/CountryContext";
-import PaymentMethodSelector from "@/components/PaymentMethodSelector";
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import Header from '@/components/Header';
+import BottomNavigation from '@/components/BottomNavigation';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Zap, Star, TrendingUp, Award, ArrowLeft } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useCountry } from '@/contexts/CountryContext';
+import { CinePayPaymentMethod } from '@/components/CinePayPaymentMethod';
 
 interface SponsorshipPackage {
   id: string;
@@ -28,9 +28,6 @@ const Sponsorship = () => {
   const [loading, setLoading] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<SponsorshipPackage | null>(null);
   const [showPayment, setShowPayment] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [cardNumber, setCardNumber] = useState("");
   const { formatPrice } = useCountry();
 
   useEffect(() => {
@@ -57,45 +54,20 @@ const Sponsorship = () => {
     setShowPayment(true);
   };
 
-  const handlePayment = async () => {
-    if (!listingId || !selectedPackage) return;
-    
-    setLoading(true);
-    try {
-      // Create transaction record with pending approval status
-      const { data: transaction, error: transactionError } = await supabase
-        .from('sponsorship_transactions')
-        .insert({
-          listing_id: listingId,
-          user_id: (await supabase.auth.getUser()).data.user?.id,
-          package_id: selectedPackage.id,
-          amount_paid: selectedPackage.price_usd,
-          payment_status: 'completed',
-          payment_method: selectedPaymentMethod,
-          approval_status: 'pending' // New: requires admin approval
-        })
-        .select()
-        .single();
-
-      if (transactionError) throw transactionError;
-
-      // Don't update the listing immediately - wait for admin approval
-      toast.success(`💰 Paiement confirmé ! Votre demande de sponsoring est en attente d'approbation par l'administrateur. Vous recevrez une notification une fois approuvée.`);
-
-      // Retourner à la page précédente
-      navigate(-1);
-    } catch (error) {
-      console.error('Error processing payment:', error);
-      toast.error("Une erreur est survenue lors du paiement.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const getPackageIcon = (index: number) => {
     const icons = [TrendingUp, Zap, Star, Award];
     const Icon = icons[index] || Zap;
     return <Icon className="h-6 w-6" />;
+  };
+
+  const handlePaymentSuccess = (transactionId: string) => {
+    toast.success('Demande de sponsoring envoyée avec succès!');
+    navigate('/');
+  };
+
+  const handlePaymentError = (error: string) => {
+    toast.error(`Erreur de paiement: ${error}`);
+    setShowPayment(false);
   };
 
   return (
@@ -138,7 +110,29 @@ const Sponsorship = () => {
 
           <Separator />
 
-          {!showPayment ? (
+          {showPayment && selectedPackage ? (
+            <div className="max-w-4xl mx-auto">
+              <Button
+                onClick={() => setShowPayment(false)}
+                variant="ghost"
+                className="mb-6"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Retour aux packages
+              </Button>
+              
+              <CinePayPaymentMethod
+                amount={selectedPackage?.price_usd || 0}
+                description={`Sponsoring - ${selectedPackage?.name}`}
+                paymentType="sponsorship"
+                relatedId={listingId}
+                packageId={selectedPackage?.id}
+                currency="USD"
+                onSuccess={handlePaymentSuccess}
+                onError={handlePaymentError}
+              />
+            </div>
+          ) : (
             <>
               {/* Packages */}
               <div className="grid md:grid-cols-2 gap-6">
@@ -193,31 +187,6 @@ const Sponsorship = () => {
                   </Card>
                 ))}
               </div>
-            </>
-          ) : (
-            <>
-              {/* Payment Method Selection */}
-              <Button 
-                variant="ghost" 
-                onClick={() => setShowPayment(false)}
-                className="mb-4"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Retour aux packages
-              </Button>
-              
-              <PaymentMethodSelector
-                selectedMethod={selectedPaymentMethod}
-                onMethodSelect={setSelectedPaymentMethod}
-                phoneNumber={phoneNumber}
-                onPhoneNumberChange={setPhoneNumber}
-                cardNumber={cardNumber}
-                onCardNumberChange={setCardNumber}
-                onConfirm={handlePayment}
-                loading={loading}
-                amount={selectedPackage?.price_usd || 0}
-                formatPrice={formatPrice}
-              />
             </>
           )}
         </div>

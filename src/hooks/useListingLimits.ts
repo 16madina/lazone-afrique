@@ -204,6 +204,31 @@ export const useListingLimits = () => {
     }
   };
 
+  const createPaidListingPayment = async (listingId: string, amount: number) => {
+    try {
+      setLoading(true);
+      
+      const { data, error } = await supabase.functions.invoke('create-cinetpay-payment', {
+        body: {
+          amount,
+          description: 'Paiement pour annonce supplémentaire',
+          payment_type: 'paid_listing',
+          related_id: listingId,
+          currency: 'XOF'
+        }
+      });
+
+      if (error) throw error;
+
+      return data;
+    } catch (error) {
+      console.error('Error creating paid listing payment:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const loadData = async () => {
       if (!user?.id || !profile?.user_type) {
@@ -261,7 +286,7 @@ export const useListingLimits = () => {
     loading,
     error,
     incrementUsage,
-    createPayment,
+    createPaidListingPayment,
     refreshData,
     getUserTypeLabel,
     getSubscriptionTypeLabel
