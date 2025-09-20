@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Building2, User, Users, ArrowLeft } from 'lucide-react';
 import PhoneInput from '@/components/PhoneInput';
 import { supabase } from '@/integrations/supabase/client';
+import LaZoneIcon from '@/assets/lazone-logo-icon.png';
+import LaZoneText from '@/assets/lazone-text-logo-3d.png';
 
 const Auth = () => {
   const { signIn, signInWithPhone, signUp, user, loading } = useAuth();
@@ -180,8 +182,19 @@ const Auth = () => {
         </Button>
         
         <Card className="w-full">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">LaZone</CardTitle>
+        <CardHeader className="text-center space-y-4">
+          <div className="flex items-center justify-center gap-3">
+            <img 
+              src={LaZoneIcon} 
+              alt="LaZone Logo" 
+              className="w-12 h-12"
+            />
+            <img 
+              src={LaZoneText} 
+              alt="LaZone" 
+              className="h-8"
+            />
+          </div>
           <CardDescription>Connexion à votre compte</CardDescription>
         </CardHeader>
         <CardContent>
