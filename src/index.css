@@ -129,11 +129,31 @@ All colors MUST be HSL.
     html {
       -webkit-text-size-adjust: 100%;
       -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
     
     body {
       overscroll-behavior: none;
       -webkit-overflow-scrolling: touch;
+      /* Prevent zoom on focus inputs */
+      font-size: 16px;
+    }
+    
+    /* Improve touch targets */
+    button, a, [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+  }
+  
+  /* iOS safe area support */
+  @supports (padding: max(0px)) {
+    .ios-safe-top {
+      padding-top: max(env(safe-area-inset-top), 1rem);
+    }
+    
+    .ios-safe-bottom {
+      padding-bottom: max(env(safe-area-inset-bottom), 1rem);
     }
   }
 }
