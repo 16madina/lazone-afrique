@@ -22,6 +22,7 @@ interface ListingOwnerProfile {
   avatar_url: string | null;
   city: string;
   country: string;
+  phone: string | null;
 }
 
 export const useSecureProfiles = () => {
