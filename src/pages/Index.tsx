@@ -87,6 +87,11 @@ const Index = () => {
     totalItems
   } = usePagination({ items: properties, itemsPerPage: 12 });
 
+  // Scroll to top when page changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
+
   // Fetch properties for selected country from Supabase
   useEffect(() => {
     const fetchProperties = async () => {
