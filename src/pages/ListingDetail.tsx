@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRealTimeMessages } from "@/hooks/useRealTimeMessages";
 import { useSecureProfiles } from "@/hooks/useSecureProfiles";
 import { useCountry } from "@/contexts/CountryContext";
+import { useContactActions } from "@/hooks/useContactActions";
 import { ArrowLeft, MapPin, Calendar, Phone, MessageCircle, Play, Send, X, Star } from "lucide-react";
 import { toast } from "sonner";
 import { UserRatingDialog } from "@/components/UserRatingDialog";
@@ -64,6 +65,7 @@ const ListingDetail = () => {
   
   const { createConversation, sendMessage } = useRealTimeMessages();
   const { getListingOwnerProfile } = useSecureProfiles();
+  const { handlePhoneContact, loading: contactLoading } = useContactActions();
 
   // Check authentication
   useEffect(() => {
@@ -689,10 +691,21 @@ const ListingDetail = () => {
                 )}
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button className="flex-1">
-                  <Phone className="w-4 h-4 mr-2" />
-                  Appeler
-                </Button>
+                {ownerProfile?.phone ? (
+                  <Button 
+                    className="flex-1" 
+                    onClick={() => handlePhoneContact(ownerProfile.phone, ownerProfile.full_name)}
+                    disabled={contactLoading}
+                  >
+                    <Phone className="w-4 h-4 mr-2" />
+                    Appeler
+                  </Button>
+                ) : (
+                  <Button className="flex-1" disabled>
+                    <Phone className="w-4 h-4 mr-2" />
+                    Numéro non disponible
+                  </Button>
+                )}
                 <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
                   <DialogTrigger asChild>
                     <Button variant="outline" className="flex-1">
