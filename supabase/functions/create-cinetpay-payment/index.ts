@@ -70,23 +70,43 @@ serve(async (req) => {
     // Générer un transaction_id unique
     const transactionId = `${paymentRequest.payment_type}_${user.id}_${Date.now()}`;
     
+    // Valider et ajuster le montant (doit être un multiple de 5)
+    const adjustedAmount = Math.max(5, Math.ceil(paymentRequest.amount / 5) * 5);
+    
     // URLs de retour
     const baseUrl = req.headers.get('origin') || 'http://localhost:3000';
     const returnUrl = `${baseUrl}/payment-success?transaction_id=${transactionId}`;
     const cancelUrl = `${baseUrl}/payment-cancel?transaction_id=${transactionId}`;
     const notifyUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/verify-cinetpay-payment`;
 
-    // Préparer les données pour CinePay
+    // Récupérer le profil utilisateur pour les informations client
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('full_name, first_name, last_name, city, country')
+      .eq('user_id', user.id)
+      .single();
+
+    // Préparer les données pour CinePay selon la documentation officielle
     const cinetpayData = {
       apikey: cinetpayApiKey,
       site_id: cinetpaySiteId,
       transaction_id: transactionId,
-      amount: paymentRequest.amount,
+      amount: adjustedAmount,
       currency: paymentRequest.currency || 'XOF',
-      alternative_currency: 'XOF',
+      alternative_currency: paymentRequest.currency || 'XOF',
       description: paymentRequest.description,
-      return_url: returnUrl,
       notify_url: notifyUrl,
+      return_url: returnUrl,
+      channels: paymentRequest.payment_method || 'ALL',
+      customer_name: profile?.last_name || user.user_metadata?.last_name || 'Client',
+      customer_surname: profile?.first_name || user.user_metadata?.first_name || 'LaZone',
+      customer_email: user.email,
+      customer_phone_number: paymentRequest.phone_number,
+      customer_address: profile?.city || 'Abidjan',
+      customer_city: profile?.city || 'Abidjan', 
+      customer_country: profile?.country?.toUpperCase() || 'CI',
+      customer_state: profile?.country?.toUpperCase() || 'CI',
+      customer_zip_code: '00000',
       metadata: JSON.stringify({
         user_id: user.id,
         payment_type: paymentRequest.payment_type,
@@ -94,35 +114,56 @@ serve(async (req) => {
         package_id: paymentRequest.package_id,
         subscription_type: paymentRequest.subscription_type
       }),
-      customer_name: user.user_metadata?.full_name || user.email,
-      customer_surname: user.user_metadata?.last_name || '',
-      customer_email: user.email,
-      customer_phone_number: paymentRequest.phone_number,
-      customer_address: '',
-      customer_city: '',
-      customer_country: 'CI',
-      customer_state: '',
-      customer_zip_code: '',
-      channels: paymentRequest.payment_method,
       lang: 'fr'
     };
 
-    logStep("Calling CinePay API", { transactionId, amount: paymentRequest.amount });
+    logStep("Calling CinePay API with data", { 
+      transactionId, 
+      amount: adjustedAmount, 
+      currency: cinetpayData.currency,
+      channels: cinetpayData.channels,
+      customer_country: cinetpayData.customer_country
+    });
 
     // Appel à l'API CinePay
     const cinetpayResponse = await fetch('https://api-checkout.cinetpay.com/v2/payment', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       body: JSON.stringify(cinetpayData)
     });
 
-    const cinetpayResult = await cinetpayResponse.json();
-    logStep("CinePay response", cinetpayResult);
+    let cinetpayResult;
+    const responseText = await cinetpayResponse.text();
+    
+    logStep("CinePay HTTP response", { 
+      status: cinetpayResponse.status, 
+      statusText: cinetpayResponse.statusText,
+      body: responseText.substring(0, 500) // Limite pour éviter les logs trop longs
+    });
 
-    if (!cinetpayResponse.ok || cinetpayResult.code !== '201') {
-      throw new Error(`CinePay error: ${cinetpayResult.message || 'Unknown error'}`);
+    try {
+      cinetpayResult = JSON.parse(responseText);
+      logStep("CinePay response parsed", cinetpayResult);
+    } catch (parseError) {
+      logStep("Failed to parse CinePay response", { responseText });
+      throw new Error(`Invalid JSON response from CinePay: ${responseText}`);
+    }
+
+    if (!cinetpayResponse.ok) {
+      logStep("CinePay API Error", { 
+        status: cinetpayResponse.status, 
+        statusText: cinetpayResponse.statusText,
+        response: cinetpayResult 
+      });
+      throw new Error(`Erreur API CinePay (${cinetpayResponse.status}): ${cinetpayResponse.statusText}`);
+    }
+
+    if (cinetpayResult.code !== '201') {
+      logStep("CinePay response error", cinetpayResult);
+      throw new Error(`Erreur CinePay (${cinetpayResult.code}): ${cinetpayResult.message || cinetpayResult.description || 'Erreur inconnue'}`);
     }
 
     // Enregistrer la transaction en base
@@ -131,7 +172,7 @@ serve(async (req) => {
       .insert({
         id: transactionId,
         user_id: user.id,
-        amount: paymentRequest.amount,
+        amount: adjustedAmount,
         currency: paymentRequest.currency || 'XOF',
         payment_method: paymentRequest.payment_method,
         payment_type: paymentRequest.payment_type,
@@ -140,8 +181,8 @@ serve(async (req) => {
         subscription_type: paymentRequest.subscription_type,
         status: 'pending',
         provider: 'cinetpay',
-        provider_transaction_id: cinetpayResult.data.transaction_id,
-        payment_url: cinetpayResult.data.payment_url,
+        provider_transaction_id: cinetpayResult.data?.payment_token,
+        payment_url: cinetpayResult.data?.payment_url,
         description: paymentRequest.description,
         phone_number: paymentRequest.phone_number
       });
@@ -156,8 +197,8 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       transaction_id: transactionId,
-      payment_url: cinetpayResult.data.payment_url,
-      payment_token: cinetpayResult.data.payment_token
+      payment_url: cinetpayResult.data?.payment_url,
+      payment_token: cinetpayResult.data?.payment_token
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
