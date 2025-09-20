@@ -16,6 +16,7 @@ import { useCountry } from "@/contexts/CountryContext";
 import { ArrowLeft, MapPin, Calendar, Phone, MessageCircle, Play, Send, X, Star } from "lucide-react";
 import { toast } from "sonner";
 import { UserRatingDialog } from "@/components/UserRatingDialog";
+import ListingLocationMap from "@/components/ListingLocationMap";
 
 interface ListingData {
   id: string;
@@ -620,18 +621,42 @@ const ListingDetail = () => {
             </CardContent>
           </Card>
 
-          {/* Localisation */}
+          {/* Localisation avec carte interactive */}
           <Card>
             <CardContent className="p-8">
               <h2 className="text-xl font-semibold mb-4">Localisation</h2>
-              <div className="space-y-2">
+              
+              {/* Informations textuelles */}
+              <div className="space-y-2 mb-4">
                 <div className="flex items-center">
                   <MapPin className="w-4 h-4 mr-2 text-muted-foreground" />
-                  <span>{listing.city}, {getCountryName(listing.country_code)}</span>
+                  <span className="font-medium">{listing.city}, {getCountryName(listing.country_code)}</span>
                 </div>
                 <div className="text-sm text-muted-foreground">
                   Coordonnées: {listing.lat.toFixed(6)}, {listing.lng.toFixed(6)}
                 </div>
+              </div>
+
+              {/* Carte interactive */}
+              <div className="rounded-lg overflow-hidden border bg-muted/10">
+                <ListingLocationMap
+                  lat={listing.lat}
+                  lng={listing.lng}
+                  title={listing.title}
+                  city={listing.city}
+                  className="w-full h-80"
+                />
+              </div>
+
+              {/* Note d'information */}
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800 flex items-start gap-2">
+                  <MapPin className="w-4 h-4 mt-0.5 text-blue-600" />
+                  <span>
+                    La localisation exacte sera partagée après contact avec le propriétaire. 
+                    Cette carte montre une zone approximative pour des raisons de confidentialité.
+                  </span>
+                </p>
               </div>
             </CardContent>
           </Card>
