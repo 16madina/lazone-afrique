@@ -151,12 +151,9 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
                 />
               </div>
               <div className="text-center">
-                <h1 className="text-2xl md:text-4xl font-fredoka text-primary-foreground font-bold leading-tight">
-                  TROUVE TON CHEZ TOI
-                </h1>
-                <h2 className="text-xl md:text-3xl font-fredoka text-primary-foreground font-bold leading-tight">
-                  DANS TA ZONE
-                </h2>
+                <p className="text-xl md:text-2xl font-fredoka text-primary-foreground font-semibold leading-tight">
+                  Trouve ton chez toi dans ta Zone
+                </p>
               </div>
             </div>
           </div>
