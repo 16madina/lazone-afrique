@@ -9,11 +9,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpDown, Grid3X3, List, Globe, ChevronLeft, ChevronRight } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowUpDown, Grid3X3, List, Globe, ChevronLeft, ChevronRight, Filter, Sparkles } from "lucide-react";
 import { useFavorites } from "@/hooks/useFavorites";
 import { usePagination } from "@/hooks/usePagination";
 import { toast } from "sonner";
 import { useSecureProfiles } from "@/hooks/useSecureProfiles";
+import { AIRecommendations } from "@/components/AIRecommendations";
 
 interface Listing {
   id: string;
@@ -326,7 +328,33 @@ const Index = () => {
 
         {/* Filters & Controls */}
         <div className="space-y-4">
-          <PropertyFilters onFiltersChange={handleFiltersChange} currentFilters={currentFilters} />
+          {/* Property Filters and AI Recommendations Tabs */}
+          <Tabs defaultValue="filtres" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="filtres" className="flex items-center gap-2">
+                <Filter className="w-4 h-4" />
+                Filtres
+              </TabsTrigger>
+              <TabsTrigger value="recommendations" className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Recommandations IA
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="filtres" className="mt-6">
+              <PropertyFilters 
+                onFiltersChange={handleFiltersChange}
+                currentFilters={currentFilters}
+              />
+            </TabsContent>
+            
+            <TabsContent value="recommendations" className="mt-6">
+              <AIRecommendations 
+                countryCode={selectedCountry.code}
+                currentFilters={currentFilters}
+              />
+            </TabsContent>
+          </Tabs>
           
           {/* Sort & View Controls */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
