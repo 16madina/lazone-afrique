@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import AdminPanel from "@/components/AdminPanel";
-import AdminSetup from "@/components/AdminSetup";
+
 import { useFavorites } from "@/hooks/useFavorites";
 import { useUserStats } from "@/hooks/useUserStats";
 import PropertyCard from "@/components/PropertyCard";
@@ -813,7 +813,21 @@ const Profile = () => {
 
           {/* Admin Tab */}
           <TabsContent value="admin">
-            {isAdmin ? <AdminPanel /> : <AdminSetup />}
+            {isAdmin ? (
+              <AdminPanel />
+            ) : (
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-center text-muted-foreground">
+                    <Shield className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>Accès administrateur requis</p>
+                    <p className="text-sm mt-2">
+                      Contactez un administrateur système pour obtenir l'accès.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
       </main>
