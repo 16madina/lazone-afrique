@@ -496,7 +496,10 @@ const Index = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={goToPreviousPage}
+                onClick={() => {
+                  goToPreviousPage();
+                  setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+                }}
                 disabled={!hasPreviousPage}
                 className="flex items-center gap-1"
               >
@@ -514,7 +517,10 @@ const Index = () => {
                         key={pageNum}
                         variant={currentPage === pageNum ? "default" : "outline"}
                         size="sm"
-                        onClick={() => goToPage(pageNum)}
+                        onClick={() => {
+                          goToPage(pageNum);
+                          setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+                        }}
                         className="w-8 h-8 p-0"
                       >
                         {pageNum}
@@ -528,7 +534,10 @@ const Index = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={goToNextPage}
+                onClick={() => {
+                  goToNextPage();
+                  setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+                }}
                 disabled={!hasNextPage}
                 className="flex items-center gap-1"
               >
@@ -545,7 +554,10 @@ const Index = () => {
             <Button 
               variant="outline" 
               size="lg"
-              onClick={goToNextPage}
+              onClick={() => {
+                goToNextPage();
+                setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+              }}
               disabled={!hasNextPage}
             >
               {hasNextPage ? 'Voir plus de propriétés' : 'Toutes les propriétés affichées'}
