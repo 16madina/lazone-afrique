@@ -164,46 +164,6 @@ export const AIRecommendations = ({ countryCode, currentFilters, onPropertySelec
         </Button>
       </div>
 
-      {/* Insights IA */}
-      {insights && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="border-l-4 border-l-blue-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <TrendingUp className="w-4 h-4" />
-                Tendances Marché
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">{insights.marketTrends}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-green-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <DollarSign className="w-4 h-4" />
-                Analyse Prix
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">{insights.priceAnalysis}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-l-4 border-l-purple-500">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                Suggestions
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">{insights.suggestions}</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
       {/* Erreur */}
       {error && (
