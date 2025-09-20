@@ -19,6 +19,7 @@ import { useFileUpload } from "@/hooks/useFileUpload";
 import AdminPanel from "@/components/AdminPanel";
 import AdminSetup from "@/components/AdminSetup";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useUserStats } from "@/hooks/useUserStats";
 import PropertyCard from "@/components/PropertyCard";
 import { 
   User, 
@@ -55,6 +56,7 @@ const Profile = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const { uploadFile, uploading } = useFileUpload();
   const { favorites, fetchFavorites } = useFavorites();
+  const { stats, loading: statsLoading, recordProfileView } = useUserStats(user?.id);
   const [favoriteListings, setFavoriteListings] = useState<any[]>([]);
   const [loadingFavorites, setLoadingFavorites] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
@@ -175,6 +177,15 @@ const Profile = () => {
       checkAdminStatus();
     }
   }, [user, profile]);
+
+  // Record profile view when component mounts (for other users viewing this profile)
+  useEffect(() => {
+    if (user?.id && recordProfileView) {
+      // Only record if this is potentially someone else's profile view
+      // The function itself will check if it's the user's own profile
+      recordProfileView(user.id);
+    }
+  }, [user?.id, recordProfileView]);
 
   // Fetch favorite listings when favorites change
   useEffect(() => {
@@ -320,10 +331,32 @@ const Profile = () => {
   const { formatLocalPrice } = useCountry();
 
   const userStats = [
-    { label: "Propriétés publiées", value: userProperties.length.toString(), icon: Home },
-    { label: "Favoris", value: favoriteListings.length.toString(), icon: Heart },
-    { label: "Notes moyennes", value: "0", icon: Star },
-    { label: "Vues profil", value: "0", icon: Eye }
+    { 
+      label: "Propriétés publiées", 
+      value: userProperties.length.toString(), 
+      icon: Home,
+      clickable: true,
+      tab: "properties"
+    },
+    { 
+      label: "Favoris", 
+      value: favoriteListings.length.toString(), 
+      icon: Heart,
+      clickable: true,
+      tab: "favorites"
+    },
+    { 
+      label: "Notes moyennes", 
+      value: statsLoading ? "..." : stats.totalRatings > 0 ? `${stats.averageRating}/5` : "Nouveau",
+      icon: Star,
+      clickable: false
+    },
+    { 
+      label: "Vues profil", 
+      value: statsLoading ? "..." : stats.profileViews.toString(),
+      icon: Eye,
+      clickable: false
+    }
   ];
 
   if (loading || !user || !profile) {
@@ -429,17 +462,15 @@ const Profile = () => {
 
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {userStats.map((stat, index) => {
+            {userStats.map((stat, index) => {
                 const Icon = stat.icon;
-                const isClickable = stat.label === "Propriétés publiées" || stat.label === "Favoris";
-                const tabValue = stat.label === "Propriétés publiées" ? "properties" : stat.label === "Favoris" ? "favorites" : null;
                 
                 return (
                   <Card 
                     key={stat.label} 
-                    className={`animate-scale-in ${isClickable ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`}
+                    className={`animate-scale-in ${stat.clickable ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`}
                     style={{ animationDelay: `${index * 0.1}s` }}
-                    onClick={() => isClickable && tabValue && setActiveTab(tabValue)}
+                    onClick={() => stat.clickable && stat.tab && setActiveTab(stat.tab)}
                   >
                     <CardContent className="p-4 text-center">
                       <Icon className="w-6 h-6 mx-auto mb-2 text-primary" />

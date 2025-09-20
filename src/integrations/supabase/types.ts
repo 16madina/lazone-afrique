@@ -530,6 +530,30 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_views: {
+        Row: {
+          created_at: string
+          id: string
+          viewed_user_id: string
+          viewer_ip: unknown | null
+          viewer_user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          viewed_user_id: string
+          viewer_ip?: unknown | null
+          viewer_user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          viewed_user_id?: string
+          viewer_ip?: unknown | null
+          viewer_user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -743,6 +767,39 @@ export type Database = {
           },
         ]
       }
+      user_ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          listing_id: string | null
+          rated_user_id: string
+          rater_user_id: string
+          rating: number
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          listing_id?: string | null
+          rated_user_id: string
+          rater_user_id: string
+          rating: number
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          listing_id?: string | null
+          rated_user_id?: string
+          rater_user_id?: string
+          rating?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_subscriptions: {
         Row: {
           auto_renew: boolean
@@ -858,6 +915,17 @@ export type Database = {
         Args: { profile_user_id: string }
         Returns: Json
       }
+      get_user_average_rating: {
+        Args: { target_user_id: string }
+        Returns: {
+          average_rating: number
+          total_ratings: number
+        }[]
+      }
+      get_user_profile_views_count: {
+        Args: { target_user_id: string }
+        Returns: number
+      }
       is_admin: {
         Args: { user_uuid?: string }
         Returns: boolean
@@ -865,6 +933,10 @@ export type Database = {
       is_listing_sponsored: {
         Args: { listing_id: string }
         Returns: boolean
+      }
+      record_profile_view: {
+        Args: { target_user_id: string; viewer_ip?: unknown }
+        Returns: undefined
       }
     }
     Enums: {

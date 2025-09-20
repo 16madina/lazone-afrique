@@ -11,9 +11,11 @@ import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRealTimeMessages } from "@/hooks/useRealTimeMessages";
+import { useSecureProfiles } from "@/hooks/useSecureProfiles";
 import { useCountry } from "@/contexts/CountryContext";
-import { ArrowLeft, MapPin, Calendar, Phone, MessageCircle, Play, Send, X } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Phone, MessageCircle, Play, Send, X, Star } from "lucide-react";
 import { toast } from "sonner";
+import { UserRatingDialog } from "@/components/UserRatingDialog";
 
 interface ListingData {
   id: string;
@@ -57,8 +59,10 @@ const ListingDetail = () => {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [ownerProfile, setOwnerProfile] = useState<any>(null);
   
   const { createConversation, sendMessage } = useRealTimeMessages();
+  const { getListingOwnerProfile } = useSecureProfiles();
 
   // Check authentication
   useEffect(() => {
@@ -91,6 +95,12 @@ const ListingDetail = () => {
         }
 
         setListing(data);
+
+        // Fetch owner profile information if listing has a user_id
+        if (data.user_id) {
+          const profile = await getListingOwnerProfile(data.user_id);
+          setOwnerProfile(profile);
+        }
       } catch (err) {
         console.error('Erreur lors du chargement de l\'annonce:', err);
         setError("Erreur lors du chargement de l'annonce");
@@ -629,7 +639,30 @@ const ListingDetail = () => {
           {/* Actions de contact */}
           <Card>
             <CardContent className="p-8">
-              <h2 className="text-xl font-semibold mb-4">Contacter le vendeur</h2>
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h2 className="text-xl font-semibold">Contacter le vendeur</h2>
+                  {ownerProfile && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {ownerProfile.full_name}
+                      {ownerProfile.company_name && ` • ${ownerProfile.company_name}`}
+                    </p>
+                  )}
+                </div>
+                {listing.user_id && user?.id !== listing.user_id && (
+                  <UserRatingDialog
+                    targetUserId={listing.user_id}
+                    targetUserName={ownerProfile?.full_name || "le propriétaire"}
+                    listingId={listing.id}
+                    listingTitle={listing.title}
+                  >
+                    <Button variant="outline" size="sm">
+                      <Star className="w-4 h-4 mr-2" />
+                      Noter
+                    </Button>
+                  </UserRatingDialog>
+                )}
+              </div>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button className="flex-1">
                   <Phone className="w-4 h-4 mr-2" />
