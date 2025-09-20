@@ -30,8 +30,8 @@ export const SplashScreen = ({ onFinish }: SplashScreenProps) => {
           <img 
             src={splashLogo} 
             alt="LaZone Logo" 
-            className={`w-full h-full object-contain drop-shadow-2xl transition-all duration-300 ${
-              isVisible ? 'animate-[bounce_2s_ease-in-out_infinite]' : ''
+            className={`w-full h-full object-contain drop-shadow-2xl transition-all duration-500 ${
+              isVisible ? 'animate-[fade-in_2s_ease-in-out]' : ''
             }`}
             style={{ 
               filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.3))',
