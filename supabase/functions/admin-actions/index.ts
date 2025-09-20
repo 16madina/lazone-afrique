@@ -34,28 +34,59 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
+    // Enhanced authentication and authorization
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('No authorization header');
+      console.warn('Missing authorization header in admin action request');
+      throw new Error('Authorization header is required');
     }
 
-    // Get user from auth token
+    // Get user from auth token with enhanced validation
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
-      throw new Error('Unauthorized');
+      console.error('Authentication failed:', authError);
+      throw new Error('Authentication failed');
     }
 
-    // Check if user is admin
-    const { data: adminCheck, error: adminError } = await supabase
+    // Enhanced admin privilege validation with security checks
+    const { data: adminData, error: adminError } = await supabase
       .from('admin_roles')
-      .select('*')
+      .select('*, granted_by')
       .eq('user_id', user.id)
       .single();
 
-    if (adminError || !adminCheck) {
+    if (adminError || !adminData) {
+      console.error('Admin privilege check failed:', {
+        user_id: user.id,
+        error: adminError?.message,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Log unauthorized access attempt
+      await supabase
+        .from('user_actions')
+        .insert({
+          admin_id: user.id,
+          action_type: 'unauthorized_admin_access_attempt',
+          reason: 'Failed admin privilege validation'
+        })
+        .then(({ error }) => {
+          if (error) console.error('Failed to log unauthorized access:', error);
+        });
+
       throw new Error('Access denied - Admin privileges required');
+    }
+
+    // Additional security: verify admin role legitimacy
+    if (adminData.granted_by === user.id) {
+      console.error('Security violation: Self-granted admin attempting access:', {
+        user_id: user.id,
+        timestamp: new Date().toISOString()
+      });
+      
+      throw new Error('Access denied - Invalid admin credentials');
     }
 
     const { action, targetUserId, targetListingId, reason, message, subject, name, description, duration_days, price_usd, features, packageId, is_active }: AdminActionRequest = await req.json();
