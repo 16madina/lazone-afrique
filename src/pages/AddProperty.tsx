@@ -22,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { toast } from "sonner";
 import CountrySelector from "@/components/CountrySelector";
 import CitySelector from "@/components/CitySelector";
+import { CinePayPaymentMethod } from '@/components/CinePayPaymentMethod';
 
 const AddProperty = () => {
   const navigate = useNavigate();
@@ -37,6 +38,8 @@ const AddProperty = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [showPaymentMethod, setShowPaymentMethod] = useState(false);
+  const [selectedPaymentType, setSelectedPaymentType] = useState<'single' | 'subscription'>('single');
   const [isLoadingListing, setIsLoadingListing] = useState(false);
   
   // Form states
@@ -1197,43 +1200,96 @@ const AddProperty = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4">
-            {config && (
-              <>
-                <div className="p-4 border rounded-lg">
-                  <h3 className="font-medium mb-2">Paiement par annonce</h3>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Payez pour cette annonce uniquement
-                  </p>
-                  <div className="text-2xl font-bold text-primary">
-                    {config.price_per_extra_listing} {config.currency}
-                  </div>
-                </div>
+            {!showPaymentMethod ? (
+              <div className="space-y-4">
+                {config && (
+                  <>
+                    <div 
+                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                        selectedPaymentType === 'single' ? 'border-primary bg-primary/5' : 'hover:bg-accent'
+                      }`}
+                      onClick={() => setSelectedPaymentType('single')}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-medium">Paiement par annonce</h3>
+                        <div className={`w-4 h-4 rounded-full border-2 ${
+                          selectedPaymentType === 'single' ? 'border-primary bg-primary' : 'border-gray-300'
+                        }`} />
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Payez pour cette annonce uniquement
+                      </p>
+                      <div className="text-2xl font-bold text-primary">
+                        {config.price_per_extra_listing} {config.currency}
+                      </div>
+                    </div>
+                    
+                    <div 
+                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                        selectedPaymentType === 'subscription' ? 'border-primary bg-primary/5' : 'hover:bg-accent'
+                      }`}
+                      onClick={() => setSelectedPaymentType('subscription')}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-medium">Abonnement mensuel illimité</h3>
+                        <div className={`w-4 h-4 rounded-full border-2 ${
+                          selectedPaymentType === 'subscription' ? 'border-primary bg-primary' : 'border-gray-300'
+                        }`} />
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Annonces illimitées pour ce mois
+                      </p>
+                      <div className="text-2xl font-bold text-primary">
+                        {config.unlimited_monthly_price} {config.currency}/mois
+                      </div>
+                    </div>
+                  </>
+                )}
                 
-                <div className="p-4 border rounded-lg">
-                  <h3 className="font-medium mb-2">Abonnement mensuel illimité</h3>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Annonces illimitées pour ce mois
-                  </p>
-                  <div className="text-2xl font-bold text-primary">
-                    {config.unlimited_monthly_price} {config.currency}/mois
-                  </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>
+                    Annuler
+                  </Button>
+                  <Button onClick={() => setShowPaymentMethod(true)}>
+                    Procéder au paiement
+                  </Button>
                 </div>
-              </>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowPaymentMethod(false)}
+                  className="mb-4"
+                >
+                  ← Retour aux options
+                </Button>
+
+                <CinePayPaymentMethod
+                  amount={selectedPaymentType === 'single' 
+                    ? (config?.price_per_extra_listing || 1000)
+                    : (config?.unlimited_monthly_price || 15000)
+                  }
+                  description={selectedPaymentType === 'single' 
+                    ? 'Paiement pour annonce supplémentaire'
+                    : 'Abonnement mensuel illimité'
+                  }
+                  paymentType={selectedPaymentType === 'single' ? 'paid_listing' : 'subscription'}
+                  subscriptionType={selectedPaymentType === 'subscription' ? 'unlimited_monthly' : undefined}
+                  currency="XOF"
+                  onSuccess={(transactionId) => {
+                    toast.success('Paiement effectué avec succès!');
+                    setShowPaymentDialog(false);
+                    setShowPaymentMethod(false);
+                    // Rafraîchir les limites et continuer la publication
+                    window.location.reload();
+                  }}
+                  onError={(error) => {
+                    toast.error(`Erreur de paiement: ${error}`);
+                  }}
+                />
+              </div>
             )}
-            
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>
-                Annuler
-              </Button>
-              <Button onClick={() => {
-                toast.error("Fonctionnalité de paiement en cours de développement");
-                setShowPaymentDialog(false);
-              }}>
-                Procéder au paiement
-              </Button>
-            </div>
-          </div>
         </DialogContent>
       </Dialog>
 
