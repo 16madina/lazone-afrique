@@ -25,10 +25,10 @@ serve(async (req) => {
     logStep("Verification function started");
 
     const cinetpayApiKey = Deno.env.get('CINETPAY_API_KEY');
-    const cinetpaySiteId = Deno.env.get('CINETPAY_SITE_ID') || '5864334';
+    const cinetpaySiteId = Deno.env.get('CINETPAY_SITE_ID');
 
-    if (!cinetpayApiKey) {
-      throw new Error('CINETPAY_API_KEY is not configured');
+    if (!cinetpayApiKey || !cinetpaySiteId) {
+      throw new Error('CINETPAY_API_KEY and CINETPAY_SITE_ID must be configured');
     }
 
     const { transaction_id } = await req.json();
