@@ -74,7 +74,7 @@ const Sponsorship = () => {
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       
-      <main className="flex-1 p-6">
+      <main className="flex-1 px-4 py-6 md:px-6">
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Navigation */}
           <Button 
