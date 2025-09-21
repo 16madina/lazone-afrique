@@ -79,8 +79,9 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error('Access denied - Admin privileges required');
     }
 
-    // Additional security: verify admin role legitimacy
-    if (adminData.granted_by === user.id) {
+    // Additional security: verify admin role legitimacy  
+    // Allow admins with granted_by = NULL (system admins) or granted by another admin
+    if (adminData.granted_by === user.id && adminData.granted_by !== null) {
       console.error('Security violation: Self-granted admin attempting access:', {
         user_id: user.id,
         timestamp: new Date().toISOString()
