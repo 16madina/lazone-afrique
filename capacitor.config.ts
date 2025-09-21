@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.77dab0d80ecb432b9820b39b851a7f4a',
+  appId: 'com.lazone.afrique',
   appName: 'lazone-afrique',
   webDir: 'dist',
   server: {
