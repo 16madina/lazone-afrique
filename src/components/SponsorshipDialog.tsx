@@ -29,7 +29,7 @@ const SponsorshipDialog = ({ listingId, children }: SponsorshipDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<SponsorshipPackage | null>(null);
   const [showPayment, setShowPayment] = useState(false);
-  const { formatPrice } = useCountry();
+  const { formatPrice, convertFromUSD, selectedCountry } = useCountry();
 
   useEffect(() => {
     fetchPackages();
@@ -157,12 +157,12 @@ const SponsorshipDialog = ({ listingId, children }: SponsorshipDialogProps) => {
             <div className="space-y-4">
               <Separator />
               <CinePayPaymentMethod
-                amount={selectedPackage.price_usd}
+                amount={Math.round(convertFromUSD(selectedPackage.price_usd))}
                 description={`Sponsoring - ${selectedPackage.name}`}
                 paymentType="sponsorship"
                 relatedId={listingId}
                 packageId={selectedPackage.id}
-                currency="USD"
+                currency={selectedCountry?.currency.code || 'XOF'}
                 onSuccess={handlePaymentSuccess}
                 onError={handlePaymentError}
               />
