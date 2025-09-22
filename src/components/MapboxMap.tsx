@@ -138,41 +138,44 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
       // Fonction pour disperser les marqueurs qui sont trop proches
       const disperseMarkers = (listings: Listing[]) => {
         const processedListings: (Listing & { adjustedLat: number; adjustedLng: number })[] = [];
-        const threshold = 0.01; // Distance minimale entre les marqueurs (environ 1km)
+        const threshold = 0.005; // Distance minimale entre les marqueurs (réduite pour plus de précision)
         
         listings.forEach(listing => {
           if (!listing.lat || !listing.lng) return;
           
-          // Vérifier s'il y a d'autres marqueurs très proches
-          const nearbyListings = processedListings.filter(processed => {
-            const distance = Math.sqrt(
-              Math.pow(processed.lat - listing.lat, 2) + 
-              Math.pow(processed.lng - listing.lng, 2)
-            );
-            return distance < threshold;
-          });
+          let adjustedLat = listing.lat;
+          let adjustedLng = listing.lng;
+          let attempts = 0;
+          const maxAttempts = 20;
           
-          if (nearbyListings.length === 0) {
-            // Pas de marqueurs proches, utiliser la position originale
-            processedListings.push({
-              ...listing,
-              adjustedLat: listing.lat,
-              adjustedLng: listing.lng
+          // Continue à ajuster la position jusqu'à ce qu'elle soit suffisamment éloignée
+          while (attempts < maxAttempts) {
+            const tooClose = processedListings.some(processed => {
+              const distance = Math.sqrt(
+                Math.pow(processed.adjustedLat - adjustedLat, 2) + 
+                Math.pow(processed.adjustedLng - adjustedLng, 2)
+              );
+              return distance < threshold;
             });
-          } else {
-            // Il y a des marqueurs proches, disperser en cercle
-            const angle = (nearbyListings.length * 60) * (Math.PI / 180); // 60 degrés entre chaque marqueur
-            const radius = 0.005; // Rayon de dispersion (environ 500m)
             
-            const adjustedLat = listing.lat + radius * Math.cos(angle);
-            const adjustedLng = listing.lng + radius * Math.sin(angle);
+            if (!tooClose) break;
             
-            processedListings.push({
-              ...listing,
-              adjustedLat,
-              adjustedLng
-            });
+            // Calculer un offset circulaire pour une meilleure répartition
+            const angle = (attempts * 60) % 360; // Rotation de 60° à chaque tentative
+            const offsetDistance = threshold * (1.5 + attempts * 0.3); // Distance croissante
+            const angleRad = (angle * Math.PI) / 180;
+            
+            adjustedLat = listing.lat + Math.sin(angleRad) * offsetDistance;
+            adjustedLng = listing.lng + Math.cos(angleRad) * offsetDistance;
+            
+            attempts++;
           }
+          
+          processedListings.push({
+            ...listing,
+            adjustedLat,
+            adjustedLng
+          });
         });
         
         return processedListings;
