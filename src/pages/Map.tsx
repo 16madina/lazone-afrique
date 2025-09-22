@@ -66,13 +66,14 @@ const Map = () => {
     }
   };
 
-  // Auto-locate user when map loads (only once)
+  // Centrer sur le pays sélectionné au chargement de la page
   useEffect(() => {
     if (!hasAutoLocated) {
-      handleLocateUser();
+      const { lat, lng } = selectedCountry.coordinates;
+      setSelectedCityCoords({ lat, lng });
       setHasAutoLocated(true);
     }
-  }, [hasAutoLocated]);
+  }, [hasAutoLocated, selectedCountry]);
 
   // Fetch listings from Supabase
   useEffect(() => {
