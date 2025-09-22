@@ -116,7 +116,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11?language=fr',
+      style: 'mapbox://styles/mapbox/light-v11',
       center: [15, 0], // Centre de l'Afrique
       zoom: 3,
       pitch: 0,
@@ -143,6 +143,24 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
       // Bounds approximatifs de l'Afrique
       const africaBounds: [number, number, number, number] = [-20, -35, 52, 37];
       map.current?.fitBounds(africaBounds, { padding: 50 });
+
+      // Configurer la langue française pour tous les layers de texte
+      const style = map.current?.getStyle();
+      if (style && style.layers) {
+        style.layers.forEach((layer) => {
+          if (layer.type === 'symbol' && layer.layout && layer.layout['text-field']) {
+            // Changer la langue des labels vers le français
+            map.current?.setLayoutProperty(layer.id, 'text-field', [
+              'coalesce',
+              ['get', 'name_fr'],
+              ['get', 'name:fr'], 
+              ['get', 'name_en'],
+              ['get', 'name:en'],
+              ['get', 'name']
+            ]);
+          }
+        });
+      }
 
       // Fonction pour disperser les marqueurs qui sont trop proches
       const disperseMarkers = (listings: Listing[]) => {
