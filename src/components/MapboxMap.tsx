@@ -276,22 +276,22 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
           className: 'custom-popup'
         })
           .setHTML(`
-            <div style="padding: 0; max-width: 280px; font-family: system-ui, -apple-system, sans-serif;">
+            <div style="padding: 0; max-width: 220px; font-family: system-ui, -apple-system, sans-serif;">
               <div style="position: relative;">
                 <img 
                   src="${getListingImage(listing)}" 
                   alt="${listing.title}"
-                  style="width: 100%; height: 160px; object-fit: cover; border-radius: 8px 8px 0 0;"
+                  style="width: 100%; height: 120px; object-fit: cover; border-radius: 6px 6px 0 0;"
                 />
                 <div style="
                   position: absolute; 
-                  top: 8px; 
-                  right: 8px; 
+                  top: 6px; 
+                  right: 6px; 
                   background: ${listing.transaction_type === 'rent' ? '#0E7490' : '#E11D48'}; 
                   color: white; 
-                  padding: 4px 8px; 
-                  border-radius: 12px; 
-                  font-size: 11px; 
+                  padding: 2px 6px; 
+                  border-radius: 8px; 
+                  font-size: 10px; 
                   font-weight: 600;
                 ">
                   ${listing.transaction_type === 'rent' ? 'Location' : 'Vente'}
@@ -300,18 +300,18 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
                   id="favorite-btn-${listing.id}"
                   style="
                     position: absolute; 
-                    top: 8px; 
-                    left: 8px; 
+                    top: 6px; 
+                    left: 6px; 
                     background: rgba(255, 255, 255, 0.9);
                     border: none;
                     border-radius: 50%;
-                    width: 36px;
-                    height: 36px;
+                    width: 28px;
+                    height: 28px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     cursor: pointer;
-                    font-size: 16px;
+                    font-size: 14px;
                     transition: all 0.3s ease;
                     backdrop-filter: blur(10px);
                   "
@@ -323,22 +323,25 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
                 </button>
               </div>
               
-              <div style="padding: 16px;">
+              <div style="padding: 12px;">
                 <div style="
                   font-weight: 600; 
-                  font-size: 16px; 
-                  margin-bottom: 8px; 
+                  font-size: 14px; 
+                  margin-bottom: 6px; 
                   line-height: 1.3;
                   color: #1f2937;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  white-space: nowrap;
                 ">
                   ${listing.title}
                 </div>
                 
                  <div style="
                    color: #0E7490; 
-                   font-size: 18px; 
+                   font-size: 16px; 
                    font-weight: 700; 
-                   margin-bottom: 12px;
+                   margin-bottom: 8px;
                  ">
                     ${formatPrice(listing.price, (listing as any).currency_code)}
                  </div>
@@ -346,22 +349,12 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
                  <div style="
                    display: flex; 
                    align-items: center; 
-                   gap: 8px; 
-                   margin-bottom: 12px;
-                   font-size: 12px;
+                   gap: 6px; 
+                   margin-bottom: 10px;
+                   font-size: 11px;
                    color: #6b7280;
                  ">
                    <span>📍 ${listing.city}</span>
-                   <span>•</span>
-                   <span style="
-                     background: ${listing.transaction_type === 'rent' ? '#0E7490' : '#E11D48'}; 
-                     color: white; 
-                     padding: 2px 6px; 
-                     border-radius: 8px; 
-                     font-weight: 600;
-                   ">
-                     ${listing.transaction_type === 'rent' ? 'Location' : 'Vente'}
-                   </span>
                  </div>
                 
                 <button 
@@ -370,9 +363,9 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
                     background: linear-gradient(135deg, #0E7490, #0891b2);
                     color: white;
                     border: none;
-                    padding: 10px 20px;
-                    border-radius: 8px;
-                    font-size: 14px;
+                    padding: 8px 16px;
+                    border-radius: 6px;
+                    font-size: 12px;
                     font-weight: 600;
                     cursor: pointer;
                     width: 100%;
@@ -381,7 +374,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
                   onmouseover="this.style.background='linear-gradient(135deg, #0891b2, #06b6d4)'; this.style.transform='translateY(-1px)'"
                   onmouseout="this.style.background='linear-gradient(135deg, #0E7490, #0891b2)'; this.style.transform='translateY(0px)'"
                 >
-                  📍 Voir les détails
+                  Voir les détails
                 </button>
               </div>
             </div>
