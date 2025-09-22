@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 interface AdminActionRequest {
-  action: 'ban_user' | 'unban_user' | 'delete_listing' | 'send_email' | 'send_sms' | 'create_package' | 'update_package' | 'free_sponsor';
+  action: 'ban_user' | 'unban_user' | 'delete_listing' | 'send_email' | 'send_sms' | 'create_package' | 'update_package' | 'delete_package' | 'free_sponsor';
   targetUserId?: string;
   targetListingId?: string;
   reason?: string;
@@ -208,6 +208,16 @@ const handler = async (req: Request): Promise<Response> => {
         result = await supabase
           .from('sponsorship_packages')
           .update(updateData)
+          .eq('id', packageId);
+
+        break;
+
+      case 'delete_package':
+        if (!packageId) throw new Error('Package ID required');
+
+        result = await supabase
+          .from('sponsorship_packages')
+          .delete()
           .eq('id', packageId);
 
         break;

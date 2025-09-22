@@ -83,6 +83,7 @@ const AdminPanel = () => {
     features: [''],
     is_active: true
   });
+  const [editingPackage, setEditingPackage] = useState<SponsorshipPackage | null>(null);
   const [sponsorForm, setSponsorForm] = useState({
     listingId: '',
     duration: 7
@@ -274,6 +275,69 @@ const AdminPanel = () => {
     fetchPackages();
   };
 
+  const handleDeletePackage = async (packageId: string, packageName: string) => {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer le package "${packageName}" ? Cette action est irréversible.`)) {
+      await performAdminAction('delete_package', undefined, undefined, { packageId });
+      fetchPackages();
+    }
+  };
+
+  const handleEditPackage = (pkg: SponsorshipPackage) => {
+    setEditingPackage(pkg);
+    setPackageForm({
+      id: pkg.id,
+      name: pkg.name,
+      description: pkg.description || '',
+      duration_days: pkg.duration_days,
+      price_usd: pkg.price_usd,
+      features: pkg.features || [''],
+      is_active: pkg.is_active
+    });
+  };
+
+  const handleSavePackage = async () => {
+    if (editingPackage) {
+      // Mode édition
+      await performAdminAction('update_package', undefined, undefined, {
+        packageId: editingPackage.id,
+        name: packageForm.name,
+        description: packageForm.description,
+        duration_days: packageForm.duration_days,
+        price_usd: packageForm.price_usd,
+        features: packageForm.features.filter(f => f.trim() !== '')
+      });
+      setEditingPackage(null);
+    } else {
+      // Mode création
+      await handleCreatePackage();
+    }
+    
+    // Reset form
+    setPackageForm({
+      id: '',
+      name: '',
+      description: '',
+      duration_days: 7,
+      price_usd: 15,
+      features: [''],
+      is_active: true
+    });
+    fetchPackages();
+  };
+
+  const cancelEdit = () => {
+    setEditingPackage(null);
+    setPackageForm({
+      id: '',
+      name: '',
+      description: '',
+      duration_days: 7,
+      price_usd: 15,
+      features: [''],
+      is_active: true
+    });
+  };
+
   const handleFreeSponsor = async () => {
     if (!sponsorForm.listingId || !sponsorForm.duration) {
       toast({
@@ -457,8 +521,13 @@ const AdminPanel = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <DollarSign className="w-5 h-5" />
-                  Gestion des packages
+                  {editingPackage ? 'Modifier le package' : 'Gestion des packages'}
                 </CardTitle>
+                {editingPackage && (
+                  <Button variant="ghost" size="sm" onClick={cancelEdit}>
+                    Annuler l'édition
+                  </Button>
+                )}
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
@@ -496,29 +565,60 @@ const AdminPanel = () => {
                       />
                     </div>
                   </div>
+                  <div>
+                    <Label>Fonctionnalités (une par ligne)</Label>
+                    <Textarea
+                      value={packageForm.features.join('\n')}
+                      onChange={(e) => setPackageForm({...packageForm, features: e.target.value.split('\n')})}
+                      placeholder="Mise en avant de votre annonce&#10;Affichage prioritaire&#10;Badge Premium"
+                      rows={3}
+                    />
+                  </div>
                 </div>
-                <Button onClick={handleCreatePackage} className="w-full">
+                <Button onClick={handleSavePackage} className="w-full">
                   <Plus className="w-4 h-4 mr-2" />
-                  Créer le package
+                  {editingPackage ? 'Sauvegarder les modifications' : 'Créer le package'}
                 </Button>
 
                 <div className="space-y-2">
                   <h4 className="font-medium">Packages existants</h4>
                   {packages.map((pkg) => (
-                    <div key={pkg.id} className="flex items-center justify-between p-2 border rounded">
+                    <div key={pkg.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex-1">
                         <div className="font-medium">{pkg.name}</div>
                         <div className="text-sm text-muted-foreground">
                           {pkg.duration_days}j • ${pkg.price_usd}
                         </div>
+                        {pkg.description && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {pkg.description}
+                          </div>
+                        )}
                       </div>
-                      <Button
-                        variant={pkg.is_active ? "destructive" : "default"}
-                        size="sm"
-                        onClick={() => handleUpdatePackage(pkg.id, { is_active: !pkg.is_active })}
-                      >
-                        {pkg.is_active ? 'Désactiver' : 'Activer'}
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditPackage(pkg)}
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Modifier
+                        </Button>
+                        <Button
+                          variant={pkg.is_active ? "destructive" : "default"}
+                          size="sm"
+                          onClick={() => handleUpdatePackage(pkg.id, { is_active: !pkg.is_active })}
+                        >
+                          {pkg.is_active ? 'Désactiver' : 'Activer'}
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeletePackage(pkg.id, pkg.name)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
