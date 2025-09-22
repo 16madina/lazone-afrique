@@ -121,6 +121,15 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
       zoom: 3,
       pitch: 0,
       maxBounds: [[-30, -40], [60, 40]], // Limiter aux coordonnées de l'Afrique
+      locale: {
+        'NavigationControl.ZoomIn': 'Zoom avant',
+        'NavigationControl.ZoomOut': 'Zoom arrière',
+        'NavigationControl.ResetBearing': 'Réinitialiser l\'orientation',
+        'GeolocateControl.FindMyLocation': 'Trouver ma position',
+        'GeolocateControl.LocationNotAvailable': 'Position non disponible',
+        'FullscreenControl.Enter': 'Plein écran',
+        'FullscreenControl.Exit': 'Quitter le plein écran'
+      }
     });
 
     // Ajouter les contrôles de navigation avec position ajustée
