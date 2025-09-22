@@ -359,17 +359,14 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
             }
           });
           
+          // Réinitialiser tous les marqueurs
+          document.querySelectorAll('.mapbox-price-marker').forEach(marker => {
+            (marker as HTMLElement).style.transform = 'scale(1)';
+          });
+          
           // Ouvrir le nouveau popup
           popup.addTo(map.current!);
           popup.setLngLat([listing.adjustedLng, listing.adjustedLat]);
-          
-          // Update favorite button state after popup is added
-          setTimeout(() => {
-            const btn = document.getElementById(`favorite-btn-${listing.id}`);
-            if (btn) {
-              btn.innerHTML = isFavorite(listing.id) ? '❤️' : '🤍';
-            }
-          }, 100);
           
           // Animation du marqueur
           markerElement.style.transform = 'scale(1.2)';
@@ -378,11 +375,29 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
           }, 150);
         });
 
-        // Fermer le popup quand on clique sur la carte
-        map.current?.on('click', () => {
-          popup.remove();
+        // Gérer la fermeture du popup
+        popup.on('close', () => {
           markerElement.style.transform = 'scale(1)';
         });
+      });
+
+      // Un seul écouteur pour fermer les popups quand on clique sur la carte
+      map.current?.on('click', (e) => {
+        // Vérifier qu'on n'a pas cliqué sur un marqueur
+        const target = e.originalEvent.target as HTMLElement;
+        if (!target.closest('.mapbox-price-marker')) {
+          // Fermer tous les popups
+          document.querySelectorAll('.mapboxgl-popup').forEach(popup => {
+            if (popup.parentNode) {
+              popup.parentNode.removeChild(popup);
+            }
+          });
+          
+          // Réinitialiser tous les marqueurs
+          document.querySelectorAll('.mapbox-price-marker').forEach(marker => {
+            (marker as HTMLElement).style.transform = 'scale(1)';
+          });
+        }
       });
     });
 
