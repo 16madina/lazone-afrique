@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import CountrySelector from "@/components/CountrySelector";
 import { Bell, User, Menu, LogOut, Settings } from "lucide-react";
 import lazoneLogo from "@/assets/lazone-logo.png";
@@ -62,14 +63,60 @@ const Header = () => {
         <div className="flex items-center space-x-3">
           {/* Notifications */}
           {user && (
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="w-5 h-5" />
-              {notifications > 0 && (
-                <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center text-xs bg-primary">
-                  {notifications}
-                </Badge>
-              )}
-            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="w-5 h-5" />
+                  {notifications > 0 && (
+                    <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center text-xs bg-primary">
+                      {notifications}
+                    </Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80" align="end">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Notifications</h4>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setNotifications(0)}
+                      className="text-xs"
+                    >
+                      Tout marquer comme lu
+                    </Button>
+                  </div>
+                  
+                  {notifications > 0 ? (
+                    <div className="space-y-3">
+                      <div className="p-3 rounded-lg bg-muted/50 text-sm">
+                        <div className="font-medium text-foreground">Nouvelle demande de contact</div>
+                        <div className="text-muted-foreground">Un utilisateur souhaite vous contacter pour une propriété</div>
+                        <div className="text-xs text-muted-foreground mt-1">Il y a 2 heures</div>
+                      </div>
+                      
+                      <div className="p-3 rounded-lg bg-muted/50 text-sm">
+                        <div className="font-medium text-foreground">Sponsoring activé</div>
+                        <div className="text-muted-foreground">Votre annonce est maintenant sponsorisée</div>
+                        <div className="text-xs text-muted-foreground mt-1">Il y a 5 heures</div>
+                      </div>
+                      
+                      <div className="p-3 rounded-lg bg-muted/50 text-sm">
+                        <div className="font-medium text-foreground">Nouveau message</div>
+                        <div className="text-muted-foreground">Vous avez reçu un nouveau message</div>
+                        <div className="text-xs text-muted-foreground mt-1">Hier</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Bell className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                      <div>Aucune notification</div>
+                    </div>
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
           )}
 
           {/* Profile or Login */}
