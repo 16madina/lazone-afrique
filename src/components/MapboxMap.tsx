@@ -401,17 +401,8 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
     };
   }, [mapboxToken, listings]);
 
-  // Navigate to selected country when it changes
-  useEffect(() => {
-    if (map.current) {
-      const { lat, lng, zoom } = selectedCountry.coordinates;
-      map.current.flyTo({
-        center: [lng, lat],
-        zoom: zoom,
-        duration: 2000 // Animation duration in milliseconds
-      });
-    }
-  }, [selectedCountry]);
+  // Ne pas naviguer automatiquement vers le pays sélectionné
+  // La carte reste centrée sur l'Afrique par défaut
 
   // Navigate to selected city when coordinates are provided
   useEffect(() => {

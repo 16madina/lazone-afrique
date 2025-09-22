@@ -66,13 +66,8 @@ const Map = () => {
     }
   };
 
-  // Auto-locate user when map loads (only once)
-  useEffect(() => {
-    if (!hasAutoLocated) {
-      handleLocateUser();
-      setHasAutoLocated(true);
-    }
-  }, [hasAutoLocated]);
+  // Supprimer la géolocalisation automatique pour laisser la carte centrée sur l'Afrique
+  // L'utilisateur peut utiliser le bouton "Ma position" s'il le souhaite
 
   // Fetch listings from Supabase
   useEffect(() => {
