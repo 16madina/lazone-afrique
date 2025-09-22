@@ -965,6 +965,10 @@ export type Database = {
         Args: { target_user_id: string; viewer_ip?: unknown }
         Returns: undefined
       }
+      save_push_token: {
+        Args: { p_platform: string; p_token: string; p_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       user_type: "proprietaire" | "demarcheur" | "agence"

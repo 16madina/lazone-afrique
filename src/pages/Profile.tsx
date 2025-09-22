@@ -43,6 +43,7 @@ import {
   Users
 } from "lucide-react";
 import SponsorButton from "@/components/SponsorButton";
+import NotificationSettings from "@/components/NotificationSettings";
 
 const Profile = () => {
   const { user, profile, signOut, loading, updateProfile } = useAuth();
@@ -712,47 +713,7 @@ const Profile = () => {
             <h3 className="text-xl font-semibold">Paramètres</h3>
 
             {/* Notifications */}
-            <Card className="animate-fade-in">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bell className="w-5 h-5" />
-                  Notifications
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Notifications push</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Recevez des alertes sur votre appareil
-                    </p>
-                  </div>
-                  <Switch checked={notifications} onCheckedChange={setNotifications} />
-                </div>
-                
-                <Separator />
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Nouvelles propriétés</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Alertes pour les nouveaux biens
-                    </p>
-                  </div>
-                  <Switch />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>Messages</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Notifications de nouveaux messages
-                    </p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-              </CardContent>
-            </Card>
+            <NotificationSettings />
 
             {/* Appearance */}
             <Card className="animate-fade-in">

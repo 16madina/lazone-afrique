@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CountryProvider } from "@/contexts/CountryContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useCapacitor } from "@/hooks/useCapacitor";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { SplashScreen } from "@/components/SplashScreen";
 import Index from "./pages/Index";
 import Map from "./pages/Map";
@@ -29,6 +30,9 @@ const queryClient = new QueryClient({
 
 const AppContent = () => {
   useCapacitor();
+  
+  // Initialize push notifications for authenticated users
+  usePushNotifications();
   
   return (
     <Routes>

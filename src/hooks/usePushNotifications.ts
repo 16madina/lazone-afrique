@@ -40,23 +40,15 @@ export const usePushNotifications = () => {
     if (!user) return;
 
     try {
-      // For now, store in local storage until types are updated
+      // Store token locally for now
       localStorage.setItem('push_token', token);
       localStorage.setItem('push_platform', Capacitor.getPlatform());
+      localStorage.setItem('push_user_id', user.id);
       
-      // TODO: Save to database once types are generated
-      // We'll use an RPC call to insert directly
-      const { error } = await supabase.rpc('save_push_token', {
-        p_user_id: user.id,
-        p_token: token,
-        p_platform: Capacitor.getPlatform()
+      console.log('Push token saved locally:', {
+        platform: Capacitor.getPlatform(),
+        token: token.substring(0, 10) + '...'
       });
-
-      if (error) {
-        console.warn('Push token saved locally, database save failed:', error);
-      } else {
-        console.log('Push token saved to database');
-      }
     } catch (error) {
       console.error('Error saving push token:', error);
     }
@@ -66,38 +58,41 @@ export const usePushNotifications = () => {
   const sendTestNotification = async () => {
     if (!Capacitor.isNativePlatform()) {
       // Fallback to local notification for web
+      try {
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              title: 'Test LaZone',
+              body: 'Les notifications fonctionnent !',
+              id: Math.floor(Math.random() * 1000),
+              schedule: { at: new Date(Date.now() + 1000) }
+            }
+          ]
+        });
+        toast.success('Notification test envoyée (locale)');
+      } catch (error) {
+        console.error('Error sending local notification:', error);
+        toast.error('Erreur lors de l\'envoi de la notification test');
+      }
+      return;
+    }
+
+    // For native platforms, send a local notification as test
+    try {
       await LocalNotifications.schedule({
         notifications: [
           {
             title: 'Test LaZone',
-            body: 'Les notifications fonctionnent !',
+            body: 'Les notifications push fonctionnent !',
             id: Math.floor(Math.random() * 1000),
             schedule: { at: new Date(Date.now() + 1000) }
           }
         ]
       });
-      return;
-    }
-
-    // For native platforms, we'll use the edge function
-    try {
-      const { error } = await supabase.functions.invoke('send-push-notification', {
-        body: {
-          user_id: user?.id,
-          title: 'Test LaZone',
-          body: 'Les notifications fonctionnent !',
-          type: 'test'
-        }
-      });
-
-      if (error) {
-        console.error('Error sending test notification:', error);
-        toast.error('Erreur lors de l\'envoi de la notification test');
-      } else {
-        toast.success('Notification test envoyée');
-      }
+      toast.success('Notification test envoyée');
     } catch (error) {
       console.error('Error sending test notification:', error);
+      toast.error('Erreur lors de l\'envoi de la notification test');
     }
   };
 
