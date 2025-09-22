@@ -294,29 +294,6 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
                   alt="${listing.title}"
                   style="width: 100%; height: 100px; object-fit: cover; border-radius: 6px 6px 0 0;"
                 />
-                <button 
-                  id="favorite-btn-${listing.id}"
-                  style="
-                    position: absolute; 
-                    top: 6px; 
-                    right: 6px; 
-                    background: rgba(255, 255, 255, 0.9);
-                    border: none;
-                    border-radius: 50%;
-                    width: 24px;
-                    height: 24px;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    cursor: pointer;
-                    font-size: 12px;
-                    transition: all 0.3s ease;
-                    backdrop-filter: blur(10px);
-                  "
-                  onclick="window.toggleMapFavorite('${listing.id}')"
-                >
-                  🤍
-                </button>
               </div>
               
               <div style="padding: 10px;">
