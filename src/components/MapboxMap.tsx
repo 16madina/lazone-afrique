@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
+import Supercluster from 'supercluster';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import './mapbox-styles.css';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,6 +20,24 @@ interface Listing {
   city: string;
   country_code: string;
   transaction_type: string | null;
+  property_type?: string | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+}
+
+interface ClusterFeature {
+  type: 'Feature';
+  properties: {
+    cluster?: boolean;
+    cluster_id?: number;
+    point_count?: number;
+    point_count_abbreviated?: string;
+    listing?: Listing;
+  };
+  geometry: {
+    type: 'Point';
+    coordinates: [number, number];
+  };
 }
 
 interface MapboxMapProps {
@@ -52,9 +71,13 @@ function formatMapPrice(priceInLocalCurrency?: number | null, currencyCode?: str
 const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const clustererRef = useRef<Supercluster | null>(null);
+  const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentZoom, setCurrentZoom] = useState(3);
+  const [mapStyle, setMapStyle] = useState('mapbox://styles/mapbox/light-v11');
   const { selectedCountry, formatPrice } = useCountry();
   const { user } = useAuth();
   const { toggleFavorite, isFavorite, loading: favoritesLoading } = useFavorites();
@@ -108,19 +131,338 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
     getMapboxToken();
   }, []);
 
+  // Initialize clustering
+  const initializeClustering = useCallback(() => {
+    if (!listings.length) return;
+
+    const points = listings
+      .filter(listing => listing.lat && listing.lng)
+      .map(listing => ({
+        type: 'Feature' as const,
+        properties: { listing },
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [listing.lng, listing.lat] as [number, number]
+        }
+      }));
+
+    clustererRef.current = new Supercluster({
+      radius: 40,
+      maxZoom: 16,
+      minZoom: 0,
+      extent: 512,
+      nodeSize: 64
+    });
+
+    clustererRef.current.load(points);
+  }, [listings]);
+
+  // Get property type color
+  const getPropertyTypeColor = useCallback((listing: Listing) => {
+    const type = listing.property_type?.toLowerCase();
+    const transactionType = listing.transaction_type?.toLowerCase();
+    
+    if (transactionType === 'rent') {
+      return { bg: '#059669', shadow: 'rgba(5, 150, 105, 0.4)' }; // Vert pour location
+    }
+    
+    switch (type) {
+      case 'apartment':
+      case 'appartement':
+        return { bg: '#0891b2', shadow: 'rgba(8, 145, 178, 0.4)' }; // Bleu cyan
+      case 'house':
+      case 'maison':
+        return { bg: '#7c3aed', shadow: 'rgba(124, 58, 237, 0.4)' }; // Violet
+      case 'land':
+      case 'terrain':
+        return { bg: '#ca8a04', shadow: 'rgba(202, 138, 4, 0.4)' }; // Jaune/orange
+      default:
+        return { bg: '#e11d48', shadow: 'rgba(225, 29, 72, 0.4)' }; // Rose par défaut
+    }
+  }, []);
+
+  // Create cluster marker
+  const createClusterMarker = useCallback((cluster: any) => {
+    const pointCount = cluster.properties.point_count || 0;
+    const clusterSize = pointCount < 10 ? 'small' : pointCount < 100 ? 'medium' : 'large';
+    
+    const sizes = {
+      small: { width: 30, height: 30, fontSize: 12 },
+      medium: { width: 40, height: 40, fontSize: 14 },
+      large: { width: 50, height: 50, fontSize: 16 }
+    };
+    
+    const size = sizes[clusterSize];
+    
+    const markerElement = document.createElement('div');
+    markerElement.className = 'cluster-marker';
+    markerElement.innerHTML = `
+      <div style="
+        width: ${size.width}px;
+        height: ${size.height}px;
+        background: linear-gradient(135deg, #0891b2, #0e7490);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: ${size.fontSize}px;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(8, 145, 178, 0.3);
+        border: 3px solid white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      ">
+        ${pointCount}
+      </div>
+    `;
+
+    markerElement.addEventListener('mouseenter', () => {
+      markerElement.style.transform = 'scale(1.1)';
+    });
+
+    markerElement.addEventListener('mouseleave', () => {
+      markerElement.style.transform = 'scale(1)';
+    });
+
+    return markerElement;
+  }, []);
+
+  // Create property marker
+  const createPropertyMarker = useCallback((listing: Listing) => {
+    const colorInfo = getPropertyTypeColor(listing);
+    
+    const markerElement = document.createElement('div');
+    markerElement.className = 'property-marker';
+    markerElement.innerHTML = `
+      <div style="
+        background: ${colorInfo.bg};
+        color: white;
+        padding: 4px 10px;
+        border-radius: 14px;
+        font-size: 11px;
+        font-weight: 700;
+        box-shadow: 0 3px 10px ${colorInfo.shadow};
+        white-space: nowrap;
+        cursor: pointer;
+        border: 2px solid white;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        min-width: 32px;
+        text-align: center;
+      ">
+        ${formatMapPrice(listing.price, (listing as any).currency_code, formatPrice)}
+      </div>
+    `;
+
+    markerElement.addEventListener('mouseenter', () => {
+      markerElement.style.transform = 'scale(1.15)';
+      markerElement.style.zIndex = '1000';
+    });
+
+    markerElement.addEventListener('mouseleave', () => {
+      markerElement.style.transform = 'scale(1)';
+      markerElement.style.zIndex = '1';
+    });
+
+    return markerElement;
+  }, [formatMapPrice, formatPrice, getPropertyTypeColor]);
+
+  // Update markers based on zoom level
+  const updateMarkers = useCallback(() => {
+    if (!map.current || !clustererRef.current) return;
+
+    // Clear existing markers
+    Object.values(markersRef.current).forEach(marker => marker.remove());
+    markersRef.current = {};
+
+    const bounds = map.current.getBounds();
+    const bbox: [number, number, number, number] = [
+      bounds.getWest(),
+      bounds.getSouth(),
+      bounds.getEast(),
+      bounds.getNorth()
+    ];
+
+    const zoom = Math.floor(map.current.getZoom());
+    const clusters = clustererRef.current.getClusters(bbox, zoom);
+
+    clusters.forEach((cluster, index) => {
+      const [lng, lat] = cluster.geometry.coordinates;
+      const markerId = `marker-${index}`;
+
+      if (cluster.properties.cluster) {
+        // Create cluster marker
+        const markerElement = createClusterMarker(cluster);
+        const marker = new mapboxgl.Marker(markerElement)
+          .setLngLat([lng, lat])
+          .addTo(map.current!);
+
+        // Click handler to zoom into cluster
+        markerElement.addEventListener('click', () => {
+          const expansionZoom = Math.min(
+            clustererRef.current!.getClusterExpansionZoom(cluster.properties.cluster_id!),
+            20
+          );
+          map.current?.easeTo({
+            center: [lng, lat],
+            zoom: expansionZoom,
+            duration: 500
+          });
+        });
+
+        markersRef.current[markerId] = marker;
+      } else {
+        // Create property marker
+        const listing = cluster.properties.listing!;
+        const markerElement = createPropertyMarker(listing);
+        const marker = new mapboxgl.Marker(markerElement)
+          .setLngLat([lng, lat])
+          .addTo(map.current!);
+
+        // Create enhanced popup
+        const popup = createEnhancedPopup(listing);
+        
+        markerElement.addEventListener('click', (e) => {
+          e.stopPropagation();
+          
+          // Close other popups
+          document.querySelectorAll('.mapboxgl-popup').forEach(p => {
+            if (p.parentNode) p.parentNode.removeChild(p);
+          });
+
+          popup.setLngLat([lng, lat]).addTo(map.current!);
+          markerElement.style.transform = 'scale(1.2)';
+        });
+
+        popup.on('close', () => {
+          markerElement.style.transform = 'scale(1)';
+        });
+
+        markersRef.current[markerId] = marker;
+      }
+    });
+  }, [createClusterMarker, createPropertyMarker]);
+
+  // Create enhanced popup
+  const createEnhancedPopup = useCallback((listing: Listing) => {
+    const getListingImage = (listing: Listing) => {
+      if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
+        return listing.photos[0];
+      }
+      if (listing.image && listing.image !== '/placeholder.svg' && !listing.image.includes('placeholder')) {
+        return listing.image;
+      }
+      return 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=280&h=160&fit=crop&auto=format';
+    };
+
+    return new mapboxgl.Popup({ 
+      offset: 25,
+      closeButton: true,
+      closeOnClick: false,
+      className: 'enhanced-popup'
+    }).setHTML(`
+      <div style="padding: 0; max-width: 220px; font-family: system-ui, -apple-system, sans-serif;">
+        <div style="position: relative;">
+          <img 
+            src="${getListingImage(listing)}" 
+            alt="${listing.title}"
+            style="width: 100%; height: 110px; object-fit: cover; border-radius: 8px 8px 0 0;"
+          />
+          <div style="
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+          ">
+            ${listing.transaction_type === 'rent' ? 'Location' : 'Vente'}
+          </div>
+        </div>
+        
+        <div style="padding: 12px;">
+          <div style="
+            color: #0891b2; 
+            font-size: 16px; 
+            font-weight: 700; 
+            margin-bottom: 6px;
+          ">
+             ${formatPrice(listing.price, (listing as any).currency_code)}
+          </div>
+          
+          <div style="
+            font-weight: 600; 
+            font-size: 13px; 
+            margin-bottom: 8px; 
+            line-height: 1.3;
+            color: #1f2937;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          ">
+            ${listing.title}
+          </div>
+          
+          <div style="
+            display: flex;
+            gap: 12px;
+            margin-bottom: 8px;
+            font-size: 11px;
+            color: #6b7280;
+          ">
+            ${listing.bedrooms ? `<span>🛏️ ${listing.bedrooms}</span>` : ''}
+            ${listing.bathrooms ? `<span>🚿 ${listing.bathrooms}</span>` : ''}
+          </div>
+           
+          <div style="
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 10px;
+          ">
+            📍 ${listing.city}
+          </div>
+          
+          <button 
+            onclick="window.location.href='/listing/${listing.id}'"
+            style="
+              background: linear-gradient(135deg, #0891b2, #0e7490);
+              color: white;
+              border: none;
+              padding: 8px 16px;
+              border-radius: 6px;
+              font-size: 12px;
+              font-weight: 600;
+              cursor: pointer;
+              width: 100%;
+              transition: all 0.3s ease;
+            "
+            onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(8, 145, 178, 0.3)'"
+            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'"
+          >
+            Voir les détails
+          </button>
+        </div>
+      </div>
+    `);
+  }, [formatPrice]);
+
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken) return;
 
-    // Initialiser la carte
     mapboxgl.accessToken = mapboxToken;
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
-      center: [15, 0], // Centre de l'Afrique
+      style: mapStyle,
+      center: [15, 0],
       zoom: 3,
       pitch: 0,
-      maxBounds: [[-30, -40], [60, 40]], // Limiter aux coordonnées de l'Afrique
+      maxBounds: [[-30, -40], [60, 40]],
       locale: {
         'NavigationControl.ZoomIn': 'Zoom avant',
         'NavigationControl.ZoomOut': 'Zoom arrière',
@@ -132,24 +474,28 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
       }
     });
 
-    // Ajouter les contrôles de navigation avec position ajustée
-    const nav = new mapboxgl.NavigationControl({
-      visualizePitch: true,
-    });
+    // Add controls
+    const nav = new mapboxgl.NavigationControl({ visualizePitch: true });
     map.current.addControl(nav, 'top-right');
 
-    // Centrer sur l'Afrique quand la carte est chargée
+    // Add geolocation control
+    const geolocate = new mapboxgl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: true,
+      showUserHeading: true
+    });
+    map.current.addControl(geolocate, 'top-right');
+
     map.current.on('load', () => {
-      // Bounds approximatifs de l'Afrique
+      // Fit to Africa bounds
       const africaBounds: [number, number, number, number] = [-20, -35, 52, 37];
       map.current?.fitBounds(africaBounds, { padding: 50 });
 
-      // Configurer la langue française pour tous les layers de texte
+      // Configure French language for text layers
       const style = map.current?.getStyle();
       if (style && style.layers) {
         style.layers.forEach((layer) => {
           if (layer.type === 'symbol' && layer.layout && layer.layout['text-field']) {
-            // Changer la langue des labels vers le français
             map.current?.setLayoutProperty(layer.id, 'text-field', [
               'coalesce',
               ['get', 'name_fr'],
@@ -162,250 +508,61 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
         });
       }
 
-      // Fonction pour disperser les marqueurs qui sont trop proches
-      const disperseMarkers = (listings: Listing[]) => {
-        const processedListings: (Listing & { adjustedLat: number; adjustedLng: number })[] = [];
-        const threshold = 0.005; // Distance minimale entre les marqueurs (réduite pour plus de précision)
-        
-        listings.forEach(listing => {
-          if (!listing.lat || !listing.lng) return;
-          
-          let adjustedLat = listing.lat;
-          let adjustedLng = listing.lng;
-          let attempts = 0;
-          const maxAttempts = 20;
-          
-          // Continue à ajuster la position jusqu'à ce qu'elle soit suffisamment éloignée
-          while (attempts < maxAttempts) {
-            const tooClose = processedListings.some(processed => {
-              const distance = Math.sqrt(
-                Math.pow(processed.adjustedLat - adjustedLat, 2) + 
-                Math.pow(processed.adjustedLng - adjustedLng, 2)
-              );
-              return distance < threshold;
-            });
-            
-            if (!tooClose) break;
-            
-            // Calculer un offset circulaire pour une meilleure répartition
-            const angle = (attempts * 60) % 360; // Rotation de 60° à chaque tentative
-            const offsetDistance = threshold * (1.5 + attempts * 0.3); // Distance croissante
-            const angleRad = (angle * Math.PI) / 180;
-            
-            adjustedLat = listing.lat + Math.sin(angleRad) * offsetDistance;
-            adjustedLng = listing.lng + Math.cos(angleRad) * offsetDistance;
-            
-            attempts++;
-          }
-          
-          processedListings.push({
-            ...listing,
-            adjustedLat,
-            adjustedLng
-          });
-        });
-        
-        return processedListings;
-      };
-
-      // Disperser les marqueurs avant de les ajouter à la carte
-      const dispersedListings = disperseMarkers(listings);
-
-      // Ajouter les marqueurs pour chaque listing dispersé
-      dispersedListings.forEach(listing => {
-        // Déterminer la couleur selon le prix
-        const getPriceColor = (price: number) => {
-          if (price >= 1000000) return { bg: '#1e40af', shadow: 'rgba(30, 64, 175, 0.4)' }; // Bleu foncé pour les prix élevés
-          if (price >= 500000) return { bg: '#7c3aed', shadow: 'rgba(124, 58, 237, 0.4)' }; // Violet pour les prix moyens-élevés
-          if (price >= 200000) return { bg: '#0891b2', shadow: 'rgba(8, 145, 178, 0.4)' }; // Bleu cyan pour les prix moyens
-          return { bg: '#e11d48', shadow: 'rgba(225, 29, 72, 0.4)' }; // Rose pour les prix plus bas
-        };
-
-        const priceColor = getPriceColor(listing.price);
-        
-        const markerElement = document.createElement('div');
-        markerElement.className = 'mapbox-price-marker';
-        markerElement.innerHTML = `
-          <div style="
-            background: ${priceColor.bg};
-            color: white;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 700;
-            box-shadow: 0 2px 8px ${priceColor.shadow};
-            white-space: nowrap;
-            cursor: pointer;
-            border: 1.5px solid white;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: scale(1);
-            min-width: 24px;
-            text-align: center;
-            position: relative;
-            z-index: 1;
-          ">
-            ${formatMapPrice(listing.price, (listing as any).currency_code, formatPrice)}
-          </div>
-        `;
-        
-        // Effet hover sur le marqueur
-        markerElement.addEventListener('mouseenter', () => {
-          markerElement.style.transform = 'scale(1.2)';
-          markerElement.style.boxShadow = `0 4px 16px ${priceColor.shadow}`;
-          markerElement.style.zIndex = '1000';
-        });
-        
-        markerElement.addEventListener('mouseleave', () => {
-          markerElement.style.transform = 'scale(1)';
-          markerElement.style.boxShadow = `0 2px 8px ${priceColor.shadow}`;
-          markerElement.style.zIndex = '1';
-        });
-
-        // Créer le marqueur avec les coordonnées ajustées
-        const marker = new mapboxgl.Marker(markerElement)
-          .setLngLat([listing.adjustedLng, listing.adjustedLat])
-          .addTo(map.current!);
-
-        // Créer le popup avec un design amélioré
-        const getListingImage = (listing: Listing) => {
-          // Vérifier d'abord les photos
-          if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
-            return listing.photos[0];
-          }
-          // Vérifier l'image mais ignorer les placeholders
-          if (listing.image && listing.image !== '/placeholder.svg' && !listing.image.includes('placeholder')) {
-            return listing.image;
-          }
-          // Image par défaut avec un design plus attrayant
-          return 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=280&h=160&fit=crop&auto=format';
-        };
-
-        const popup = new mapboxgl.Popup({ 
-          offset: 25,
-          closeButton: true,
-          closeOnClick: false,
-          className: 'custom-popup'
-        })
-          .setHTML(`
-            <div style="padding: 0; max-width: 200px; font-family: system-ui, -apple-system, sans-serif;">
-              <div style="position: relative;">
-                <img 
-                  src="${getListingImage(listing)}" 
-                  alt="${listing.title}"
-                  style="width: 100%; height: 100px; object-fit: cover; border-radius: 6px 6px 0 0;"
-                />
-              </div>
-              
-              <div style="padding: 10px;">
-                <div style="
-                  color: #0E7490; 
-                  font-size: 15px; 
-                  font-weight: 700; 
-                  margin-bottom: 4px;
-                ">
-                   ${formatPrice(listing.price, (listing as any).currency_code)}
-                </div>
-                
-                <div style="
-                  font-weight: 500; 
-                  font-size: 12px; 
-                  margin-bottom: 6px; 
-                  line-height: 1.2;
-                  color: #374151;
-                  overflow: hidden;
-                  text-overflow: ellipsis;
-                  white-space: nowrap;
-                ">
-                  ${listing.title}
-                </div>
-                 
-                 <div style="
-                   font-size: 11px;
-                   color: #6b7280;
-                   margin-bottom: 8px;
-                 ">
-                   📍 ${listing.city}
-                 </div>
-                
-                <button 
-                  onclick="window.location.href='/listing/${listing.id}'"
-                  style="
-                    background: linear-gradient(135deg, #0E7490, #0891b2);
-                    color: white;
-                    border: none;
-                    padding: 6px 12px;
-                    border-radius: 5px;
-                    font-size: 11px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    width: 100%;
-                    transition: all 0.3s ease;
-                  "
-                >
-                  Voir détails
-                </button>
-              </div>
-            </div>
-          `);
-
-        // Attacher le popup au marqueur avec animation
-        markerElement.addEventListener('click', (e) => {
-          e.stopPropagation();
-          
-          // Fermer tous les autres popups
-          document.querySelectorAll('.mapboxgl-popup').forEach(popup => {
-            if (popup.parentNode) {
-              popup.parentNode.removeChild(popup);
-            }
-          });
-          
-          // Réinitialiser tous les marqueurs
-          document.querySelectorAll('.mapbox-price-marker').forEach(marker => {
-            (marker as HTMLElement).style.transform = 'scale(1)';
-          });
-          
-          // Ouvrir le nouveau popup
-          popup.addTo(map.current!);
-          popup.setLngLat([listing.adjustedLng, listing.adjustedLat]);
-          
-          // Animation du marqueur
-          markerElement.style.transform = 'scale(1.2)';
-          setTimeout(() => {
-            markerElement.style.transform = 'scale(1.1)';
-          }, 150);
-        });
-
-        // Gérer la fermeture du popup
-        popup.on('close', () => {
-          markerElement.style.transform = 'scale(1)';
-        });
-      });
-
-      // Un seul écouteur pour fermer les popups quand on clique sur la carte
-      map.current?.on('click', (e) => {
-        // Vérifier qu'on n'a pas cliqué sur un marqueur
-        const target = e.originalEvent.target as HTMLElement;
-        if (!target.closest('.mapbox-price-marker')) {
-          // Fermer tous les popups
-          document.querySelectorAll('.mapboxgl-popup').forEach(popup => {
-            if (popup.parentNode) {
-              popup.parentNode.removeChild(popup);
-            }
-          });
-          
-          // Réinitialiser tous les marqueurs
-          document.querySelectorAll('.mapbox-price-marker').forEach(marker => {
-            (marker as HTMLElement).style.transform = 'scale(1)';
-          });
-        }
-      });
+      // Initialize clustering
+      initializeClustering();
+      
+      // Update markers initially
+      updateMarkers();
     });
 
-    // Cleanup
+    // Update markers on zoom/move
+    map.current.on('zoom', () => {
+      const zoom = map.current?.getZoom() || 3;
+      setCurrentZoom(zoom);
+      updateMarkers();
+    });
+
+    map.current.on('moveend', updateMarkers);
+
+    // Close popups when clicking on map
+    map.current.on('click', (e) => {
+      const target = e.originalEvent.target as HTMLElement;
+      if (!target.closest('.property-marker') && !target.closest('.cluster-marker')) {
+        document.querySelectorAll('.mapboxgl-popup').forEach(popup => {
+          if (popup.parentNode) popup.parentNode.removeChild(popup);
+        });
+      }
+    });
+
     return () => {
+      Object.values(markersRef.current).forEach(marker => marker.remove());
       map.current?.remove();
     };
-  }, [mapboxToken, listings]);
+  }, [mapboxToken, mapStyle, initializeClustering, updateMarkers]);
+
+  // Re-initialize clustering when listings change
+  useEffect(() => {
+    if (map.current && clustererRef.current) {
+      initializeClustering();
+      updateMarkers();
+    }
+  }, [listings, initializeClustering, updateMarkers]);
+
+  // Toggle map style
+  const toggleMapStyle = useCallback(() => {
+    const newStyle = mapStyle === 'mapbox://styles/mapbox/light-v11' 
+      ? 'mapbox://styles/mapbox/satellite-v11' 
+      : 'mapbox://styles/mapbox/light-v11';
+    
+    setMapStyle(newStyle);
+    if (map.current) {
+      map.current.setStyle(newStyle);
+      // Re-add markers after style load
+      map.current.once('styledata', () => {
+        updateMarkers();
+      });
+    }
+  }, [mapStyle, updateMarkers]);
 
   // Navigate to selected country when it changes
   useEffect(() => {
