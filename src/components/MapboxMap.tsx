@@ -116,7 +116,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: 'mapbox://styles/mapbox/light-v11?language=fr',
       center: [15, 0], // Centre de l'Afrique
       zoom: 3,
       pitch: 0,
