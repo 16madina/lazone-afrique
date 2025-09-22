@@ -176,6 +176,7 @@ const AdminPanel = () => {
 
   const performAdminAction = async (action: string, targetUserId?: string, targetListingId?: string, data?: any) => {
     setLoading(true);
+    console.log('🔧 Exécution de l\'action admin:', { action, targetUserId, targetListingId, data });
     try {
       const { error } = await supabase.functions.invoke('admin-actions', {
         body: {
@@ -186,8 +187,12 @@ const AdminPanel = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erreur de la fonction admin:', error);
+        throw error;
+      }
 
+      console.log('✅ Action admin réussie:', action);
       toast({
         title: 'Succès',
         description: 'Action effectuée avec succès'
@@ -203,6 +208,7 @@ const AdminPanel = () => {
         description: error.message || 'Une erreur est survenue',
         variant: 'destructive'
       });
+      throw error; // Re-throw pour que handleDeletePackage puisse le capturer
     } finally {
       setLoading(false);
     }
@@ -277,8 +283,14 @@ const AdminPanel = () => {
 
   const handleDeletePackage = async (packageId: string, packageName: string) => {
     if (confirm(`Êtes-vous sûr de vouloir supprimer le package "${packageName}" ? Cette action est irréversible.`)) {
-      await performAdminAction('delete_package', undefined, undefined, { packageId });
-      fetchPackages();
+      console.log('🗑️ Tentative de suppression du package:', { packageId, packageName });
+      try {
+        await performAdminAction('delete_package', undefined, undefined, { packageId });
+        console.log('✅ Package supprimé avec succès:', packageId);
+        fetchPackages();
+      } catch (error) {
+        console.error('❌ Erreur lors de la suppression du package:', error);
+      }
     }
   };
 
