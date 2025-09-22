@@ -213,23 +213,33 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
 
       // Ajouter les marqueurs pour chaque listing dispersé
       dispersedListings.forEach(listing => {
+        // Déterminer la couleur selon le prix
+        const getPriceColor = (price: number) => {
+          if (price >= 1000000) return { bg: '#1e40af', shadow: 'rgba(30, 64, 175, 0.4)' }; // Bleu foncé pour les prix élevés
+          if (price >= 500000) return { bg: '#7c3aed', shadow: 'rgba(124, 58, 237, 0.4)' }; // Violet pour les prix moyens-élevés
+          if (price >= 200000) return { bg: '#0891b2', shadow: 'rgba(8, 145, 178, 0.4)' }; // Bleu cyan pour les prix moyens
+          return { bg: '#e11d48', shadow: 'rgba(225, 29, 72, 0.4)' }; // Rose pour les prix plus bas
+        };
+
+        const priceColor = getPriceColor(listing.price);
+        
         const markerElement = document.createElement('div');
         markerElement.className = 'mapbox-price-marker';
         markerElement.innerHTML = `
           <div style="
-            background: linear-gradient(135deg, #0E7490, #0891b2);
+            background: ${priceColor.bg};
             color: white;
-            padding: 4px 8px;
-            border-radius: 16px;
-            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
             font-weight: 700;
-            box-shadow: 0 4px 12px rgba(14,116,144,0.4);
+            box-shadow: 0 2px 8px ${priceColor.shadow};
             white-space: nowrap;
             cursor: pointer;
-            border: 2px solid white;
+            border: 1.5px solid white;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             transform: scale(1);
-            min-width: 28px;
+            min-width: 24px;
             text-align: center;
             position: relative;
             z-index: 1;
@@ -237,16 +247,17 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
             ${formatMapPrice(listing.price, (listing as any).currency_code, formatPrice)}
           </div>
         `;
+        
         // Effet hover sur le marqueur
         markerElement.addEventListener('mouseenter', () => {
-          markerElement.style.transform = 'scale(1.15)';
-          markerElement.style.boxShadow = '0 8px 25px rgba(14,116,144,0.7)';
+          markerElement.style.transform = 'scale(1.2)';
+          markerElement.style.boxShadow = `0 4px 16px ${priceColor.shadow}`;
           markerElement.style.zIndex = '1000';
         });
         
         markerElement.addEventListener('mouseleave', () => {
           markerElement.style.transform = 'scale(1)';
-          markerElement.style.boxShadow = '0 4px 12px rgba(14,116,144,0.4)';
+          markerElement.style.boxShadow = `0 2px 8px ${priceColor.shadow}`;
           markerElement.style.zIndex = '1';
         });
 
@@ -276,85 +287,67 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
           className: 'custom-popup'
         })
           .setHTML(`
-            <div style="padding: 0; max-width: 220px; font-family: system-ui, -apple-system, sans-serif;">
+            <div style="padding: 0; max-width: 200px; font-family: system-ui, -apple-system, sans-serif;">
               <div style="position: relative;">
                 <img 
                   src="${getListingImage(listing)}" 
                   alt="${listing.title}"
-                  style="width: 100%; height: 120px; object-fit: cover; border-radius: 6px 6px 0 0;"
+                  style="width: 100%; height: 100px; object-fit: cover; border-radius: 6px 6px 0 0;"
                 />
-                <div style="
-                  position: absolute; 
-                  top: 6px; 
-                  right: 6px; 
-                  background: ${listing.transaction_type === 'rent' ? '#0E7490' : '#E11D48'}; 
-                  color: white; 
-                  padding: 2px 6px; 
-                  border-radius: 8px; 
-                  font-size: 10px; 
-                  font-weight: 600;
-                ">
-                  ${listing.transaction_type === 'rent' ? 'Location' : 'Vente'}
-                </div>
                 <button 
                   id="favorite-btn-${listing.id}"
                   style="
                     position: absolute; 
                     top: 6px; 
-                    left: 6px; 
+                    right: 6px; 
                     background: rgba(255, 255, 255, 0.9);
                     border: none;
                     border-radius: 50%;
-                    width: 28px;
-                    height: 28px;
+                    width: 24px;
+                    height: 24px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     cursor: pointer;
-                    font-size: 14px;
+                    font-size: 12px;
                     transition: all 0.3s ease;
                     backdrop-filter: blur(10px);
                   "
                   onclick="window.toggleMapFavorite('${listing.id}')"
-                  onmouseover="this.style.background='rgba(255, 255, 255, 1)'; this.style.transform='scale(1.1)'"
-                  onmouseout="this.style.background='rgba(255, 255, 255, 0.9)'; this.style.transform='scale(1)'"
                 >
                   🤍
                 </button>
               </div>
               
-              <div style="padding: 12px;">
+              <div style="padding: 10px;">
                 <div style="
-                  font-weight: 600; 
-                  font-size: 14px; 
+                  color: #0E7490; 
+                  font-size: 15px; 
+                  font-weight: 700; 
+                  margin-bottom: 4px;
+                ">
+                   ${formatPrice(listing.price, (listing as any).currency_code)}
+                </div>
+                
+                <div style="
+                  font-weight: 500; 
+                  font-size: 12px; 
                   margin-bottom: 6px; 
-                  line-height: 1.3;
-                  color: #1f2937;
+                  line-height: 1.2;
+                  color: #374151;
                   overflow: hidden;
                   text-overflow: ellipsis;
                   white-space: nowrap;
                 ">
                   ${listing.title}
                 </div>
-                
-                 <div style="
-                   color: #0E7490; 
-                   font-size: 16px; 
-                   font-weight: 700; 
-                   margin-bottom: 8px;
-                 ">
-                    ${formatPrice(listing.price, (listing as any).currency_code)}
-                 </div>
                  
                  <div style="
-                   display: flex; 
-                   align-items: center; 
-                   gap: 6px; 
-                   margin-bottom: 10px;
                    font-size: 11px;
                    color: #6b7280;
+                   margin-bottom: 8px;
                  ">
-                   <span>📍 ${listing.city}</span>
+                   📍 ${listing.city}
                  </div>
                 
                 <button 
@@ -363,18 +356,16 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
                     background: linear-gradient(135deg, #0E7490, #0891b2);
                     color: white;
                     border: none;
-                    padding: 8px 16px;
-                    border-radius: 6px;
-                    font-size: 12px;
+                    padding: 6px 12px;
+                    border-radius: 5px;
+                    font-size: 11px;
                     font-weight: 600;
                     cursor: pointer;
                     width: 100%;
                     transition: all 0.3s ease;
                   "
-                  onmouseover="this.style.background='linear-gradient(135deg, #0891b2, #06b6d4)'; this.style.transform='translateY(-1px)'"
-                  onmouseout="this.style.background='linear-gradient(135deg, #0E7490, #0891b2)'; this.style.transform='translateY(0px)'"
                 >
-                  Voir les détails
+                  Voir détails
                 </button>
               </div>
             </div>
