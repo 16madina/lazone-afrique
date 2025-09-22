@@ -40,21 +40,23 @@ export const usePushNotifications = () => {
     if (!user) return;
 
     try {
-      const { error } = await supabase
-        .from('user_push_tokens')
-        .upsert({
-          user_id: user.id,
-          token: token,
-          platform: Capacitor.getPlatform(),
-          updated_at: new Date().toISOString()
-        });
+      // For now, store in local storage until types are updated
+      localStorage.setItem('push_token', token);
+      localStorage.setItem('push_platform', Capacitor.getPlatform());
+      
+      // TODO: Save to database once types are generated
+      // We'll use an RPC call to insert directly
+      const { error } = await supabase.rpc('save_push_token', {
+        p_user_id: user.id,
+        p_token: token,
+        p_platform: Capacitor.getPlatform()
+      });
 
       if (error) {
-        console.error('Error saving push token:', error);
-        return;
+        console.warn('Push token saved locally, database save failed:', error);
+      } else {
+        console.log('Push token saved to database');
       }
-
-      console.log('Push token saved to database');
     } catch (error) {
       console.error('Error saving push token:', error);
     }
