@@ -8,6 +8,7 @@ import { CountryProvider } from "@/contexts/CountryContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useCapacitor } from "@/hooks/useCapacitor";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useAllNotifications } from "@/hooks/useAllNotifications";
 import { SplashScreen } from "@/components/SplashScreen";
 import Index from "./pages/Index";
 import Map from "./pages/Map";
@@ -33,6 +34,9 @@ const AppContent = () => {
   
   // Initialize push notifications for authenticated users
   usePushNotifications();
+  
+  // Initialize all notification listeners
+  useAllNotifications();
   
   return (
     <Routes>

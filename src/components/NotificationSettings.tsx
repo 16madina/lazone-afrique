@@ -63,39 +63,32 @@ const NotificationSettings = () => {
           )}
         </div>
 
-        <div className="space-y-3 pt-4 border-t">
-          <h4 className="font-medium">Types de notifications</h4>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Nouveaux messages</Label>
-              <p className="text-sm text-muted-foreground">
-                Notification quand vous recevez un message
-              </p>
+          <div className="space-y-3 pt-4 border-t">
+            <h4 className="font-medium">Types de notifications activées</h4>
+            
+            <div className="grid gap-2 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span>📨 Nouveaux messages</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span>🤝 Demandes de contact</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span>💰 Sponsoring (approbation/paiement)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span>🏠 Mises à jour d'annonces</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span>⏰ Rappels importants</span>
+              </div>
             </div>
-            <Switch defaultChecked />
           </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Demandes de contact</Label>
-              <p className="text-sm text-muted-foreground">
-                Notification pour les nouvelles demandes
-              </p>
-            </div>
-            <Switch defaultChecked />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Rappels d'annonces</Label>
-              <p className="text-sm text-muted-foreground">
-                Rappels pour mettre à jour vos annonces
-              </p>
-            </div>
-            <Switch />
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
