@@ -11,8 +11,8 @@ export const SplashScreen = ({ onFinish }: SplashScreenProps) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(false);
-      setTimeout(onFinish, 300); // Reduced wait time for smoother transition
-    }, 2000); // Reduced total time
+      setTimeout(onFinish, 200); // Quick transition after native splash
+    }, 1500); // Shorter duration to sync with native splash
 
     return () => clearTimeout(timer);
   }, [onFinish]);
