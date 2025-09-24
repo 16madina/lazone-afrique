@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCapacitor } from "@/hooks/useCapacitor";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,6 +14,7 @@ import lazoneLogo from "@/assets/lazone-logo.png";
 const Header = () => {
   const [notifications, setNotifications] = useState(3);
   const { user, profile, signOut } = useAuth();
+  const { isAndroid, isNative } = useCapacitor();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -45,8 +47,15 @@ const Header = () => {
     }
   };
 
+  // Determine the correct safe area class based on platform
+  const getSafeAreaClass = () => {
+    if (!isNative) return ''; // No safe area needed for web
+    if (isAndroid) return 'header-safe-area-android';
+    return 'header-safe-area'; // iOS
+  };
+
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border pt-safe">
+    <header className={`sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border ${getSafeAreaClass()}`}>
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>

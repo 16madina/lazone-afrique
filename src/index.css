@@ -174,4 +174,24 @@ All colors MUST be HSL.
   .pr-safe {
     padding-right: env(safe-area-inset-right);
   }
+  
+  /* Android-specific safe area classes */
+  .pt-safe-android {
+    padding-top: var(--android-status-bar-height, 24px);
+  }
+  
+  .header-safe-area {
+    /* iOS uses env() variables */
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  /* Android specific header safe area with fallback */
+  .header-safe-area-android {
+    padding-top: var(--android-status-bar-height, 24px);
+  }
+  
+  /* Hybrid approach - try env() first, then custom property for Android */
+  .header-safe-hybrid {
+    padding-top: env(safe-area-inset-top, var(--android-status-bar-height, 24px));
+  }
 }
