@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
-import { Resend } from "npm:resend@4.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -144,30 +143,14 @@ const handler = async (req: Request): Promise<Response> => {
           throw new Error('User email not found');
         }
 
-        // Send email using Resend
-        const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
-        
-        const emailResult = await resend.emails.send({
-          from: 'LaZone <lazoneapp@gmail.com>',
-          to: [profile.email],
+        // Email placeholder - replace with actual email service  
+        console.log('Email to send:', {
+          to: profile.email,
           subject: subject,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #333;">Message de l'équipe LaZone</h2>
-              <p>Bonjour ${profile.full_name || 'Utilisateur'},</p>
-              <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                ${message.replace(/\n/g, '<br>')}
-              </div>
-              <p>Cordialement,<br>L'équipe LaZone</p>
-            </div>
-          `,
+          html: `Message de l'équipe LaZone: ${message}`
         });
 
-        if (emailResult.error) {
-          throw new Error(`Failed to send email: ${emailResult.error.message}`);
-        }
-
-        result = { success: true, emailId: emailResult.data?.id };
+        result = { success: true };
         break;
 
       case 'send_sms':

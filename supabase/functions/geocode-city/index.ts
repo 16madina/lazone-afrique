@@ -75,7 +75,7 @@ serve(async (req) => {
       lng: defaultCoords.lng,
       foundExact: false,
       city: city,
-      error: error.message
+      error: (error as Error).message
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

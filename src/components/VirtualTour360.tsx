@@ -22,11 +22,7 @@ interface TourData {
   title: string;
   description?: string;
   tour_type: string;
-  tour_data: {
-    photos?: string[];
-    video_url?: string;
-    panorama_urls?: string[];
-  };
+  tour_data: any;
   is_active: boolean;
 }
 

@@ -9,8 +9,8 @@ interface Appointment {
   visitor_user_id: string;
   owner_user_id: string;
   requested_date: string;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  visit_type: 'physical' | 'virtual' | 'video_call';
+  status: string;
+  visit_type: string;
   notes?: string;
   created_at: string;
   updated_at: string;
@@ -19,16 +19,8 @@ interface Appointment {
     city: string;
     photos?: string[];
   };
-  visitor_profile?: {
-    full_name: string;
-    avatar_url?: string;
-    phone?: string;
-  };
-  owner_profile?: {
-    full_name: string;
-    avatar_url?: string;
-    phone?: string;
-  };
+  visitor_profile?: any;
+  owner_profile?: any;
 }
 
 export const useAppointments = () => {

@@ -217,7 +217,7 @@ Recommande les meilleures propriétés pour cet utilisateur.`;
   } catch (error) {
     console.error('Erreur dans ai-recommendations:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: (error as Error).message,
       recommendations: [],
       insights: {
         marketTrends: "Service temporairement indisponible",

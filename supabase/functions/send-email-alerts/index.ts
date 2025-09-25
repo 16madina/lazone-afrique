@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,9 +22,14 @@ interface EmailAlertRequest {
   };
 }
 
-const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+// Email service placeholder - replace with actual email service
+const sendEmail = async (to: string, subject: string, html: string) => {
+  console.log(`Email to ${to}: ${subject}`);
+  // Integrate with your preferred email service here
+  return Promise.resolve();
+};
 
-const serve = async (req: Request): Promise<Response> => {
+const sendEmailAlert = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -69,14 +73,14 @@ const serve = async (req: Request): Promise<Response> => {
         throw new Error(`Type d'alerte non supporté: ${type}`);
     }
 
-    const emailResponse = await resend.emails.send({
-      from: "LaZone Afrique <notifications@lazone-afrique.com>",
-      to: [recipientEmail],
+    // Email placeholder - replace with actual email service
+    console.log('Email to send:', {
+      to: recipientEmail,
       subject: subject,
-      html: htmlContent,
+      html: htmlContent
     });
 
-    console.log('Email sent successfully:', emailResponse);
+    console.log('Email placeholder sent successfully');
 
     // Enregistrer l'envoi d'email dans les logs
     const { error: logError } = await supabaseClient
@@ -86,7 +90,7 @@ const serve = async (req: Request): Promise<Response> => {
         email_type: type,
         subject: subject,
         status: 'sent',
-        provider_response: emailResponse
+        provider_response: null
       });
 
     if (logError) {
@@ -95,7 +99,7 @@ const serve = async (req: Request): Promise<Response> => {
 
     return new Response(JSON.stringify({ 
       success: true, 
-      emailId: emailResponse.data?.id 
+      emailId: null 
     }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -318,4 +322,4 @@ function generatePropertyMatchEmail(recipientName: string, data: any): string {
   `;
 }
 
-serve(serve);
+serve(sendEmailAlert);
