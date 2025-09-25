@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import PropertyFilters, { FilterState } from "@/components/PropertyFilters";
-import PropertyCard from "@/components/PropertyCard";
+import PerformanceOptimizedPropertyCard from "@/components/PerformanceOptimizedPropertyCard";
+import { PropertyCardSkeleton } from "@/components/PropertyCardSkeleton";
 import BottomNavigation from "@/components/BottomNavigation";
 import { useCountry } from "@/contexts/CountryContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -415,14 +416,7 @@ const Index = () => {
         {loading ? (
           <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {[...Array(6)].map((_, index) => (
-              <div key={index} className="animate-pulse">
-                <div className="bg-muted h-48 rounded-t-lg"></div>
-                <div className="p-4 space-y-3">
-                  <div className="h-4 bg-muted rounded w-3/4"></div>
-                  <div className="h-4 bg-muted rounded w-1/2"></div>
-                  <div className="h-4 bg-muted rounded w-1/4"></div>
-                </div>
-              </div>
+              <PropertyCardSkeleton key={index} />
             ))}
           </div>
         ) : properties.length > 0 ? (
@@ -438,7 +432,7 @@ const Index = () => {
                               profile?.user_type === 'agence' ? 'agency' : 'broker';
               
               return (
-                <PropertyCard 
+                <PerformanceOptimizedPropertyCard 
                   key={property.id} 
                   id={property.id}
                   title={property.title}
@@ -454,7 +448,7 @@ const Index = () => {
                   surface={property.surface_area || 120}
                   agent={{
                     name: agentName,
-                    type: agentType,
+                    type: agentType,  
                     rating: 4.5,
                     verified: true,
                     avatar_url: (profile as any)?.avatar_url,
