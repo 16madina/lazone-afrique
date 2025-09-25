@@ -68,6 +68,45 @@ export type Database = {
         }
         Relationships: []
       }
+      appointments: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          notes: string | null
+          owner_user_id: string
+          requested_date: string
+          status: string
+          updated_at: string
+          visit_type: string
+          visitor_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          notes?: string | null
+          owner_user_id: string
+          requested_date: string
+          status?: string
+          updated_at?: string
+          visit_type?: string
+          visitor_user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          notes?: string | null
+          owner_user_id?: string
+          requested_date?: string
+          status?: string
+          updated_at?: string
+          visit_type?: string
+          visitor_user_id?: string
+        }
+        Relationships: []
+      }
       conversation_participants: {
         Row: {
           conversation_id: string
@@ -159,6 +198,197 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      crm_activities: {
+        Row: {
+          completed: boolean
+          created_at: string
+          description: string
+          id: string
+          lead_id: string
+          scheduled_date: string | null
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          description: string
+          id?: string
+          lead_id: string
+          scheduled_date?: string | null
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          description?: string
+          id?: string
+          lead_id?: string
+          scheduled_date?: string | null
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_leads: {
+        Row: {
+          agent_id: string
+          assigned_to: string | null
+          budget: number | null
+          created_at: string
+          email: string
+          id: string
+          last_contact: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          priority: string
+          property_interest: string | null
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          assigned_to?: string | null
+          budget?: number | null
+          created_at?: string
+          email: string
+          id?: string
+          last_contact?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          priority?: string
+          property_interest?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          assigned_to?: string | null
+          budget?: number | null
+          created_at?: string
+          email?: string
+          id?: string
+          last_contact?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          priority?: string
+          property_interest?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_logs: {
+        Row: {
+          created_at: string
+          email_type: string
+          error_message: string | null
+          id: string
+          provider_response: Json | null
+          recipient_email: string
+          sent_at: string | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email_type: string
+          error_message?: string | null
+          id?: string
+          provider_response?: Json | null
+          recipient_email: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email_type?: string
+          error_message?: string | null
+          id?: string
+          provider_response?: Json | null
+          recipient_email?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_preferences: {
+        Row: {
+          created_at: string
+          frequency: string
+          id: string
+          locations: string[] | null
+          market_reports: boolean
+          max_price: number | null
+          min_price: number | null
+          new_listings: boolean
+          new_messages: boolean
+          price_changes: boolean
+          property_matches: boolean
+          property_types: string[] | null
+          updated_at: string
+          user_id: string
+          weekly_digest: boolean
+        }
+        Insert: {
+          created_at?: string
+          frequency?: string
+          id?: string
+          locations?: string[] | null
+          market_reports?: boolean
+          max_price?: number | null
+          min_price?: number | null
+          new_listings?: boolean
+          new_messages?: boolean
+          price_changes?: boolean
+          property_matches?: boolean
+          property_types?: string[] | null
+          updated_at?: string
+          user_id: string
+          weekly_digest?: boolean
+        }
+        Update: {
+          created_at?: string
+          frequency?: string
+          id?: string
+          locations?: string[] | null
+          market_reports?: boolean
+          max_price?: number | null
+          min_price?: number | null
+          new_listings?: boolean
+          new_messages?: boolean
+          price_changes?: boolean
+          property_matches?: boolean
+          property_types?: string[] | null
+          updated_at?: string
+          user_id?: string
+          weekly_digest?: boolean
+        }
+        Relationships: []
       }
       favorites: {
         Row: {
@@ -874,6 +1104,42 @@ export type Database = {
           },
         ]
       }
+      virtual_tours: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          listing_id: string
+          title: string | null
+          tour_data: Json
+          tour_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          listing_id: string
+          title?: string | null
+          tour_data?: Json
+          tour_type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          listing_id?: string
+          title?: string | null
+          tour_data?: Json
+          tour_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -968,6 +1234,31 @@ export type Database = {
       save_push_token: {
         Args: { p_platform: string; p_token: string; p_user_id: string }
         Returns: boolean
+      }
+      search_listings_by_location: {
+        Args: {
+          max_price?: number
+          min_price?: number
+          property_types?: string[]
+          radius_km?: number
+          search_lat: number
+          search_lng: number
+          transaction_type_filter?: string
+        }
+        Returns: {
+          bathrooms: number
+          bedrooms: number
+          city: string
+          distance_km: number
+          id: string
+          lat: number
+          lng: number
+          photos: string[]
+          price: number
+          property_type: string
+          title: string
+          transaction_type: string
+        }[]
       }
     }
     Enums: {
