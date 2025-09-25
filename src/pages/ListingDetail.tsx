@@ -18,6 +18,8 @@ import { ArrowLeft, MapPin, Calendar, Phone, MessageCircle, Play, Send, X, Star 
 import { toast } from "sonner";
 import { UserRatingDialog } from "@/components/UserRatingDialog";
 import ListingLocationMap from "@/components/ListingLocationMap";
+import VirtualTour360 from "@/components/VirtualTour360";
+import AppointmentBooking from "@/components/AppointmentBooking";
 
 interface ListingData {
   id: string;
@@ -662,6 +664,26 @@ const ListingDetail = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Visites Virtuelles 360° */}
+          <VirtualTour360 
+            listingId={listing.id}
+            isOwner={user?.id === listing.user_id}
+          />
+
+          {/* Système de rendez-vous */}
+          {listing.user_id && user?.id !== listing.user_id && (
+            <Card>
+              <CardContent className="p-8">
+                <h2 className="text-xl font-semibold mb-4">Planifier une visite</h2>
+                <AppointmentBooking
+                  listingId={listing.id}
+                  ownerId={listing.user_id}
+                  listingTitle={listing.title}
+                />
+              </CardContent>
+            </Card>
+          )}
 
           {/* Actions de contact */}
           <Card>
