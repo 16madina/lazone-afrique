@@ -47,7 +47,9 @@ const Auth = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user && !loading) {
-      navigate('/');
+      setTimeout(() => {
+        navigate('/');
+      }, 100);
     }
   }, [user, loading, navigate]);
 
@@ -73,7 +75,10 @@ const Auth = () => {
         title: "Connexion réussie",
         description: "Vous êtes maintenant connecté.",
       });
-      navigate('/');
+      // Délai pour s'assurer que l'état auth est bien mis à jour
+      setTimeout(() => {
+        navigate('/');
+      }, 100);
     }
     
     setIsLoading(false);
