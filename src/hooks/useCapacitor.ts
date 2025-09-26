@@ -8,31 +8,35 @@ export const useCapacitor = () => {
   
   useEffect(() => {
     const initializeCapacitor = async () => {
-      if (Capacitor.isNativePlatform()) {
-        try {
-          // Configure status bar
-          await StatusBar.setStyle({ style: Style.Light });
-          await StatusBar.setBackgroundColor({ color: '#E4A853' });
-          
-          // Get status bar info for Android
-          if (Capacitor.getPlatform() === 'android') {
-            // For Android, set a standard status bar height
-            // Most Android devices have 24dp status bar (24px at 1x density)
-            const androidStatusBarHeight = 24;
-            setStatusBarHeight(androidStatusBarHeight);
+      try {
+        if (Capacitor.isNativePlatform()) {
+          try {
+            // Configure status bar
+            await StatusBar.setStyle({ style: Style.Light });
+            await StatusBar.setBackgroundColor({ color: '#E4A853' });
             
-            // Set CSS custom property for Android safe area
-            document.documentElement.style.setProperty(
-              '--android-status-bar-height', 
-              `${androidStatusBarHeight}px`
-            );
+            // Get status bar info for Android
+            if (Capacitor.getPlatform() === 'android') {
+              // For Android, set a standard status bar height
+              // Most Android devices have 24dp status bar (24px at 1x density)
+              const androidStatusBarHeight = 24;
+              setStatusBarHeight(androidStatusBarHeight);
+              
+              // Set CSS custom property for Android safe area
+              document.documentElement.style.setProperty(
+                '--android-status-bar-height', 
+                `${androidStatusBarHeight}px`
+              );
+            }
+            
+            // Hide splash screen
+            await SplashScreen.hide();
+          } catch (error) {
+            console.warn('Capacitor initialization error:', error);
           }
-          
-          // Hide splash screen
-          await SplashScreen.hide();
-        } catch (error) {
-          console.warn('Capacitor initialization error:', error);
         }
+      } catch (error) {
+        console.warn('Capacitor hook error:', error);
       }
     };
 

@@ -13,26 +13,30 @@ export const usePushNotifications = () => {
 
   // Initialize push notifications
   const initializePushNotifications = async () => {
-    if (!Capacitor.isNativePlatform()) {
-      console.log('Push notifications only work on native platforms');
-      return;
+    try {
+      if (!Capacitor.isNativePlatform()) {
+        console.log('Push notifications only work on native platforms');
+        return;
+      }
+
+      // Request permission for notifications
+      let permStatus = await PushNotifications.checkPermissions();
+
+      if (permStatus.receive === 'prompt') {
+        permStatus = await PushNotifications.requestPermissions();
+      }
+
+      if (permStatus.receive !== 'granted') {
+        console.warn('Push notification permissions denied');
+        return;
+      }
+
+      // Register for push notifications
+      await PushNotifications.register();
+      console.log('Push notifications registered');
+    } catch (error) {
+      console.warn('Error initializing push notifications:', error);
     }
-
-    // Request permission for notifications
-    let permStatus = await PushNotifications.checkPermissions();
-
-    if (permStatus.receive === 'prompt') {
-      permStatus = await PushNotifications.requestPermissions();
-    }
-
-    if (permStatus.receive !== 'granted') {
-      toast.error('Permissions de notification refusées');
-      return;
-    }
-
-    // Register for push notifications
-    await PushNotifications.register();
-    console.log('Push notifications registered');
   };
 
   // Save push token to database
