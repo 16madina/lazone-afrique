@@ -120,12 +120,12 @@ export const AppointmentBooking = ({ listingId, ownerId, listingTitle, className
           Demander une visite
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto pb-safe">
         <DialogHeader>
           <DialogTitle>Réserver une visite</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 pb-4">
           {/* Property Info */}
           <Card>
             <CardContent className="pt-4">
