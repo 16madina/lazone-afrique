@@ -141,10 +141,10 @@ const PerformanceOptimizedPropertyCard = memo(({
             {allImages.map((imgSrc, index) => (
               <CarouselItem key={index}>
                 <div className="relative w-full h-full">
-                  <LazyImage
-                    src={imgSrc}
+                  <img 
+                    src={imgSrc} 
                     alt={`${title} - Image ${index + 1}`}
-                    className="w-full h-full group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 </div>
               </CarouselItem>
