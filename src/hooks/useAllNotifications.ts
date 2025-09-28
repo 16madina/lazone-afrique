@@ -193,7 +193,102 @@ export const useAllNotifications = () => {
         })
         .subscribe();
 
-      // 4. Écouter les notifications admin (si c'est un admin)
+      // 4. Écouter les nouvelles demandes de visite (appointments)
+      const appointmentsChannel = supabase
+        .channel('appointment-notifications')
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'appointments'
+        }, async (payload) => {
+          try {
+            console.log('📅 Nouvelle demande de visite:', payload);
+            
+            // Notification pour le vendeur (owner)
+            if (payload.new.owner_user_id === user.id) {
+              const { data: visitorProfile } = await supabase.rpc('get_public_profile_safe', {
+                profile_user_id: payload.new.visitor_user_id
+              });
+
+              const { data: listing } = await supabase
+                .from('listings')
+                .select('title')
+                .eq('id', payload.new.listing_id)
+                .single();
+
+              const visitorName = (visitorProfile as any)?.full_name || 'Un utilisateur';
+              const listingTitle = listing?.title || 'votre propriété';
+              
+              const visitTypeText = payload.new.visit_type === 'physical' ? 'une visite physique' :
+                                  payload.new.visit_type === 'virtual' ? 'une visite virtuelle' : 'un appel vidéo';
+
+              await sendNotification({
+                title: 'Nouvelle demande de visite',
+                body: `${visitorName} souhaite planifier ${visitTypeText} pour ${listingTitle}`,
+                type: 'appointment_request',
+                data: {
+                  appointment_id: payload.new.id,
+                  listing_id: payload.new.listing_id,
+                  visitor_id: payload.new.visitor_user_id
+                }
+              });
+            }
+          } catch (error) {
+            console.error('Erreur notification appointment:', error);
+          }
+        })
+        .subscribe();
+
+      // 5. Écouter les mises à jour de statut des appointments
+      const appointmentUpdatesChannel = supabase
+        .channel('appointment-status-updates')
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'appointments'
+        }, async (payload) => {
+          try {
+            console.log('📅 Mise à jour appointment:', payload);
+            
+            // Notification pour le visiteur quand le statut change
+            if (payload.new.visitor_user_id === user.id && payload.new.status !== payload.old?.status) {
+              const { data: ownerProfile } = await supabase.rpc('get_public_profile_safe', {
+                profile_user_id: payload.new.owner_user_id
+              });
+
+              const ownerName = (ownerProfile as any)?.full_name || 'Le propriétaire';
+              
+              let title = '';
+              let body = '';
+
+              if (payload.new.status === 'confirmed') {
+                title = 'Visite confirmée !';
+                body = `${ownerName} a confirmé votre demande de visite`;
+              } else if (payload.new.status === 'cancelled') {
+                title = 'Visite annulée';
+                body = `${ownerName} a annulé votre demande de visite`;
+              }
+
+              if (title) {
+                await sendNotification({
+                  title,
+                  body,
+                  type: 'appointment_update',
+                  data: {
+                    appointment_id: payload.new.id,
+                    listing_id: payload.new.listing_id,
+                    status: payload.new.status
+                  }
+                });
+              }
+            }
+          } catch (error) {
+            console.error('Erreur notification appointment update:', error);
+          }
+        })
+        .subscribe();
+
+      // 6. Écouter les notifications admin (si c'est un admin)
       const adminNotificationsChannel = supabase
         .channel('admin-notifications-updates')
         .on('postgres_changes', {
@@ -260,6 +355,8 @@ export const useAllNotifications = () => {
           supabase.removeChannel(messagesChannel);
           supabase.removeChannel(contactRequestsChannel);
           supabase.removeChannel(sponsorshipChannel);
+          supabase.removeChannel(appointmentsChannel);
+          supabase.removeChannel(appointmentUpdatesChannel);
           supabase.removeChannel(adminNotificationsChannel);
           supabase.removeChannel(listingsChannel);
         } catch (error) {

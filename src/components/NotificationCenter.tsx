@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Bell, X, Check, Mail, Home, Star, AlertCircle } from 'lucide-react';
+import { Bell, X, Check, Mail, Home, Star, AlertCircle, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +13,7 @@ import { fr } from 'date-fns/locale';
 
 interface Notification {
   id: string;
-  type: 'message' | 'listing' | 'rating' | 'admin' | 'system';
+  type: 'message' | 'listing' | 'rating' | 'admin' | 'system' | 'appointment_request' | 'appointment_update' | 'sponsorship';
   title: string;
   message: string;
   isRead: boolean;
@@ -203,6 +203,9 @@ export const NotificationCenter = () => {
       case 'listing': return <Home className="w-4 h-4 text-green-500" />;
       case 'rating': return <Star className="w-4 h-4 text-yellow-500" />;
       case 'admin': return <AlertCircle className="w-4 h-4 text-red-500" />;
+      case 'appointment_request': return <Calendar className="w-4 h-4 text-purple-500" />;
+      case 'appointment_update': return <Calendar className="w-4 h-4 text-orange-500" />;
+      case 'sponsorship': return <Star className="w-4 h-4 text-gold-500" />;
       default: return <Bell className="w-4 h-4 text-gray-500" />;
     }
   };
