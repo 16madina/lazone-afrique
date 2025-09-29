@@ -1,7 +1,7 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCapacitor } from "@/hooks/useCapacitor";
+import { useUnreadNotifications } from "@/hooks/useUnreadNotifications";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,7 +12,7 @@ import { Bell, User, Menu, LogOut, Settings } from "lucide-react";
 import lazoneLogo from "@/assets/lazone-logo.png";
 
 const Header = () => {
-  const [notifications, setNotifications] = useState(3);
+  const { unreadCount, resetCount } = useUnreadNotifications();
   const { user, profile, signOut } = useAuth();
   const { isAndroid, isNative } = useCapacitor();
   const navigate = useNavigate();
@@ -74,11 +74,11 @@ const Header = () => {
           {user && (
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative">
+                <Button variant="ghost" size="icon" className="relative" onClick={() => navigate('/profile?tab=notifications')}>
                   <Bell className="w-5 h-5" />
-                  {notifications > 0 && (
+                  {unreadCount > 0 && (
                     <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center text-xs bg-primary">
-                      {notifications}
+                      {unreadCount}
                     </Badge>
                   )}
                 </Button>
@@ -90,32 +90,26 @@ const Header = () => {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      onClick={() => setNotifications(0)}
+                      onClick={resetCount}
                       className="text-xs"
+                      disabled={unreadCount === 0}
                     >
                       Tout marquer comme lu
                     </Button>
                   </div>
                   
-                  {notifications > 0 ? (
-                    <div className="space-y-3">
-                      <div className="p-3 rounded-lg bg-muted/50 text-sm">
-                        <div className="font-medium text-foreground">Nouvelle demande de contact</div>
-                        <div className="text-muted-foreground">Un utilisateur souhaite vous contacter pour une propriété</div>
-                        <div className="text-xs text-muted-foreground mt-1">Il y a 2 heures</div>
-                      </div>
-                      
-                      <div className="p-3 rounded-lg bg-muted/50 text-sm">
-                        <div className="font-medium text-foreground">Sponsoring activé</div>
-                        <div className="text-muted-foreground">Votre annonce est maintenant sponsorisée</div>
-                        <div className="text-xs text-muted-foreground mt-1">Il y a 5 heures</div>
-                      </div>
-                      
-                      <div className="p-3 rounded-lg bg-muted/50 text-sm">
-                        <div className="font-medium text-foreground">Nouveau message</div>
-                        <div className="text-muted-foreground">Vous avez reçu un nouveau message</div>
-                        <div className="text-xs text-muted-foreground mt-1">Hier</div>
-                      </div>
+                  {unreadCount > 0 ? (
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">
+                        Vous avez {unreadCount} notification{unreadCount > 1 ? 's' : ''} non lue{unreadCount > 1 ? 's' : ''}
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        className="w-full" 
+                        onClick={() => navigate('/profile?tab=notifications')}
+                      >
+                        Voir toutes les notifications
+                      </Button>
                     </div>
                   ) : (
                     <div className="text-center py-8 text-muted-foreground">
