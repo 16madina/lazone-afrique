@@ -8,16 +8,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Search, MessageCircle, Phone, Video, MoreVertical, Check, CheckCheck } from "lucide-react";
+import { Search, MessageCircle, Phone, Video, MoreVertical, Check, CheckCheck, Calendar } from "lucide-react";
 import { useRealTimeMessages } from "@/hooks/useRealTimeMessages";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AppointmentManager } from "@/components/AppointmentManager";
 
 const Messages = () => {
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [activeTab, setActiveTab] = useState<'messages' | 'appointments'>('messages');
   const { user } = useAuth();
 
   const {
@@ -158,122 +160,149 @@ const Messages = () => {
     <div className="flex flex-col h-screen bg-background">
       <Header />
       
-      <main className="flex flex-1 overflow-hidden">
-        {/* Conversations List */}
-        <div className={`
-          ${selectedConversationId ? 'hidden md:flex' : 'flex'} 
-          flex-col w-full md:w-1/3 border-r border-border
-        `}>
-          {/* Search and Filters */}
-          <div className="p-4 border-b border-border">
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input 
-                placeholder="Rechercher une conversation..." 
-                className="pl-10"
-              />
-            </div>
-            
-            <div className="flex gap-2">
-              <Button 
-                variant={!showUnreadOnly ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowUnreadOnly(false)}
-              >
-                Tous
-              </Button>
-              <Button 
-                variant={showUnreadOnly ? "default" : "outline"}
-                size="sm" 
-                onClick={() => setShowUnreadOnly(true)}
-              >
-                Non lus
-              </Button>
-            </div>
-          </div>
-
-          {/* Conversations */}
-          <div className="flex-1 overflow-y-auto">
-            {filteredConversations.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center p-8">
-                <MessageCircle className="w-12 h-12 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
-                  {showUnreadOnly ? "Aucun message non lu" : "Aucune conversation"}
-                </p>
+      {/* Tab Navigation */}
+      <div className="border-b border-border bg-background">
+        <div className="flex">
+          <Button
+            variant={activeTab === 'messages' ? 'default' : 'ghost'}
+            onClick={() => setActiveTab('messages')}
+            className="flex-1 rounded-none border-r"
+          >
+            <MessageCircle className="w-4 h-4 mr-2" />
+            Messages
+          </Button>
+          <Button
+            variant={activeTab === 'appointments' ? 'default' : 'ghost'}
+            onClick={() => setActiveTab('appointments')}
+            className="flex-1 rounded-none"
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            Rendez-vous
+          </Button>
+        </div>
+      </div>
+      
+      {activeTab === 'appointments' ? (
+        <div className="flex-1 overflow-hidden p-4">
+          <AppointmentManager className="h-full" />
+        </div>
+      ) : (
+        <main className="flex flex-1 overflow-hidden">
+          {/* Conversations List */}
+          <div className={`
+            ${selectedConversationId ? 'hidden md:flex' : 'flex'} 
+            flex-col w-full md:w-1/3 border-r border-border
+          `}>
+            {/* Search and Filters */}
+            <div className="p-4 border-b border-border">
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input 
+                  placeholder="Rechercher une conversation..." 
+                  className="pl-10"
+                />
               </div>
-            ) : (
-              filteredConversations.map((conversation) => (
-                <div
-                  key={conversation.id}
-                  onClick={() => {
-                    setSelectedConversationId(conversation.id);
-                    // Marquer la conversation comme lue
-                    if (conversation.unread_count > 0) {
-                      markConversationAsRead(conversation.id);
-                    }
-                  }}
-                  className={`
-                    p-4 border-b border-border cursor-pointer transition-colors hover:bg-muted/50
-                    ${selectedConversationId === conversation.id ? 'bg-muted' : ''}
-                  `}
+              
+              <div className="flex gap-2">
+                <Button 
+                  variant={!showUnreadOnly ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setShowUnreadOnly(false)}
                 >
-                  <div className="flex items-center gap-3">
-                     <div className="relative">
-                       <Avatar className="w-12 h-12">
-                         <AvatarImage 
-                           src={getConversationAvatarUrl(conversation)} 
-                           alt={getConversationDisplayName(conversation)}
-                           onError={(e) => {
-                             console.log('Avatar failed to load:', getConversationAvatarUrl(conversation));
-                           }}
-                         />
-                         <AvatarFallback className="bg-gradient-primary text-primary-foreground">
-                           {getConversationAvatar(conversation)}
-                         </AvatarFallback>
-                       </Avatar>
-                      {isParticipantOnline(conversation) && (
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-accent rounded-full border-2 border-background" />
-                      )}
-                    </div>
+                  Tous
+                </Button>
+                <Button 
+                  variant={showUnreadOnly ? "default" : "outline"}
+                  size="sm" 
+                  onClick={() => setShowUnreadOnly(true)}
+                >
+                  Non lus
+                </Button>
+              </div>
+            </div>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold truncate">
-                          {getConversationDisplayName(conversation)}
-                        </h3>
-                        <span className="text-xs text-muted-foreground ml-2">
-                          {formatMessageTime(conversation.updated_at)}
-                        </span>
+            {/* Conversations */}
+            <div className="flex-1 overflow-y-auto">
+              {filteredConversations.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center p-8">
+                  <MessageCircle className="w-12 h-12 text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">
+                    {showUnreadOnly ? "Aucun message non lu" : "Aucune conversation"}
+                  </p>
+                </div>
+              ) : (
+                filteredConversations.map((conversation) => (
+                  <div
+                    key={conversation.id}
+                    onClick={() => {
+                      setSelectedConversationId(conversation.id);
+                      // Marquer la conversation comme lue
+                      if (conversation.unread_count > 0) {
+                        markConversationAsRead(conversation.id);
+                      }
+                    }}
+                    className={`
+                      p-4 border-b border-border cursor-pointer transition-colors hover:bg-muted/50
+                      ${selectedConversationId === conversation.id ? 'bg-muted' : ''}
+                    `}
+                  >
+                    <div className="flex items-center gap-3">
+                       <div className="relative">
+                         <Avatar className="w-12 h-12">
+                           <AvatarImage 
+                             src={getConversationAvatarUrl(conversation)} 
+                             alt={getConversationDisplayName(conversation)}
+                             onError={(e) => {
+                               console.log('Avatar failed to load:', getConversationAvatarUrl(conversation));
+                             }}
+                           />
+                           <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+                             {getConversationAvatar(conversation)}
+                           </AvatarFallback>
+                         </Avatar>
+                        {isParticipantOnline(conversation) && (
+                          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-accent rounded-full border-2 border-background" />
+                        )}
                       </div>
 
-                      <p className="text-sm text-muted-foreground truncate mt-1">
-                        {conversation.latest_message?.content || "Aucun message"}
-                      </p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold truncate">
+                            {getConversationDisplayName(conversation)}
+                          </h3>
+                          <span className="text-xs text-muted-foreground ml-2">
+                            {formatMessageTime(conversation.updated_at)}
+                          </span>
+                        </div>
 
-                      <div className="flex items-center justify-between mt-2">
-                        <Badge variant="outline" className="text-xs">
-                          {conversation.property?.title || 'Conversation'}
-                        </Badge>
-                        {conversation.unread_count > 0 && (
-                          <Badge className="bg-primary text-primary-foreground">
-                            {conversation.unread_count}
+                        <p className="text-sm text-muted-foreground truncate mt-1">
+                          {conversation.latest_message?.content || "Aucun message"}
+                        </p>
+
+                        <div className="flex items-center justify-between mt-2">
+                          <Badge variant="outline" className="text-xs">
+                            {conversation.property?.title || 'Conversation'}
                           </Badge>
-                        )}
+                          {conversation.unread_count > 0 && (
+                            <Badge className="bg-primary text-primary-foreground">
+                              {conversation.unread_count}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Chat Area */}
-        {selectedConversationId && selectedConversation ? (
-          <div className={`
-            ${selectedConversationId ? 'flex' : 'hidden md:flex'} 
-            flex-col flex-1
-          `}>
+          {/* Chat Area */}
+          {selectedConversationId && selectedConversation ? (
+            <div className={`
+              ${selectedConversationId ? 'flex' : 'hidden md:flex'} 
+              flex-col flex-1
+            `}>
             {/* Chat Header */}
             <div className="p-4 border-b border-border bg-background/95 backdrop-blur-sm">
               <div className="flex items-center justify-between">
@@ -457,23 +486,23 @@ const Messages = () => {
               </div>
             </div>
           </div>
-        ) : (
-          /* Empty State */
-          <div className="hidden md:flex flex-1 items-center justify-center pb-20 md:pb-0">
-            <div className="text-center space-y-4 animate-fade-in">
-              <MessageCircle className="w-16 h-16 mx-auto text-muted-foreground" />
-              <div className="space-y-2">
-                <h3 className="text-xl font-semibold">Sélectionnez une conversation</h3>
-                <p className="text-muted-foreground">
-                  Choisissez une conversation pour commencer à discuter
-                </p>
+          ) : (
+            /* Empty State */
+            <div className="hidden md:flex flex-1 items-center justify-center pb-20 md:pb-0">
+              <div className="text-center space-y-4 animate-fade-in">
+                <MessageCircle className="w-16 h-16 mx-auto text-muted-foreground" />
+                <div className="space-y-2">
+                  <h3 className="text-xl font-semibold">Sélectionnez une conversation</h3>
+                  <p className="text-muted-foreground">
+                    Choisissez une conversation pour commencer à discuter
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </main>
-
-
+          )}
+        </main>
+      )}
+      
       <BottomNavigation />
     </div>
   );
