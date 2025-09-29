@@ -327,7 +327,7 @@ const Map = () => {
               <span>Propriétés</span>
             </div>
             <div className="text-xs text-muted-foreground">
-              Prix en FCFA
+              Prix en {selectedCountry.currency.code}
             </div>
           </div>
         </div>
