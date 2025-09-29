@@ -20,6 +20,15 @@ export interface Country {
 
 export const africanCountries: Country[] = [
   {
+    code: 'intl',
+    name: 'International',
+    flag: '🌍',
+    currency: { code: 'USD', symbol: '$', name: 'Dollar américain' },
+    cities: ['Autre'],
+    exchangeRate: 1,
+    coordinates: { lat: 0, lng: 0, zoom: 2 }
+  },
+  {
     code: 'ci',
     name: 'Côte d\'Ivoire',
     flag: '🇨🇮',
@@ -255,9 +264,23 @@ export const CountryProvider: React.FC<CountryProviderProps> = ({ children }) =>
           localStorage.setItem('selectedCountry', country.code);
           console.log(`Pays détecté automatiquement: ${country.name}`);
         }
+      } else {
+        // Si le pays n'est pas en Afrique, utiliser "International"
+        const intlCountry = africanCountries.find(c => c.code === 'intl');
+        if (intlCountry && !localStorage.getItem('selectedCountry')) {
+          setSelectedCountry(intlCountry);
+          localStorage.setItem('selectedCountry', 'intl');
+          console.log('Utilisateur en dehors de l\'Afrique - mode International activé');
+        }
       }
     } catch (error) {
       console.log('Impossible de détecter la localisation:', error);
+      // En cas d'erreur, utiliser "International" par défaut
+      const intlCountry = africanCountries.find(c => c.code === 'intl');
+      if (intlCountry && !localStorage.getItem('selectedCountry')) {
+        setSelectedCountry(intlCountry);
+        localStorage.setItem('selectedCountry', 'intl');
+      }
     }
   };
 
