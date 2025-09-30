@@ -102,57 +102,77 @@ export const usePushNotifications = () => {
 
   useEffect(() => {
     if (!user) return;
+    
+    // Only initialize on native platforms
+    if (!Capacitor.isNativePlatform()) {
+      console.log('Push notifications disabled: not a native platform');
+      return;
+    }
 
-    // Initialize push notifications
-    initializePushNotifications();
+    // Initialize push notifications with better error handling
+    const setupPushNotifications = async () => {
+      try {
+        await initializePushNotifications();
+        
+        // Listen for registration success
+        PushNotifications.addListener('registration', (token) => {
+          console.log('Push registration success, token: ' + token.value);
+          setPushToken(token.value);
+          setIsRegistered(true);
+          savePushTokenToDatabase(token.value);
+        });
 
-    // Listen for registration success
-    PushNotifications.addListener('registration', (token) => {
-      console.log('Push registration success, token: ' + token.value);
-      setPushToken(token.value);
-      setIsRegistered(true);
-      savePushTokenToDatabase(token.value);
-    });
+        // Listen for registration errors
+        PushNotifications.addListener('registrationError', (error) => {
+          console.error('Error on registration: ' + JSON.stringify(error));
+          // Don't show error toast to avoid spamming users if Firebase is not configured
+          console.warn('Push notifications may not be available on this device');
+        });
 
-    // Listen for registration errors
-    PushNotifications.addListener('registrationError', (error) => {
-      console.error('Error on registration: ' + JSON.stringify(error));
-      toast.error('Erreur lors de l\'enregistrement des notifications');
-    });
+        // Listen for push notifications received
+        PushNotifications.addListener('pushNotificationReceived', (notification) => {
+          console.log('Push notification received: ', notification);
+          
+          // Show local notification when app is in foreground
+          LocalNotifications.schedule({
+            notifications: [
+              {
+                title: notification.title || 'LaZone',
+                body: notification.body || 'Nouveau message',
+                id: Math.floor(Math.random() * 1000),
+                schedule: { at: new Date(Date.now() + 1000) }
+              }
+            ]
+          }).catch(err => console.warn('Local notification error:', err));
+        });
 
-    // Listen for push notifications received
-    PushNotifications.addListener('pushNotificationReceived', (notification) => {
-      console.log('Push notification received: ', notification);
-      
-      // Show local notification when app is in foreground
-      LocalNotifications.schedule({
-        notifications: [
-          {
-            title: notification.title || 'LaZone',
-            body: notification.body || 'Nouveau message',
-            id: Math.floor(Math.random() * 1000),
-            schedule: { at: new Date(Date.now() + 1000) }
+        // Listen for notification actions
+        PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+          console.log('Push notification action performed', notification);
+          
+          // Handle navigation based on notification data
+          if (notification.notification.data?.type === 'message') {
+            const conversationId = notification.notification.data?.conversation_id;
+            if (conversationId) {
+              // Navigate to messages page with conversation
+              window.location.href = `/messages?conversation=${conversationId}`;
+            }
           }
-        ]
-      });
-    });
-
-    // Listen for notification actions
-    PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-      console.log('Push notification action performed', notification);
-      
-      // Handle navigation based on notification data
-      if (notification.notification.data?.type === 'message') {
-        const conversationId = notification.notification.data?.conversation_id;
-        if (conversationId) {
-          // Navigate to messages page with conversation
-          window.location.href = `/messages?conversation=${conversationId}`;
-        }
+        });
+      } catch (error) {
+        console.warn('Failed to setup push notifications:', error);
+        // Silently fail - the app should continue to work without push notifications
       }
-    });
+    };
+
+    setupPushNotifications();
 
     return () => {
-      PushNotifications.removeAllListeners();
+      try {
+        PushNotifications.removeAllListeners();
+      } catch (error) {
+        console.warn('Error removing push notification listeners:', error);
+      }
     };
   }, [user]);
 
