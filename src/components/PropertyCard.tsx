@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,6 +9,9 @@ import { useNavigate } from "react-router-dom";
 import { MapPin, Heart, Bed, Bath, Square, Phone, MessageCircle, Star } from "lucide-react";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useContactActions } from "@/hooks/useContactActions";
+
+// Placeholder constant pour éviter de recréer à chaque render
+const PLACEHOLDER_IMAGE = '/placeholder.svg';
 
 interface PropertyCardProps {
   id: string;
@@ -66,22 +69,24 @@ const PropertyCard = memo(({
     await toggleFavorite(id);
   };
 
-  // Fonction optimisée pour obtenir toutes les images disponibles
-  const getAllImages = () => {
+  // Fonction optimisée pour obtenir toutes les images disponibles - mémorisée
+  const allImages = useMemo(() => {
     const images: string[] = [];
+    
+    // Ajouter les photos d'abord
     if (photos && Array.isArray(photos) && photos.length > 0) {
       // Limiter le nombre d'images pour optimiser les performances
       images.push(...photos.slice(0, 5));
     }
-    if (image && !images.includes(image) && image !== "/placeholder.svg") {
-      images.unshift(image); // Mettre l'image principale en premier
+    
+    // Ajouter l'image principale si elle existe et n'est pas déjà dans la liste
+    if (image && image !== PLACEHOLDER_IMAGE && !images.includes(image)) {
+      images.unshift(image);
     }
-    // Utiliser un SVG data URI comme fallback
-    const placeholderSvg = `data:image/svg+xml,%3csvg width='400' height='300' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='400' height='300' fill='%23f3f4f6'/%3e%3crect x='50' y='50' width='300' height='200' fill='%23e5e7eb' stroke='%23d1d5db' stroke-width='2' rx='8'/%3e%3ccircle cx='120' cy='110' r='20' fill='%23d1d5db'/%3e%3cpath d='M80 180 L120 140 L160 180 L200 140 L240 160 L280 120 L320 140 L320 200 L80 200 Z' fill='%23d1d5db'/%3e%3c/svg%3e`;
-    return images.length > 0 ? images : [placeholderSvg];
-  };
-
-  const allImages = getAllImages();
+    
+    // Si aucune image, utiliser le placeholder
+    return images.length > 0 ? images : [PLACEHOLDER_IMAGE];
+  }, [photos, image]);
 
   const handleCardClick = () => {
     // Vérifier que l'ID est un UUID valide (format Supabase)
@@ -135,26 +140,18 @@ const PropertyCard = memo(({
       className="group hover:shadow-warm transition-all duration-300 hover:-translate-y-1 overflow-hidden bg-gradient-card cursor-pointer"
       onClick={handleCardClick}
     >
-      {/* Image Carousel optimisé */}
-      <div className="relative aspect-[4/3] overflow-hidden">
+      {/* Image Carousel */}
+      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         <Carousel className="w-full h-full">
           <CarouselContent>
             {allImages.map((imgSrc, index) => (
-              <CarouselItem key={index}>
-                <div className="relative w-full h-full bg-muted">
+              <CarouselItem key={`${id}-${index}`}>
+                <div className="relative w-full h-full">
                   <img 
                     src={imgSrc} 
                     alt={`${title} - Image ${index + 1}`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading={index === 0 ? "eager" : "lazy"}
-                    onError={(e) => {
-                      // Éviter la boucle infinie en vérifiant l'URL actuelle
-                      const currentSrc = e.currentTarget.src;
-                      if (!currentSrc.includes('placeholder.svg') && !currentSrc.includes('data:image/svg')) {
-                        e.currentTarget.src = '/placeholder.svg';
-                        e.currentTarget.onerror = null; // Désactiver pour éviter boucle
-                      }
-                    }}
                   />
                 </div>
               </CarouselItem>
