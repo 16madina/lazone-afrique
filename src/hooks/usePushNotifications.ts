@@ -6,6 +6,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
+// Session flag to ensure push notifications are only initialized once
+let hasInitialized = false;
+
 export const usePushNotifications = () => {
   const [isRegistered, setIsRegistered] = useState(false);
   const [pushToken, setPushToken] = useState<string | null>(null);
@@ -101,7 +104,8 @@ export const usePushNotifications = () => {
   };
 
   useEffect(() => {
-    if (!user) return;
+    // Don't initialize if no user or already initialized
+    if (!user || hasInitialized) return;
     
     // Only initialize on native platforms
     if (!Capacitor.isNativePlatform()) {
@@ -109,14 +113,19 @@ export const usePushNotifications = () => {
       return;
     }
 
+    console.log('🔔 Initializing push notifications for user:', user.id);
+
     // Initialize push notifications with better error handling
     const setupPushNotifications = async () => {
       try {
         await initializePushNotifications();
         
+        // Mark as initialized to prevent multiple attempts
+        hasInitialized = true;
+        
         // Listen for registration success
         PushNotifications.addListener('registration', (token) => {
-          console.log('Push registration success, token: ' + token.value);
+          console.log('✅ Push registration success, token: ' + token.value);
           setPushToken(token.value);
           setIsRegistered(true);
           savePushTokenToDatabase(token.value);

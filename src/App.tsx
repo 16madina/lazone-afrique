@@ -6,9 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CountryProvider } from "@/contexts/CountryContext";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { useCapacitor } from "@/hooks/useCapacitor";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { useAllNotifications } from "@/hooks/useAllNotifications";
+import { NativeInitializer } from "@/components/NativeInitializer";
 import { SplashScreen } from "@/components/SplashScreen";
 import Index from "./pages/Index";
 import Map from "./pages/Map";
@@ -30,14 +28,6 @@ const queryClient = new QueryClient({
 });
 
 const AppContent = () => {
-  useCapacitor();
-  
-  // Initialize push notifications for authenticated users
-  usePushNotifications();
-  
-  // Initialize all notification listeners
-  useAllNotifications();
-  
   return (
     <Routes>
       <Route path="/" element={<Index />} />
@@ -74,6 +64,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <CountryProvider>
         <AuthProvider>
+          <NativeInitializer />
           <TooltipProvider>
             <Toaster />
             <Sonner />
