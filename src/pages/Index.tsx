@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import PropertyFilters, { FilterState } from "@/components/PropertyFilters";
@@ -401,18 +401,10 @@ const Index = () => {
               : "grid-cols-1"
           }`}>
             {paginatedProperties.map((property) => {
-              // Mémoiser les props de l'agent pour éviter les re-renders
               const profile = property.profiles;
-              const agentProps = useMemo(() => ({
-                name: profile?.full_name || "Propriétaire",
-                type: (profile?.user_type === 'proprietaire' ? 'individual' : 
-                       profile?.user_type === 'agence' ? 'agency' : 'broker') as "individual" | "agency" | "broker",
-                rating: 4.5,
-                verified: true,
-                avatar_url: (profile as any)?.avatar_url,
-                user_id: property.user_id,
-                phone: profile?.phone
-              }), [profile?.full_name, profile?.user_type, (profile as any)?.avatar_url, property.user_id, profile?.phone]);
+              const agentName = profile?.full_name || "Propriétaire";
+              const agentType = profile?.user_type === 'proprietaire' ? 'individual' : 
+                              profile?.user_type === 'agence' ? 'agency' : 'broker';
               
               return (
                 <PropertyCard 
@@ -429,7 +421,15 @@ const Index = () => {
                   bedrooms={property.bedrooms}
                   bathrooms={property.bathrooms}
                   surface={property.surface_area || 120}
-                  agent={agentProps}
+                  agent={{
+                    name: agentName,
+                    type: agentType,  
+                    rating: 4.5,
+                    verified: true,
+                    avatar_url: (profile as any)?.avatar_url,
+                    user_id: property.user_id,
+                    phone: profile?.phone
+                  }}
                   features={property.features || ["Moderne", "Bien situé"]}
                   isSponsored={property.is_sponsored && property.sponsored_until && new Date(property.sponsored_until) > new Date()}
                   isFavorite={isFavorite(property.id)}
