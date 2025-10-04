@@ -141,16 +141,18 @@ const PropertyCard = memo(({
           <CarouselContent>
             {allImages.map((imgSrc, index) => (
               <CarouselItem key={index}>
-                <div className="relative w-full h-full">
+                <div className="relative w-full h-full bg-muted">
                   <img 
                     src={imgSrc} 
                     alt={`${title} - Image ${index + 1}`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading={index === 0 ? "eager" : "lazy"}
                     onError={(e) => {
-                      const placeholderSvg = `data:image/svg+xml,%3csvg width='400' height='300' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='400' height='300' fill='%23f3f4f6'/%3e%3crect x='50' y='50' width='300' height='200' fill='%23e5e7eb' stroke='%23d1d5db' stroke-width='2' rx='8'/%3e%3ccircle cx='120' cy='110' r='20' fill='%23d1d5db'/%3e%3cpath d='M80 180 L120 140 L160 180 L200 140 L240 160 L280 120 L320 140 L320 200 L80 200 Z' fill='%23d1d5db'/%3e%3c/svg%3e`;
-                      if (!imgSrc.includes('data:image/svg+xml')) {
-                        e.currentTarget.src = placeholderSvg;
+                      // Éviter la boucle infinie en vérifiant l'URL actuelle
+                      const currentSrc = e.currentTarget.src;
+                      if (!currentSrc.includes('placeholder.svg') && !currentSrc.includes('data:image/svg')) {
+                        e.currentTarget.src = '/placeholder.svg';
+                        e.currentTarget.onerror = null; // Désactiver pour éviter boucle
                       }
                     }}
                   />
