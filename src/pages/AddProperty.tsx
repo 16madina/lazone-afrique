@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import CountrySelector from "@/components/CountrySelector";
 import CitySelector from "@/components/CitySelector";
 import { CinePayPaymentMethod } from '@/components/CinePayPaymentMethod';
+import { logger } from '@/lib/logger';
 
 const AddProperty = () => {
   const navigate = useNavigate();
@@ -97,14 +98,14 @@ const AddProperty = () => {
         .single();
 
       if (error) {
-        console.error('Error loading listing:', error);
+        logger.error('Error loading listing', error);
         toast.error("Impossible de charger l'annonce");
         navigate('/profile');
         return;
       }
 
       if (listing) {
-        console.log('Loading existing listing for editing:', listing);
+        logger.info('Loading existing listing for editing');
         
         // Populate form with existing data
         setFormData({
@@ -138,7 +139,7 @@ const AddProperty = () => {
         }
       }
     } catch (error) {
-      console.error('Error loading listing:', error);
+      logger.error('Error loading listing', error);
       toast.error("Erreur lors du chargement de l'annonce");
       navigate('/profile');
     } finally {
@@ -177,7 +178,7 @@ const AddProperty = () => {
             }));
           }
         } catch (error) {
-          console.error('Error loading user profile:', error);
+          logger.error('Error loading user profile', error);
         }
       }
     };
@@ -334,14 +335,14 @@ const AddProperty = () => {
             toast.error("Erreur lors de la géolocalisation");
           }
         } catch (error) {
-          console.error('Geolocation error:', error);
+          logger.error('Geolocation error', error);
           toast.error("Erreur lors de la géolocalisation");
         } finally {
           setIsGeolocating(false);
         }
       },
       (error) => {
-        console.error('Geolocation error:', error);
+        logger.error('Geolocation error', error);
         setIsGeolocating(false);
         
         switch (error.code) {
@@ -391,13 +392,6 @@ const AddProperty = () => {
         
         break;
       case 2:
-        console.log('🔍 Validation étape 2:', {
-          title: formData.title,
-          area: formData.area,
-          titleExists: !!formData.title,
-          areaExists: !!formData.area,
-          isLandProperty: isLandProperty()
-        });
         
         // À l'étape 2, on valide seulement le titre et la surface (pas le prix qui est à l'étape 3)
         if (!formData.title) {
@@ -422,10 +416,6 @@ const AddProperty = () => {
         
         break;
       case 3:
-        console.log('🔍 Validation étape 3:', {
-          price: formData.price,
-          priceExists: !!formData.price
-        });
         
         // À l'étape 3, on valide le prix qui est saisi à cette étape
         if (!formData.price) {
@@ -488,7 +478,6 @@ const AddProperty = () => {
       const videoUrl = uploadedVideo?.url || null;
 
       // Get real coordinates for the city using geocoding
-      console.log(`Geocoding city: ${formData.city}, ${selectedCountry.code}`);
       const { data: geocodeData, error: geocodeError } = await supabase.functions.invoke('geocode-city', {
         body: {
           city: formData.city,

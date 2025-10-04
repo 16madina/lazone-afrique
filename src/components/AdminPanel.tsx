@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { logger } from '@/lib/logger';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -99,7 +100,7 @@ const AdminPanel = () => {
       if (error) throw error;
       setUsers(data || []);
     } catch (error: any) {
-      console.error('Error fetching users:', error);
+      logger.error('Error fetching users', error);
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les utilisateurs',
@@ -125,7 +126,7 @@ const AdminPanel = () => {
         .in('user_id', userIds);
 
       if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
+        logger.error('Error fetching profiles', profilesError);
       }
 
       const profilesMap = (profiles || []).reduce((acc, profile) => {
@@ -140,7 +141,7 @@ const AdminPanel = () => {
 
       setListings(listingsWithProfiles);
     } catch (error: any) {
-      console.error('Error fetching listings:', error);
+      logger.error('Error fetching listings', error);
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les annonces',
@@ -159,7 +160,7 @@ const AdminPanel = () => {
       if (error) throw error;
       setPackages(data || []);
     } catch (error: any) {
-      console.error('Error fetching packages:', error);
+      logger.error('Error fetching packages', error);
       toast({
         title: 'Erreur',
         description: 'Impossible de charger les packages',
@@ -176,7 +177,7 @@ const AdminPanel = () => {
 
   const performAdminAction = async (action: string, targetUserId?: string, targetListingId?: string, data?: any) => {
     setLoading(true);
-    console.log('🔧 Exécution de l\'action admin:', { action, targetUserId, targetListingId, data });
+    logger.safe('Executing admin action', { action, targetUserId, targetListingId });
     try {
       const { error } = await supabase.functions.invoke('admin-actions', {
         body: {
@@ -188,11 +189,11 @@ const AdminPanel = () => {
       });
 
       if (error) {
-        console.error('❌ Erreur de la fonction admin:', error);
+        logger.error('Admin function error', error);
         throw error;
       }
 
-      console.log('✅ Action admin réussie:', action);
+      logger.info('Admin action successful:', action);
       toast({
         title: 'Succès',
         description: 'Action effectuée avec succès'
@@ -202,7 +203,7 @@ const AdminPanel = () => {
       await fetchUsers();
       await fetchListings();
     } catch (error: any) {
-      console.error('Admin action error:', error);
+      logger.error('Admin action error', error);
       toast({
         title: 'Erreur',
         description: error.message || 'Une erreur est survenue',
@@ -283,13 +284,13 @@ const AdminPanel = () => {
 
   const handleDeletePackage = async (packageId: string, packageName: string) => {
     if (confirm(`Êtes-vous sûr de vouloir supprimer le package "${packageName}" ? Cette action est irréversible.`)) {
-      console.log('🗑️ Tentative de suppression du package:', { packageId, packageName });
+      logger.info('Attempting to delete package:', packageId);
       try {
         await performAdminAction('delete_package', undefined, undefined, { packageId });
-        console.log('✅ Package supprimé avec succès:', packageId);
+        logger.info('Package deleted successfully:', packageId);
         fetchPackages();
       } catch (error) {
-        console.error('❌ Erreur lors de la suppression du package:', error);
+        logger.error('Error deleting package', error);
       }
     }
   };

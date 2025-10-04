@@ -168,34 +168,21 @@ const Index = () => {
 
   // Filter properties based on current filters
   const filterProperties = (properties: Listing[], filters: FilterState) => {
-    console.log('🔍 Début du filtrage:', { 
-      totalProperties: properties.length, 
-      filters,
-      sampleProperty: properties[0] ? {
-        city: properties[0].city,
-        property_type: properties[0].property_type,
-        transaction_type: properties[0].transaction_type
-      } : 'aucune propriété'
-    });
-
     return properties.filter(property => {
       // Filter by transaction type
       if (filters.type && property.transaction_type !== filters.type) {
-        console.log('❌ Filtré par transaction type:', property.title, property.transaction_type, 'vs', filters.type);
         return false;
       }
       
       // Filter by property type
       if (filters.propertyType) {
         if (property.property_type !== filters.propertyType) {
-          console.log('❌ Filtré par property type:', property.title, property.property_type, 'vs', filters.propertyType);
           return false;
         }
       }
       
       // Filter by price range
       if (property.price < filters.priceRange[0] || property.price > filters.priceRange[1]) {
-        console.log('❌ Filtré par prix:', property.title, property.price);
         return false;
       }
       
@@ -203,7 +190,6 @@ const Index = () => {
       if (filters.bedrooms) {
         const minBedrooms = parseInt(filters.bedrooms);
         if (property.bedrooms && property.bedrooms < minBedrooms) {
-          console.log('❌ Filtré par chambres:', property.title, property.bedrooms, 'vs', minBedrooms);
           return false;
         }
       }
@@ -212,7 +198,6 @@ const Index = () => {
       if (filters.bathrooms) {
         const minBathrooms = parseInt(filters.bathrooms);
         if (property.bathrooms && property.bathrooms < minBathrooms) {
-          console.log('❌ Filtré par salles de bain:', property.title, property.bathrooms, 'vs', minBathrooms);
           return false;
         }
       }
@@ -220,7 +205,6 @@ const Index = () => {
       // Filter by surface area
       if (property.surface_area) {
         if (property.surface_area < filters.surface[0] || property.surface_area > filters.surface[1]) {
-          console.log('❌ Filtré par surface:', property.title, property.surface_area);
           return false;
         }
       }
@@ -231,7 +215,6 @@ const Index = () => {
           property.features?.includes(feature)
         );
         if (!hasAllFeatures) {
-          console.log('❌ Filtré par features:', property.title);
           return false;
         }
       }
@@ -241,7 +224,6 @@ const Index = () => {
         const locationLower = filters.location.toLowerCase();
         const cityLower = property.city.toLowerCase();
         if (!cityLower.includes(locationLower)) {
-          console.log('❌ Filtré par localisation:', property.title, property.city, 'vs', filters.location);
           return false;
         }
       }
@@ -252,12 +234,10 @@ const Index = () => {
         const titleMatch = property.title.toLowerCase().includes(searchLower);
         const cityMatch = property.city.toLowerCase().includes(searchLower);
         if (!titleMatch && !cityMatch) {
-          console.log('❌ Filtré par recherche:', property.title, 'recherche:', filters.searchQuery);
           return false;
         }
       }
       
-      console.log('✅ Propriété acceptée:', property.title);
       return true;
     });
   };
@@ -275,8 +255,6 @@ const Index = () => {
     propertyType: string;
     searchQuery: string;
   }) => {
-    console.log('🔍 Recherche depuis HeroSection:', searchFilters);
-    
     const newFilters = {
       ...currentFilters,
       location: searchFilters.location,
@@ -284,20 +262,8 @@ const Index = () => {
       searchQuery: searchFilters.searchQuery
     };
     
-    console.log('📋 Nouveaux filtres:', newFilters);
-    console.log('🏠 Propriétés avant filtrage:', allProperties.length);
-    
     setCurrentFilters(newFilters);
     const filteredProperties = filterProperties(allProperties, newFilters);
-    
-    console.log('🏠 Propriétés après filtrage:', filteredProperties.length);
-    console.log('🏠 Propriétés filtrées:', filteredProperties.map(p => ({ 
-      title: p.title, 
-      city: p.city, 
-      propertyType: p.property_type, 
-      transactionType: p.transaction_type 
-    })));
-    
     setProperties(filteredProperties);
   };
 

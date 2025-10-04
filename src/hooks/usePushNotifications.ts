@@ -5,6 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
 
 // Session flag to ensure push notifications are only initialized once
 let hasInitialized = false;
@@ -18,7 +19,7 @@ export const usePushNotifications = () => {
   const initializePushNotifications = async () => {
     try {
       if (!Capacitor.isNativePlatform()) {
-        console.log('Push notifications only work on native platforms');
+        logger.info('Push notifications only work on native platforms');
         return;
       }
 
@@ -30,15 +31,15 @@ export const usePushNotifications = () => {
       }
 
       if (permStatus.receive !== 'granted') {
-        console.warn('Push notification permissions denied');
+        logger.warn('Push notification permissions denied');
         return;
       }
 
       // Register for push notifications
       await PushNotifications.register();
-      console.log('Push notifications registered');
+      logger.info('Push notifications registered');
     } catch (error) {
-      console.warn('Error initializing push notifications:', error);
+      logger.error('Error initializing push notifications', error);
     }
   };
 
@@ -54,12 +55,12 @@ export const usePushNotifications = () => {
       });
       
       if (error) {
-        console.error('Error saving push token to database:', error);
+        logger.error('Error saving push token to database', error);
       } else {
-        console.log('Push token saved successfully to database');
+        logger.info('Push token saved successfully to database');
       }
     } catch (error) {
-      console.error('Error saving push token:', error);
+      logger.error('Error saving push token', error);
     }
   };
 
@@ -80,7 +81,7 @@ export const usePushNotifications = () => {
         });
         toast.success('Notification test envoyée (locale)');
       } catch (error) {
-        console.error('Error sending local notification:', error);
+        logger.error('Error sending local notification', error);
         toast.error('Erreur lors de l\'envoi de la notification test');
       }
       return;
@@ -100,7 +101,7 @@ export const usePushNotifications = () => {
       });
       toast.success('Notification test envoyée');
     } catch (error) {
-      console.error('Error sending test notification:', error);
+      logger.error('Error sending test notification', error);
       toast.error('Erreur lors de l\'envoi de la notification test');
     }
   };
@@ -111,11 +112,11 @@ export const usePushNotifications = () => {
     
     // Only initialize on native platforms
     if (!Capacitor.isNativePlatform()) {
-      console.log('Push notifications disabled: not a native platform');
+      logger.info('Push notifications disabled: not a native platform');
       return;
     }
 
-    console.log('🔔 Initializing push notifications for user:', user.id);
+    logger.info('🔔 Initializing push notifications for user:', user.id);
 
     // Initialize push notifications with better error handling
     const setupPushNotifications = async () => {
@@ -127,7 +128,7 @@ export const usePushNotifications = () => {
         
         // Listen for registration success
         PushNotifications.addListener('registration', (token) => {
-          console.log('✅ Push registration success, token: ' + token.value);
+          logger.info('✅ Push registration success, token: ' + token.value.substring(0, 20) + '...');
           setPushToken(token.value);
           setIsRegistered(true);
           savePushTokenToDatabase(token.value);
@@ -135,14 +136,13 @@ export const usePushNotifications = () => {
 
         // Listen for registration errors
         PushNotifications.addListener('registrationError', (error) => {
-          console.error('Error on registration: ' + JSON.stringify(error));
-          // Don't show error toast to avoid spamming users if Firebase is not configured
-          console.warn('Push notifications may not be available on this device');
+          logger.error('Error on registration', error);
+          logger.warn('Push notifications may not be available on this device');
         });
 
         // Listen for push notifications received
         PushNotifications.addListener('pushNotificationReceived', (notification) => {
-          console.log('Push notification received: ', notification);
+          logger.safe('Push notification received', notification);
           
           // Show local notification when app is in foreground
           LocalNotifications.schedule({
@@ -154,12 +154,12 @@ export const usePushNotifications = () => {
                 schedule: { at: new Date(Date.now() + 1000) }
               }
             ]
-          }).catch(err => console.warn('Local notification error:', err));
+          }).catch(err => logger.warn('Local notification error:', err));
         });
 
         // Listen for notification actions
         PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-          console.log('Push notification action performed', notification);
+          logger.info('Push notification action performed', notification.actionId);
           
           // Handle navigation based on notification data
           if (notification.notification.data?.type === 'message') {
@@ -171,7 +171,7 @@ export const usePushNotifications = () => {
           }
         });
       } catch (error) {
-        console.warn('Failed to setup push notifications:', error);
+        logger.warn('Failed to setup push notifications', error);
         // Silently fail - the app should continue to work without push notifications
       }
     };
@@ -182,7 +182,7 @@ export const usePushNotifications = () => {
       try {
         PushNotifications.removeAllListeners();
       } catch (error) {
-        console.warn('Error removing push notification listeners:', error);
+        logger.warn('Error removing push notification listeners', error);
       }
     };
   }, [user]);
