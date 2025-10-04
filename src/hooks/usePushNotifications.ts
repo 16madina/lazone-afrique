@@ -42,20 +42,22 @@ export const usePushNotifications = () => {
     }
   };
 
-  // Save push token to database
+  // Save push token to database securely using RPC
   const savePushTokenToDatabase = async (token: string) => {
     if (!user) return;
 
     try {
-      // Store token locally for now
-      localStorage.setItem('push_token', token);
-      localStorage.setItem('push_platform', Capacitor.getPlatform());
-      localStorage.setItem('push_user_id', user.id);
-      
-      console.log('Push token saved locally:', {
-        platform: Capacitor.getPlatform(),
-        token: token.substring(0, 10) + '...'
+      const { data, error } = await supabase.rpc('save_push_token', {
+        p_user_id: user.id,
+        p_token: token,
+        p_platform: Capacitor.getPlatform()
       });
+      
+      if (error) {
+        console.error('Error saving push token to database:', error);
+      } else {
+        console.log('Push token saved successfully to database');
+      }
     } catch (error) {
       console.error('Error saving push token:', error);
     }

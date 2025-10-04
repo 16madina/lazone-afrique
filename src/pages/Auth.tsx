@@ -9,11 +9,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Building2, User, Users, ArrowLeft } from 'lucide-react';
+import { Building2, User, Users, ArrowLeft, AlertCircle } from 'lucide-react';
 import PhoneInput from '@/components/PhoneInput';
 import { supabase } from '@/integrations/supabase/client';
 import LaZoneIcon from '@/assets/lazone-logo-icon.png';
 import LaZoneText from '@/assets/lazone-text-logo-3d.png';
+import { validatePassword, getPasswordStrengthLabel, getPasswordStrengthColor } from '@/lib/passwordValidator';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Auth = () => {
   const { signIn, signInWithPhone, signUp, user, loading } = useAuth();
@@ -43,6 +46,9 @@ const Auth = () => {
     company_name: '',
     license_number: '',
   });
+
+  // Password strength validation
+  const [passwordStrength, setPasswordStrength] = useState<any>(null);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -121,6 +127,17 @@ const Auth = () => {
       toast({
         title: "Erreur",
         description: "Les mots de passe ne correspondent pas.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate password strength
+    const strength = validatePassword(signupForm.password);
+    if (!strength.isValid) {
+      toast({
+        title: "Mot de passe trop faible",
+        description: strength.feedback.join('. '),
         variant: "destructive",
       });
       return;
@@ -440,11 +457,39 @@ const Auth = () => {
                   <Input
                     id="signup-password"
                     type="password"
-                    placeholder="Mot de passe"
+                    placeholder="Minimum 8 caractères"
                     value={signupForm.password}
-                    onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
+                    onChange={(e) => {
+                      const newPassword = e.target.value;
+                      setSignupForm({ ...signupForm, password: newPassword });
+                      if (newPassword.length > 0) {
+                        setPasswordStrength(validatePassword(newPassword));
+                      } else {
+                        setPasswordStrength(null);
+                      }
+                    }}
                     required
                   />
+                  {passwordStrength && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span>Force du mot de passe</span>
+                        <span className="font-medium">{getPasswordStrengthLabel(passwordStrength.score)}</span>
+                      </div>
+                      <Progress 
+                        value={(passwordStrength.score / 4) * 100} 
+                        className={`h-2 ${getPasswordStrengthColor(passwordStrength.score)}`}
+                      />
+                      {passwordStrength.feedback.length > 0 && (
+                        <Alert variant={passwordStrength.isValid ? "default" : "destructive"} className="py-2">
+                          <AlertCircle className="h-3 w-3" />
+                          <AlertDescription className="text-xs">
+                            {passwordStrength.feedback[0]}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="space-y-2">
