@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { MapPin, Heart, Bed, Bath, Square, Phone, MessageCircle, Star } from "lucide-react";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useContactActions } from "@/hooks/useContactActions";
+import { LazyImage } from "@/components/LazyImage";
 
 // Placeholder constant pour éviter de recréer à chaque render
 const PLACEHOLDER_IMAGE = '/placeholder.svg';
@@ -140,20 +141,18 @@ const PropertyCard = memo(({
       className="group hover:shadow-warm transition-all duration-300 hover:-translate-y-1 overflow-hidden bg-gradient-card cursor-pointer"
       onClick={handleCardClick}
     >
-      {/* Image Carousel */}
+      {/* Image Carousel optimisé avec LazyImage */}
       <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-        <Carousel className="w-full h-full">
+        <Carousel key={id} className="w-full h-full">
           <CarouselContent>
             {allImages.map((imgSrc, index) => (
               <CarouselItem key={`${id}-${index}`}>
-                <div className="relative w-full h-full">
-                  <img 
-                    src={imgSrc} 
-                    alt={`${title} - Image ${index + 1}`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    loading={index === 0 ? "eager" : "lazy"}
-                  />
-                </div>
+                <LazyImage
+                  src={imgSrc}
+                  alt={`${title} - Image ${index + 1}`}
+                  className="w-full h-full group-hover:scale-105 transition-transform duration-300"
+                  placeholder={PLACEHOLDER_IMAGE}
+                />
               </CarouselItem>
             ))}
           </CarouselContent>
@@ -321,4 +320,18 @@ const PropertyCard = memo(({
 
 PropertyCard.displayName = 'PropertyCard';
 
-export default PropertyCard;
+// Custom comparison function pour éviter les re-renders inutiles
+const arePropsEqual = (prevProps: PropertyCardProps, nextProps: PropertyCardProps) => {
+  // Comparer uniquement les props essentielles qui affectent le rendu visuel
+  return (
+    prevProps.id === nextProps.id &&
+    prevProps.title === nextProps.title &&
+    prevProps.price === nextProps.price &&
+    prevProps.isFavorite === nextProps.isFavorite &&
+    prevProps.isSponsored === nextProps.isSponsored &&
+    JSON.stringify(prevProps.photos) === JSON.stringify(nextProps.photos) &&
+    prevProps.image === nextProps.image
+  );
+};
+
+export default memo(PropertyCard, arePropsEqual);
