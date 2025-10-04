@@ -23,8 +23,6 @@ import { toast } from "sonner";
 import CountrySelector from "@/components/CountrySelector";
 import CitySelector from "@/components/CitySelector";
 import { CinePayPaymentMethod } from '@/components/CinePayPaymentMethod';
-import { logger } from '@/lib/logger';
-import { propertyStep1Schema, propertyStep2Schema, propertyStep3Schema } from '@/lib/validationSchemas';
 
 const AddProperty = () => {
   const navigate = useNavigate();
@@ -99,14 +97,14 @@ const AddProperty = () => {
         .single();
 
       if (error) {
-        logger.error('Error loading listing', error);
+        console.error('Error loading listing:', error);
         toast.error("Impossible de charger l'annonce");
         navigate('/profile');
         return;
       }
 
       if (listing) {
-        logger.info('Loading existing listing for editing');
+        console.log('Loading existing listing for editing:', listing);
         
         // Populate form with existing data
         setFormData({
@@ -140,7 +138,7 @@ const AddProperty = () => {
         }
       }
     } catch (error) {
-      logger.error('Error loading listing', error);
+      console.error('Error loading listing:', error);
       toast.error("Erreur lors du chargement de l'annonce");
       navigate('/profile');
     } finally {
@@ -179,7 +177,7 @@ const AddProperty = () => {
             }));
           }
         } catch (error) {
-          logger.error('Error loading user profile', error);
+          console.error('Error loading user profile:', error);
         }
       }
     };
@@ -306,8 +304,8 @@ const AddProperty = () => {
     }
   };
 
-  // Geolocation function using secure edge function
-  const handleGeolocation = async () => {
+  // Geolocation function
+  const handleGeolocation = () => {
     if (!navigator.geolocation) {
       toast.error("La géolocalisation n'est pas supportée par votre navigateur");
       return;
@@ -318,33 +316,32 @@ const AddProperty = () => {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
-          // Use the secure edge function for geocoding
-          const { data, error } = await supabase.functions.invoke('geocode-city', {
-            body: {
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-              countryCode: selectedCountry.code
-            }
-          });
+          // Reverse geocoding to get city name from coordinates
+          const response = await fetch(
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${position.coords.longitude},${position.coords.latitude}.json?access_token=${process.env.MAPBOX_ACCESS_TOKEN}&types=place,locality&limit=1`
+          );
           
-          if (error) {
-            logger.error('Geocoding error', error);
-            toast.error("Erreur lors de la géolocalisation");
-          } else if (data?.city) {
-            updateFormData('city', data.city);
-            toast.success("Localisation détectée avec succès!");
+          if (response.ok) {
+            const data = await response.json();
+            if (data.features && data.features.length > 0) {
+              const placeName = data.features[0].text || data.features[0].place_name;
+              updateFormData('city', placeName);
+              toast.success("Localisation détectée avec succès!");
+            } else {
+              toast.error("Impossible de déterminer votre ville");
+            }
           } else {
-            toast.error("Impossible de déterminer votre ville");
+            toast.error("Erreur lors de la géolocalisation");
           }
         } catch (error) {
-          logger.error('Geolocation error', error);
+          console.error('Geolocation error:', error);
           toast.error("Erreur lors de la géolocalisation");
         } finally {
           setIsGeolocating(false);
         }
       },
       (error) => {
-        logger.error('Geolocation error', error);
+        console.error('Geolocation error:', error);
         setIsGeolocating(false);
         
         switch (error.code) {
@@ -371,87 +368,89 @@ const AddProperty = () => {
   };
 
   const nextStep = () => {
-    // Validation using centralized schemas
-    try {
-      switch (currentStep) {
-        case 1: {
-          const step1Data = {
-            transactionType,
-            propertyType: formData.propertyType,
-            city: formData.city,
-            country: selectedCountry.code
-          };
-          
-          const result = propertyStep1Schema.safeParse(step1Data);
-          if (!result.success) {
-            const error = result.error.errors[0];
-            toast.error(error.message);
-            return;
-          }
-          
-          // Verify city belongs to selected country
-          const isValidCity = selectedCountry.cities.includes(formData.city);
-          if (!isValidCity) {
-            toast.error(`⚠️ La ville "${formData.city}" ne correspond pas au pays sélectionné (${selectedCountry.name})`);
-            return;
-          }
-          break;
+    // Validation avant de passer à l'étape suivante
+    switch (currentStep) {
+      case 1:
+        if (!transactionType || !formData.propertyType) {
+          toast.error("Veuillez sélectionner le type de transaction et de bien");
+          return;
         }
         
-        case 2: {
-          const step2Data = {
-            title: formData.title,
-            description: formData.description,
-            area: formData.area || undefined,
-            bedrooms: formData.bedrooms || undefined,
-            bathrooms: formData.bathrooms || undefined,
-          };
-          
-          const result = propertyStep2Schema.safeParse(step2Data);
-          if (!result.success) {
-            const error = result.error.errors[0];
-            toast.error(error.message);
-            return;
-          }
-          
-          // For non-land properties, area is required
-          if (!isLandProperty() && !formData.area) {
-            toast.error("Veuillez saisir la surface");
-            return;
-          }
-          break;
+        // Validation stricte ville/pays
+        if (!formData.city) {
+          toast.error("Veuillez sélectionner une ville");
+          return;
         }
         
-        case 3: {
-          const step3Data = {
-            price: formData.price,
-            fullName: formData.fullName,
-            email: formData.email || undefined,
-            phone: formData.phone || undefined,
-          };
-          
-          const result = propertyStep3Schema.safeParse(step3Data);
-          if (!result.success) {
-            const error = result.error.errors[0];
-            toast.error(error.message);
-            return;
-          }
-          break;
+        // Vérifier si la ville appartient au pays sélectionné
+        const isValidCity = selectedCountry.cities.includes(formData.city);
+        if (!isValidCity) {
+          toast.error(`⚠️ La ville "${formData.city}" ne correspond pas au pays sélectionné (${selectedCountry.name}). Veuillez vérifier votre sélection.`);
+          return;
         }
         
-        case 4:
-          if (uploadedPhotos.length === 0) {
-            toast.error("Veuillez ajouter au moins une photo");
+        break;
+      case 2:
+        console.log('🔍 Validation étape 2:', {
+          title: formData.title,
+          area: formData.area,
+          titleExists: !!formData.title,
+          areaExists: !!formData.area,
+          isLandProperty: isLandProperty()
+        });
+        
+        // À l'étape 2, on valide seulement le titre et la surface (pas le prix qui est à l'étape 3)
+        if (!formData.title) {
+          toast.error("Veuillez saisir le titre de l'annonce");
+          return;
+        }
+        
+        // Pour les biens non-terrain, la surface est requise à l'étape 2
+        if (!isLandProperty() && !formData.area) {
+          toast.error("Veuillez saisir la surface");
+          return;
+        }
+        
+        // Validation de la surface si elle est renseignée
+        if (formData.area) {
+          const area = parseFloat(formData.area);
+          if (isNaN(area) || area <= 0) {
+            toast.error("Veuillez entrer une surface valide");
             return;
           }
-          break;
-      }
-      
-      if (currentStep < 4) setCurrentStep(currentStep + 1);
-    } catch (error) {
-      logger.error('Validation error', error);
-      toast.error("Erreur de validation");
+        }
+        
+        break;
+      case 3:
+        console.log('🔍 Validation étape 3:', {
+          price: formData.price,
+          priceExists: !!formData.price
+        });
+        
+        // À l'étape 3, on valide le prix qui est saisi à cette étape
+        if (!formData.price) {
+          toast.error("Veuillez saisir le prix");
+          return;
+        }
+        
+        // Validation du prix
+        const price = parseFloat(formData.price);
+        if (isNaN(price) || price <= 0) {
+          toast.error("Veuillez entrer un prix valide");
+          return;
+        }
+        
+        break;
+      case 4:
+        // À l'étape 4, on valide les photos
+        if (uploadedPhotos.length === 0) {
+          toast.error("Veuillez ajouter au moins une photo");
+          return;
+        }
+        break;
     }
+    
+    if (currentStep < 4) setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {
@@ -489,6 +488,7 @@ const AddProperty = () => {
       const videoUrl = uploadedVideo?.url || null;
 
       // Get real coordinates for the city using geocoding
+      console.log(`Geocoding city: ${formData.city}, ${selectedCountry.code}`);
       const { data: geocodeData, error: geocodeError } = await supabase.functions.invoke('geocode-city', {
         body: {
           city: formData.city,

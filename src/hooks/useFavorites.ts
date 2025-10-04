@@ -29,10 +29,34 @@ export const useFavorites = () => {
     }
   };
 
-  // Supprimé le real-time pour éviter les re-renders constants
-  // Les mises à jour sont maintenant optimistes pour une meilleure UX
+  // Setup real-time updates for favorites
+  useEffect(() => {
+    if (!user) return;
 
-  // Add listing to favorites avec mise à jour optimiste
+    const channel = supabase
+      .channel('favorites-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'favorites',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Favorites changed:', payload);
+          // Refresh favorites when changes occur
+          fetchFavorites();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  // Add listing to favorites
   const addToFavorites = async (listingId: string) => {
     if (!user) {
       toast.error('Vous devez être connecté pour ajouter aux favoris');
@@ -43,10 +67,7 @@ export const useFavorites = () => {
       return true; // Already in favorites
     }
 
-    // Mise à jour optimiste: ajouter immédiatement à l'UI
-    setFavorites(prev => [...prev, listingId]);
     setLoading(true);
-    
     try {
       const { error } = await supabase
         .from('favorites')
@@ -56,8 +77,6 @@ export const useFavorites = () => {
         });
 
       if (error) {
-        // Rollback en cas d'erreur
-        setFavorites(prev => prev.filter(id => id !== listingId));
         console.error('Error adding to favorites:', error);
         toast.error('Erreur lors de l\'ajout aux favoris');
         return false;
@@ -66,8 +85,6 @@ export const useFavorites = () => {
       toast.success('Ajouté aux favoris');
       return true;
     } catch (error) {
-      // Rollback en cas d'erreur
-      setFavorites(prev => prev.filter(id => id !== listingId));
       console.error('Error adding to favorites:', error);
       toast.error('Erreur lors de l\'ajout aux favoris');
       return false;
@@ -76,7 +93,7 @@ export const useFavorites = () => {
     }
   };
 
-  // Remove listing from favorites avec mise à jour optimiste
+  // Remove listing from favorites
   const removeFromFavorites = async (listingId: string) => {
     if (!user) return false;
 
@@ -84,10 +101,7 @@ export const useFavorites = () => {
       return true; // Not in favorites
     }
 
-    // Mise à jour optimiste: retirer immédiatement de l'UI
-    setFavorites(prev => prev.filter(id => id !== listingId));
     setLoading(true);
-    
     try {
       const { error } = await supabase
         .from('favorites')
@@ -96,8 +110,6 @@ export const useFavorites = () => {
         .eq('listing_id', listingId);
 
       if (error) {
-        // Rollback en cas d'erreur
-        setFavorites(prev => [...prev, listingId]);
         console.error('Error removing from favorites:', error);
         toast.error('Erreur lors de la suppression des favoris');
         return false;
@@ -106,8 +118,6 @@ export const useFavorites = () => {
       toast.success('Retiré des favoris');
       return true;
     } catch (error) {
-      // Rollback en cas d'erreur
-      setFavorites(prev => [...prev, listingId]);
       console.error('Error removing from favorites:', error);
       toast.error('Erreur lors de la suppression des favoris');
       return false;

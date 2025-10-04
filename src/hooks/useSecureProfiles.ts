@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PublicProfile {
@@ -25,51 +26,57 @@ interface ListingOwnerProfile {
 }
 
 export const useSecureProfiles = () => {
-  // Suppression de l'état loading partagé pour éviter les conflits en parallèle
+  const [loading, setLoading] = useState(false);
+
   const getPublicProfile = async (userId: string): Promise<PublicProfile | null> => {
     if (!userId) return null;
     
+    setLoading(true);
     try {
       const { data, error } = await supabase.rpc('get_public_profile_safe', {
         profile_user_id: userId
       });
 
       if (error) {
-        // Log silencieux - ne pas polluer la console
-        console.warn('Profile fetch failed for user:', userId);
+        console.error('Error fetching public profile:', error);
         return null;
       }
 
       return data as unknown as PublicProfile;
     } catch (error) {
-      // Log silencieux - ne pas polluer la console
-      console.warn('Profile fetch error for user:', userId);
+      console.error('Error fetching public profile:', error);
       return null;
+    } finally {
+      setLoading(false);
     }
   };
 
   const getListingOwnerProfile = async (userId: string): Promise<ListingOwnerProfile | null> => {
     if (!userId) return null;
     
+    setLoading(true);
     try {
       const { data, error } = await supabase.rpc('get_listing_owner_profile', {
         owner_user_id: userId
       });
 
       if (error) {
-        console.warn('Listing owner profile fetch failed for user:', userId);
+        console.error('Error fetching listing owner profile:', error);
         return null;
       }
 
       return data as unknown as ListingOwnerProfile;
     } catch (error) {
-      console.warn('Listing owner profile fetch error for user:', userId);
+      console.error('Error fetching listing owner profile:', error);
       return null;
+    } finally {
+      setLoading(false);
     }
   };
 
   return {
     getPublicProfile,
-    getListingOwnerProfile
+    getListingOwnerProfile,
+    loading
   };
 };

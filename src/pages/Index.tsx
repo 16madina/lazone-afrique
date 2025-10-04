@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import PropertyFilters, { FilterState } from "@/components/PropertyFilters";
-import PropertyCard from "@/components/PropertyCard";
+import PerformanceOptimizedPropertyCard from "@/components/PerformanceOptimizedPropertyCard";
 import { PropertyCardSkeleton } from "@/components/PropertyCardSkeleton";
 import BottomNavigation from "@/components/BottomNavigation";
 import { useCountry } from "@/contexts/CountryContext";
@@ -93,7 +93,7 @@ const Index = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage]);
 
-  // Fetch properties for selected country from Supabase with optimized query
+  // Fetch properties for selected country from Supabase
   useEffect(() => {
     const fetchProperties = async () => {
       setLoading(true);
@@ -128,26 +128,17 @@ const Index = () => {
         if (error) {
           toast.error('Erreur lors du chargement des propriétés');
         } else {
-          // Optimized: Fetch all profiles in a single query instead of N+1
-          const userIds = [...new Set((data || []).map(l => l.user_id).filter(Boolean))];
-          
-          let profilesMap: Record<string, any> = {};
-          if (userIds.length > 0) {
-            const profiles = await Promise.all(
-              userIds.map(userId => getPublicProfile(userId))
-            );
-            
-            profiles.forEach((profile, index) => {
-              if (profile) {
-                profilesMap[userIds[index]] = profile;
-              }
-            });
-          }
-
-          // Attach profiles to listings
-          const listingsWithProfiles = (data || []).map(listing => ({
-            ...listing,
-            profiles: listing.user_id ? profilesMap[listing.user_id] : null
+          // Récupérer les profils pour chaque listing
+          const listingsWithProfiles = await Promise.all((data || []).map(async (listing) => {
+            if (listing.user_id) {
+              const profile = await getPublicProfile(listing.user_id);
+              
+              return {
+                ...listing,
+                profiles: profile
+              };
+            }
+            return listing;
           }));
 
           // Sort properties to show sponsored ones first
@@ -173,25 +164,38 @@ const Index = () => {
     };
 
     fetchProperties();
-  }, [selectedCountry.code, getPublicProfile]);
+  }, [selectedCountry.code]);
 
   // Filter properties based on current filters
   const filterProperties = (properties: Listing[], filters: FilterState) => {
+    console.log('🔍 Début du filtrage:', { 
+      totalProperties: properties.length, 
+      filters,
+      sampleProperty: properties[0] ? {
+        city: properties[0].city,
+        property_type: properties[0].property_type,
+        transaction_type: properties[0].transaction_type
+      } : 'aucune propriété'
+    });
+
     return properties.filter(property => {
       // Filter by transaction type
       if (filters.type && property.transaction_type !== filters.type) {
+        console.log('❌ Filtré par transaction type:', property.title, property.transaction_type, 'vs', filters.type);
         return false;
       }
       
       // Filter by property type
       if (filters.propertyType) {
         if (property.property_type !== filters.propertyType) {
+          console.log('❌ Filtré par property type:', property.title, property.property_type, 'vs', filters.propertyType);
           return false;
         }
       }
       
       // Filter by price range
       if (property.price < filters.priceRange[0] || property.price > filters.priceRange[1]) {
+        console.log('❌ Filtré par prix:', property.title, property.price);
         return false;
       }
       
@@ -199,6 +203,7 @@ const Index = () => {
       if (filters.bedrooms) {
         const minBedrooms = parseInt(filters.bedrooms);
         if (property.bedrooms && property.bedrooms < minBedrooms) {
+          console.log('❌ Filtré par chambres:', property.title, property.bedrooms, 'vs', minBedrooms);
           return false;
         }
       }
@@ -207,6 +212,7 @@ const Index = () => {
       if (filters.bathrooms) {
         const minBathrooms = parseInt(filters.bathrooms);
         if (property.bathrooms && property.bathrooms < minBathrooms) {
+          console.log('❌ Filtré par salles de bain:', property.title, property.bathrooms, 'vs', minBathrooms);
           return false;
         }
       }
@@ -214,6 +220,7 @@ const Index = () => {
       // Filter by surface area
       if (property.surface_area) {
         if (property.surface_area < filters.surface[0] || property.surface_area > filters.surface[1]) {
+          console.log('❌ Filtré par surface:', property.title, property.surface_area);
           return false;
         }
       }
@@ -224,6 +231,7 @@ const Index = () => {
           property.features?.includes(feature)
         );
         if (!hasAllFeatures) {
+          console.log('❌ Filtré par features:', property.title);
           return false;
         }
       }
@@ -233,6 +241,7 @@ const Index = () => {
         const locationLower = filters.location.toLowerCase();
         const cityLower = property.city.toLowerCase();
         if (!cityLower.includes(locationLower)) {
+          console.log('❌ Filtré par localisation:', property.title, property.city, 'vs', filters.location);
           return false;
         }
       }
@@ -243,10 +252,12 @@ const Index = () => {
         const titleMatch = property.title.toLowerCase().includes(searchLower);
         const cityMatch = property.city.toLowerCase().includes(searchLower);
         if (!titleMatch && !cityMatch) {
+          console.log('❌ Filtré par recherche:', property.title, 'recherche:', filters.searchQuery);
           return false;
         }
       }
       
+      console.log('✅ Propriété acceptée:', property.title);
       return true;
     });
   };
@@ -264,6 +275,8 @@ const Index = () => {
     propertyType: string;
     searchQuery: string;
   }) => {
+    console.log('🔍 Recherche depuis HeroSection:', searchFilters);
+    
     const newFilters = {
       ...currentFilters,
       location: searchFilters.location,
@@ -271,8 +284,20 @@ const Index = () => {
       searchQuery: searchFilters.searchQuery
     };
     
+    console.log('📋 Nouveaux filtres:', newFilters);
+    console.log('🏠 Propriétés avant filtrage:', allProperties.length);
+    
     setCurrentFilters(newFilters);
     const filteredProperties = filterProperties(allProperties, newFilters);
+    
+    console.log('🏠 Propriétés après filtrage:', filteredProperties.length);
+    console.log('🏠 Propriétés filtrées:', filteredProperties.map(p => ({ 
+      title: p.title, 
+      city: p.city, 
+      propertyType: p.property_type, 
+      transactionType: p.transaction_type 
+    })));
+    
     setProperties(filteredProperties);
   };
 
@@ -407,7 +432,7 @@ const Index = () => {
                               profile?.user_type === 'agence' ? 'agency' : 'broker';
               
               return (
-                <PropertyCard 
+                <PerformanceOptimizedPropertyCard 
                   key={property.id} 
                   id={property.id}
                   title={property.title}
