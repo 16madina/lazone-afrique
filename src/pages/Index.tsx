@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import PropertyFilters, { FilterState } from "@/components/PropertyFilters";
-import PerformanceOptimizedPropertyCard from "@/components/PerformanceOptimizedPropertyCard";
+import PropertyCard from "@/components/PropertyCard";
 import { PropertyCardSkeleton } from "@/components/PropertyCardSkeleton";
 import BottomNavigation from "@/components/BottomNavigation";
 import { useCountry } from "@/contexts/CountryContext";
@@ -407,7 +407,7 @@ const Index = () => {
                               profile?.user_type === 'agence' ? 'agency' : 'broker';
               
               return (
-                <PerformanceOptimizedPropertyCard 
+                <PropertyCard 
                   key={property.id} 
                   id={property.id}
                   title={property.title}

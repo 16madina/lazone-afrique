@@ -21,8 +21,16 @@ import Sponsorship from "./pages/Sponsorship";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 1000 * 60 * 5, // 5 minutes - données considérées fraîches
+      gcTime: 1000 * 60 * 10, // 10 minutes - garde en cache
       refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: true,
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+    mutations: {
+      retry: 1,
     },
   },
 });

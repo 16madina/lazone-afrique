@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,7 +7,6 @@ import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carouse
 import { useCountry } from "@/contexts/CountryContext";
 import { useNavigate } from "react-router-dom";
 import { MapPin, Heart, Bed, Bath, Square, Phone, MessageCircle, Star } from "lucide-react";
-import { useState } from "react";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useContactActions } from "@/hooks/useContactActions";
 
@@ -38,7 +38,7 @@ interface PropertyCardProps {
   isFavorite?: boolean;
 }
 
-const PropertyCard = ({ 
+const PropertyCard = memo(({ 
   id,
   title, 
   price, 
@@ -66,16 +66,19 @@ const PropertyCard = ({
     await toggleFavorite(id);
   };
 
-  // Fonction pour obtenir toutes les images disponibles
+  // Fonction optimisée pour obtenir toutes les images disponibles
   const getAllImages = () => {
     const images: string[] = [];
     if (photos && Array.isArray(photos) && photos.length > 0) {
-      images.push(...photos);
+      // Limiter le nombre d'images pour optimiser les performances
+      images.push(...photos.slice(0, 5));
     }
-    if (image && !images.includes(image)) {
-      images.push(image);
+    if (image && !images.includes(image) && image !== "/placeholder.svg") {
+      images.unshift(image); // Mettre l'image principale en premier
     }
-    return images.length > 0 ? images : ["/placeholder.svg"];
+    // Utiliser un SVG data URI comme fallback
+    const placeholderSvg = `data:image/svg+xml,%3csvg width='400' height='300' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='400' height='300' fill='%23f3f4f6'/%3e%3crect x='50' y='50' width='300' height='200' fill='%23e5e7eb' stroke='%23d1d5db' stroke-width='2' rx='8'/%3e%3ccircle cx='120' cy='110' r='20' fill='%23d1d5db'/%3e%3cpath d='M80 180 L120 140 L160 180 L200 140 L240 160 L280 120 L320 140 L320 200 L80 200 Z' fill='%23d1d5db'/%3e%3c/svg%3e`;
+    return images.length > 0 ? images : [placeholderSvg];
   };
 
   const allImages = getAllImages();
@@ -132,7 +135,7 @@ const PropertyCard = ({
       className="group hover:shadow-warm transition-all duration-300 hover:-translate-y-1 overflow-hidden bg-gradient-card cursor-pointer"
       onClick={handleCardClick}
     >
-      {/* Image Carousel */}
+      {/* Image Carousel optimisé */}
       <div className="relative aspect-[4/3] overflow-hidden">
         <Carousel className="w-full h-full">
           <CarouselContent>
@@ -143,6 +146,13 @@ const PropertyCard = ({
                     src={imgSrc} 
                     alt={`${title} - Image ${index + 1}`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading={index === 0 ? "eager" : "lazy"}
+                    onError={(e) => {
+                      const placeholderSvg = `data:image/svg+xml,%3csvg width='400' height='300' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='400' height='300' fill='%23f3f4f6'/%3e%3crect x='50' y='50' width='300' height='200' fill='%23e5e7eb' stroke='%23d1d5db' stroke-width='2' rx='8'/%3e%3ccircle cx='120' cy='110' r='20' fill='%23d1d5db'/%3e%3cpath d='M80 180 L120 140 L160 180 L200 140 L240 160 L280 120 L320 140 L320 200 L80 200 Z' fill='%23d1d5db'/%3e%3c/svg%3e`;
+                      if (!imgSrc.includes('data:image/svg+xml')) {
+                        e.currentTarget.src = placeholderSvg;
+                      }
+                    }}
                   />
                 </div>
               </CarouselItem>
@@ -233,7 +243,7 @@ const PropertyCard = ({
           </div>
         )}
 
-        {/* Features */}
+        {/* Features optimisées */}
         {features.length > 0 && (
           <div className="flex flex-wrap gap-1">
             {features.slice(0, 3).map((feature, index) => (
@@ -249,7 +259,7 @@ const PropertyCard = ({
           </div>
         )}
 
-        {/* Agent Info */}
+        {/* Agent Info avec avatar optimisé */}
         <div className="flex items-center justify-between pt-2 border-t border-border">
           <div className="flex items-center gap-2">
             <Avatar className="w-8 h-8">
@@ -308,6 +318,8 @@ const PropertyCard = ({
       </CardContent>
     </Card>
   );
-};
+});
+
+PropertyCard.displayName = 'PropertyCard';
 
 export default PropertyCard;
