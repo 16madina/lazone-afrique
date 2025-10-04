@@ -17,6 +17,7 @@ import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Sponsorship from "./pages/Sponsorship";
+import AdminImageUpload from "./pages/AdminImageUpload";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +39,7 @@ const AppContent = () => {
       <Route path="/profile" element={<Profile />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/sponsorship/:listingId" element={<Sponsorship />} />
+      <Route path="/admin/upload-demo-images" element={<AdminImageUpload />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
