@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { getAuthErrorMessage } from '@/lib/errorMessages';
+import { logger } from '@/lib/logger';
 
 interface Profile {
   id: string;
@@ -21,10 +23,10 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signInWithPhone: (phone: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, userData: { full_name: string; user_type: string; company_name?: string; license_number?: string }) => Promise<{ error: any }>;
-  signOut: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ data?: any; error: any }>;
+  signInWithPhone: (phone: string, password: string) => Promise<{ data?: any; error: any }>;
+  signUp: (email: string, password: string, userData: any) => Promise<{ data?: any; error: any }>;
+  signOut: () => Promise<{ error: any }>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: any }>;
 }
 
@@ -53,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching profile:', error);
+        logger.error('Error fetching profile', error);
         setProfile(null);
         return;
       }
@@ -61,11 +63,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data) {
         setProfile(data);
       } else {
-        console.log('No profile found for user:', userId);
+        logger.info('No profile found for user:', userId);
         setProfile(null);
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      logger.error('Error fetching profile', error);
       setProfile(null);
     }
   };
@@ -105,87 +107,117 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        return { error: { message: getAuthErrorMessage(error) } };
+      }
+      
+      return { data, error: null };
+    } catch (error: any) {
+      logger.error('Sign in error', error);
+      return { error: { message: getAuthErrorMessage(error) } };
+    }
   };
 
   const signInWithPhone = async (phone: string, password: string) => {
     try {
       const { data, error } = await supabase.functions.invoke('phone-login', {
-        body: { phone, password },
+        body: { phone, password }
       });
 
       if (error) {
-        console.error('Edge function error:', error);
-        return { error: { message: error.message || 'Erreur de connexion' } };
+        return { error: { message: getAuthErrorMessage(error) } };
       }
 
       if (data.error) {
-        console.error('Login error:', data.error);
-        return { error: { message: data.error } };
+        return { error: { message: getAuthErrorMessage(data.error) } };
       }
 
-      // Si la connexion réussit, définir la session
-      if (data.success && data.session) {
-        const { error: sessionError } = await supabase.auth.setSession({
+      // Set the session from the phone login response
+      if (data.session) {
+        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
           access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token
+          refresh_token: data.session.refresh_token,
         });
-
+        
         if (sessionError) {
-          console.error('Session error:', sessionError);
-          return { error: { message: 'Erreur lors de la définition de la session' } };
+          return { error: { message: getAuthErrorMessage(sessionError) } };
         }
+        
+        return { data: sessionData, error: null };
       }
 
-      return { error: null };
-    } catch (error) {
-      console.error('SignInWithPhone error:', error);
-      return { error: { message: 'Erreur de connexion' } };
+      return { data, error: null };
+    } catch (error: any) {
+      logger.error('Phone sign in error', error);
+      return { error: { message: getAuthErrorMessage(error) } };
     }
   };
 
-  const signUp = async (
-    email: string, 
-    password: string, 
-    userData: { full_name: string; user_type: string; company_name?: string; license_number?: string }
-  ) => {
-    // Use the deployed app URL for redirects, fallback to localhost for development
-    const redirectUrl = window.location.origin.includes('localhost') 
-      ? `${window.location.origin}/` 
-      : `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: userData
+  const signUp = async (email: string, password: string, userData: any) => {
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: userData
+        }
+      });
+      
+      if (error) {
+        return { error: { message: getAuthErrorMessage(error) } };
       }
-    });
-    return { error };
+      
+      return { data, error: null };
+    } catch (error: any) {
+      logger.error('Sign up error', error);
+      return { error: { message: getAuthErrorMessage(error) } };
+    }
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        return { error: { message: getAuthErrorMessage(error) } };
+      }
+      return { error: null };
+    } catch (error: any) {
+      logger.error('Sign out error', error);
+      return { error: { message: getAuthErrorMessage(error) } };
+    }
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user) return { error: 'No user logged in' };
+    if (!user) return { error: { message: 'Aucun utilisateur connecté' } };
 
-    const { error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('user_id', user.id);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('user_id', user.id);
 
-    if (!error && profile) {
-      setProfile({ ...profile, ...updates });
+      if (error) {
+        return { error: { message: getAuthErrorMessage(error) } };
+      }
+
+      if (profile) {
+        setProfile({ ...profile, ...updates });
+      }
+
+      return { error: null };
+    } catch (error: any) {
+      logger.error('Update profile error', error);
+      return { error: { message: 'Erreur lors de la mise à jour du profil' } };
     }
-
-    return { error };
   };
 
   const value = {

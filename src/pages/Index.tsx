@@ -93,7 +93,7 @@ const Index = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage]);
 
-  // Fetch properties for selected country from Supabase
+  // Fetch properties for selected country from Supabase with optimized query
   useEffect(() => {
     const fetchProperties = async () => {
       setLoading(true);
@@ -128,17 +128,26 @@ const Index = () => {
         if (error) {
           toast.error('Erreur lors du chargement des propriétés');
         } else {
-          // Récupérer les profils pour chaque listing
-          const listingsWithProfiles = await Promise.all((data || []).map(async (listing) => {
-            if (listing.user_id) {
-              const profile = await getPublicProfile(listing.user_id);
-              
-              return {
-                ...listing,
-                profiles: profile
-              };
-            }
-            return listing;
+          // Optimized: Fetch all profiles in a single query instead of N+1
+          const userIds = [...new Set((data || []).map(l => l.user_id).filter(Boolean))];
+          
+          let profilesMap: Record<string, any> = {};
+          if (userIds.length > 0) {
+            const profiles = await Promise.all(
+              userIds.map(userId => getPublicProfile(userId))
+            );
+            
+            profiles.forEach((profile, index) => {
+              if (profile) {
+                profilesMap[userIds[index]] = profile;
+              }
+            });
+          }
+
+          // Attach profiles to listings
+          const listingsWithProfiles = (data || []).map(listing => ({
+            ...listing,
+            profiles: listing.user_id ? profilesMap[listing.user_id] : null
           }));
 
           // Sort properties to show sponsored ones first
@@ -164,7 +173,7 @@ const Index = () => {
     };
 
     fetchProperties();
-  }, [selectedCountry.code]);
+  }, [selectedCountry.code, getPublicProfile]);
 
   // Filter properties based on current filters
   const filterProperties = (properties: Listing[], filters: FilterState) => {
