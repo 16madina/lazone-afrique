@@ -14,7 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        'fredoka': ['Fredoka One', 'cursive'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Poppins', 'Inter', 'sans-serif'],
+        fredoka: ['Fredoka One', 'cursive'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -68,14 +70,21 @@ export default {
         "gradient-primary": "var(--gradient-primary)",
         "gradient-hero": "var(--gradient-hero)",
         "gradient-card": "var(--gradient-card)",
+        "gradient-glass": "var(--gradient-glass)",
       },
       boxShadow: {
         "warm": "var(--shadow-warm)",
         "card": "var(--shadow-card)",
+        "elevation-1": "var(--shadow-elevation-1)",
+        "elevation-2": "var(--shadow-elevation-2)",
+        "elevation-3": "var(--shadow-elevation-3)",
+        "elevation-4": "var(--shadow-elevation-4)",
+        "elevation-5": "var(--shadow-elevation-5)",
       },
       transitionTimingFunction: {
         "smooth": "var(--transition-smooth)",
         "bounce": "var(--transition-bounce)",
+        "spring": "var(--transition-spring)",
       },
       borderRadius: {
         lg: "var(--radius)",

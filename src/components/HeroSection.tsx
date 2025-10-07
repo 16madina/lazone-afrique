@@ -123,13 +123,13 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
   };
 
   return (
-    <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden animate-fade-in">
       {/* Background Image with Overlay */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 hover:scale-105"
         style={{ backgroundImage: `url(${heroImage})` }}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-foreground/60 via-foreground/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-foreground/70 via-foreground/50 to-transparent" />
       </div>
 
       {/* Content */}
@@ -159,7 +159,7 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
           </div>
 
           {/* Search Form */}
-          <div className="bg-background/95 backdrop-blur-sm rounded-xl p-2 shadow-warm max-w-xl mx-auto">
+          <div className="glass-card rounded-2xl p-3 shadow-elevation-4 max-w-xl mx-auto animate-slide-up">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-1">
               {/* Location */}
               <div className="space-y-1">
@@ -212,7 +212,7 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
                 <label className="text-sm font-medium text-muted-foreground opacity-0">Action</label>
                 <Button 
                   onClick={handleSearch}
-                  className="w-full h-10 bg-gradient-primary hover:opacity-90 transition-all duration-300"
+                  className="w-full h-10 bg-gradient-primary hover:opacity-90 transition-all duration-300 active:scale-95 shadow-elevation-2"
                 >
                   <Search className="w-4 h-4 mr-2" />
                   Rechercher
@@ -221,23 +221,23 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
             </div>
 
             {/* Quick Filters */}
-            <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-border">
-              <span className="text-sm text-muted-foreground">Recherche populaire:</span>
-              <Button variant="outline" size="sm" className="text-xs">Villa {selectedCountry.cities[0]}</Button>
+            <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-border/50">
+              <span className="text-sm text-muted-foreground font-display">Recherche populaire:</span>
+              <Button variant="outline" size="sm" className="text-xs hover:bg-accent/50 transition-all duration-200 active:scale-95">Villa {selectedCountry.cities[0]}</Button>
             </div>
           </div>
 
           {/* Featured Sponsored Properties */}
           {sponsoredListings.length > 0 ? (
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-primary-foreground text-center">
+            <div className="space-y-4 animate-fade-in">
+              <h3 className="text-xl font-display font-semibold text-primary-foreground text-center">
                 🌟 Annonces Sponsorisées
               </h3>
               <div className="grid grid-cols-3 gap-2 sm:gap-4 max-w-4xl mx-auto">
                 {sponsoredListings.map((listing) => (
                   <div 
                     key={listing.id}
-                    className="bg-background/95 backdrop-blur-sm rounded-xl overflow-hidden shadow-warm hover:scale-105 transition-transform duration-300 cursor-pointer"
+                    className="glass-card rounded-2xl overflow-hidden shadow-elevation-3 hover:scale-105 hover:shadow-elevation-4 transition-all duration-300 cursor-pointer active:scale-100"
                     onClick={() => window.location.href = `/listing/${listing.id}`}
                   >
                     <div className="relative h-32 w-full">
@@ -251,7 +251,7 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
                       </div>
                     </div>
                     <div className="p-3">
-                      <h4 className="font-semibold text-xs mb-1 truncate">{listing.title}</h4>
+                      <h4 className="font-display font-semibold text-xs mb-1 truncate">{listing.title}</h4>
                       <p className="text-xs text-muted-foreground mb-2">{listing.city}</p>
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-primary text-xs">{formatPrice(listing.price)}</span>
@@ -267,7 +267,7 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
               </div>
               <div className="text-center space-y-3">
                 <SponsorshipDialog listingId="demo">
-                  <Button variant="default" className="bg-gradient-primary hover:opacity-90">
+                  <Button variant="default" className="bg-gradient-primary hover:opacity-90 transition-all duration-200 active:scale-95 shadow-elevation-3">
                     <Star className="w-4 h-4 mr-2" />
                     Voir tarifs & sponsoriser
                   </Button>

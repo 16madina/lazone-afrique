@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCapacitor } from "@/hooks/useCapacitor";
@@ -12,10 +13,21 @@ import { Bell, User, Menu, LogOut, Settings } from "lucide-react";
 import lazoneLogo from "@/assets/lazone-logo.png";
 
 const Header = () => {
+  const [scrolled, setScrolled] = useState(false);
   const { unreadCount, resetCount } = useUnreadNotifications();
   const { user, profile, signOut } = useAuth();
   const { isAndroid, isNative } = useCapacitor();
   const navigate = useNavigate();
+
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -55,38 +67,63 @@ const Header = () => {
   };
 
   return (
-    <header className={`sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border ${getSafeAreaClass()}`}>
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+    <header 
+      className={`
+        fixed top-0 left-0 right-0 z-50 
+        transition-all duration-300 ease-smooth
+        ${scrolled 
+          ? 'glass shadow-elevation-2 h-14' 
+          : 'bg-background/60 backdrop-blur-sm h-16'
+        }
+        border-b border-border/50
+        ${getSafeAreaClass()}
+      `}
+    >
+      <div className="container mx-auto px-4 h-full flex items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>
-          <img src={lazoneLogo} alt="LaZone" className="w-8 h-8" />
-          <span className="font-bold text-xl bg-gradient-primary bg-clip-text text-transparent">
+        <div 
+          className="flex items-center space-x-2 cursor-pointer transition-transform duration-200 hover:scale-105 active:scale-95" 
+          onClick={() => navigate('/')}
+        >
+          <img 
+            src={lazoneLogo} 
+            alt="LaZone" 
+            className={`transition-all duration-300 ${scrolled ? 'w-7 h-7' : 'w-8 h-8'}`} 
+          />
+          <span className={`font-display font-bold bg-gradient-primary bg-clip-text text-transparent transition-all duration-300 ${scrolled ? 'text-lg' : 'text-xl'}`}>
             LaZone
           </span>
         </div>
 
         {/* Country Selector */}
-        <CountrySelector />
+        <div className="hidden md:block">
+          <CountrySelector />
+        </div>
 
         {/* Actions */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2">
           {/* Notifications */}
           {user && (
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative" onClick={() => navigate('/profile?tab=notifications')}>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="relative hover:bg-accent/50 transition-all duration-200 active:scale-95" 
+                  onClick={() => navigate('/profile?tab=notifications')}
+                >
                   <Bell className="w-5 h-5" />
                   {unreadCount > 0 && (
-                    <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center text-xs bg-primary">
+                    <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center text-xs bg-primary animate-bounce-in">
                       {unreadCount}
                     </Badge>
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80" align="end">
+              <PopoverContent className="w-80 glass-card animate-scale-in" align="end">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-medium">Notifications</h4>
+                    <h4 className="font-display font-medium">Notifications</h4>
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -105,7 +142,7 @@ const Header = () => {
                       </p>
                       <Button 
                         variant="outline" 
-                        className="w-full" 
+                        className="w-full hover:bg-accent/50 transition-all duration-200" 
                         onClick={() => navigate('/profile?tab=notifications')}
                       >
                         Voir toutes les notifications
@@ -126,8 +163,11 @@ const Header = () => {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 h-auto p-2">
-                  <Avatar className="w-8 h-8">
+                <Button 
+                  variant="ghost" 
+                  className="flex items-center gap-2 h-auto p-2 hover:bg-accent/50 transition-all duration-200 active:scale-95"
+                >
+                  <Avatar className={`transition-all duration-300 ${scrolled ? 'w-7 h-7' : 'w-8 h-8'}`}>
                     {profile?.avatar_url && (
                       <AvatarImage src={profile.avatar_url} alt={profile.full_name || 'Utilisateur'} />
                     )}
@@ -136,33 +176,47 @@ const Header = () => {
                     </AvatarFallback>
                   </Avatar>
                   <div className="hidden md:block text-left">
-                    <div className="text-sm font-medium">{profile?.full_name || 'Utilisateur'}</div>
+                    <div className={`font-medium transition-all duration-300 ${scrolled ? 'text-xs' : 'text-sm'}`}>
+                      {profile?.full_name || 'Utilisateur'}
+                    </div>
                     <div className="text-xs text-muted-foreground">{getUserTypeLabel()}</div>
                   </div>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => navigate('/profile')}>
+              <DropdownMenuContent align="end" className="w-56 glass-card animate-scale-in">
+                <DropdownMenuItem 
+                  onClick={() => navigate('/profile')}
+                  className="cursor-pointer transition-colors duration-200"
+                >
                   <User className="w-4 h-4 mr-2" />
                   Mon profil
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                <DropdownMenuItem 
+                  onClick={() => navigate('/profile')}
+                  className="cursor-pointer transition-colors duration-200"
+                >
                   <Settings className="w-4 h-4 mr-2" />
                   Paramètres
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                <DropdownMenuItem 
+                  onClick={handleSignOut} 
+                  className="text-destructive cursor-pointer transition-colors duration-200"
+                >
                   <LogOut className="w-4 h-4 mr-2" />
                   Déconnexion
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button onClick={() => navigate('/auth')} variant="default">
+            <Button 
+              onClick={() => navigate('/auth')} 
+              variant="default"
+              className="bg-gradient-primary hover:opacity-90 transition-all duration-200 active:scale-95"
+            >
               Se connecter
             </Button>
           )}
-
         </div>
       </div>
     </header>

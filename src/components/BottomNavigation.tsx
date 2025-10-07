@@ -46,7 +46,7 @@ const BottomNavigation = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border pb-safe md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/50 pb-safe md:hidden shadow-elevation-4">
       <div className="flex items-center justify-around px-2 py-2">
         {navItems.map((item, index) => {
           const Icon = item.icon;
@@ -57,14 +57,14 @@ const BottomNavigation = () => {
               key={item.path}
               onClick={() => navigate(item.path)}
               className={`
-                relative flex flex-col items-center justify-center p-2 rounded-xl min-w-[60px] h-14
-                transition-all duration-300 group
+                relative flex flex-col items-center justify-center p-2 rounded-2xl min-w-[60px] h-14
+                transition-all duration-300 ease-spring group active:scale-95
                 ${isActive 
-                  ? 'text-primary bg-primary/10' 
+                  ? 'text-primary bg-primary/15 shadow-elevation-1' 
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 }
                 ${item.isAction 
-                  ? 'bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-warm' 
+                  ? 'bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-elevation-3 scale-110' 
                   : ''
                 }
               `}

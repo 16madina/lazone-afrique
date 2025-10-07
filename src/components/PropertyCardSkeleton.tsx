@@ -1,53 +1,55 @@
 import { Card, CardContent } from "@/components/ui/card";
 
-export const PropertyCardSkeleton = () => {
+const PropertyCardSkeleton = () => {
   return (
-    <Card className="overflow-hidden">
-      {/* Image skeleton */}
-      <div className="aspect-[4/3] bg-muted animate-pulse" />
-      
+    <Card className="overflow-hidden glass-card animate-fade-in">
+      {/* Image Skeleton with shimmer */}
+      <div className="relative aspect-[4/3] bg-muted skeleton-shimmer" />
+
       <CardContent className="p-4 space-y-4">
-        {/* Title & Price skeleton */}
+        {/* Title & Price */}
         <div className="space-y-2">
-          <div className="h-6 bg-muted rounded animate-pulse w-3/4" />
-          <div className="flex justify-between">
-            <div className="h-8 bg-muted rounded animate-pulse w-1/2" />
-            <div className="h-5 bg-muted rounded animate-pulse w-1/4" />
+          <div className="h-6 bg-muted rounded skeleton-shimmer w-3/4" />
+          <div className="flex items-center justify-between">
+            <div className="h-8 bg-muted rounded skeleton-shimmer w-1/3" />
+            <div className="h-5 bg-muted rounded skeleton-shimmer w-20" />
           </div>
         </div>
 
-        {/* Location skeleton */}
-        <div className="h-4 bg-muted rounded animate-pulse w-2/3" />
+        {/* Location */}
+        <div className="h-4 bg-muted rounded skeleton-shimmer w-1/2" />
 
-        {/* Property details skeleton */}
-        <div className="flex gap-4">
-          <div className="h-4 bg-muted rounded animate-pulse w-12" />
-          <div className="h-4 bg-muted rounded animate-pulse w-12" />
-          <div className="h-4 bg-muted rounded animate-pulse w-16" />
+        {/* Property Details */}
+        <div className="flex items-center gap-4">
+          <div className="h-4 bg-muted rounded skeleton-shimmer w-12" />
+          <div className="h-4 bg-muted rounded skeleton-shimmer w-12" />
+          <div className="h-4 bg-muted rounded skeleton-shimmer w-16" />
         </div>
 
-        {/* Features skeleton */}
-        <div className="flex gap-2">
-          <div className="h-6 bg-muted rounded animate-pulse w-16" />
-          <div className="h-6 bg-muted rounded animate-pulse w-20" />
-          <div className="h-6 bg-muted rounded animate-pulse w-12" />
+        {/* Features */}
+        <div className="flex flex-wrap gap-1">
+          <div className="h-6 bg-muted rounded-full skeleton-shimmer w-20" />
+          <div className="h-6 bg-muted rounded-full skeleton-shimmer w-24" />
+          <div className="h-6 bg-muted rounded-full skeleton-shimmer w-16" />
         </div>
 
-        {/* Agent section skeleton */}
-        <div className="flex justify-between items-center pt-2 border-t">
+        {/* Agent Info */}
+        <div className="flex items-center justify-between pt-2 border-t border-border">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-muted rounded-full animate-pulse" />
-            <div className="space-y-1">
-              <div className="h-4 bg-muted rounded animate-pulse w-20" />
-              <div className="h-3 bg-muted rounded animate-pulse w-16" />
+            <div className="w-8 h-8 bg-muted rounded-full skeleton-shimmer" />
+            <div className="flex flex-col gap-1">
+              <div className="h-4 bg-muted rounded skeleton-shimmer w-24" />
+              <div className="h-3 bg-muted rounded skeleton-shimmer w-16" />
             </div>
           </div>
           <div className="flex gap-1">
-            <div className="w-8 h-8 bg-muted rounded animate-pulse" />
-            <div className="w-8 h-8 bg-muted rounded animate-pulse" />
+            <div className="h-8 w-8 bg-muted rounded skeleton-shimmer" />
+            <div className="h-8 w-8 bg-muted rounded skeleton-shimmer" />
           </div>
         </div>
       </CardContent>
     </Card>
   );
 };
+
+export default PropertyCardSkeleton;

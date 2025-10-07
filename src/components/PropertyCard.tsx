@@ -129,7 +129,7 @@ const PropertyCard = ({
 
   return (
     <Card 
-      className="group hover:shadow-warm transition-all duration-300 hover:-translate-y-1 overflow-hidden bg-gradient-card cursor-pointer"
+      className="group hover:shadow-elevation-3 transition-all duration-300 hover:-translate-y-2 overflow-hidden glass-card cursor-pointer animate-fade-in"
       onClick={handleCardClick}
     >
       {/* Image Carousel */}
@@ -164,9 +164,9 @@ const PropertyCard = ({
         <Button 
           size="icon" 
           variant="ghost" 
-          className={`absolute top-3 left-3 w-8 h-8 rounded-full bg-background/80 hover:bg-background ${
-            isInFavorites(id) ? 'text-red-500 hover:text-red-600' : 'text-muted-foreground hover:text-red-500'
-          } z-20 transition-colors`}
+          className={`absolute top-3 left-3 w-9 h-9 rounded-full glass backdrop-blur-md hover:scale-110 ${
+            isInFavorites(id) ? 'text-red-500 hover:text-red-600' : 'text-white hover:text-red-500'
+          } z-20 transition-all duration-200 active:scale-95 shadow-elevation-2`}
           onClick={handleFavoriteClick}
           disabled={favLoading}
         >
@@ -177,7 +177,7 @@ const PropertyCard = ({
       <CardContent className="p-4 space-y-4">
         {/* Title & Price */}
         <div className="space-y-2">
-          <h3 className="font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors">
+          <h3 className="font-display font-semibold text-lg line-clamp-2 group-hover:text-primary transition-colors duration-200">
             {title}
           </h3>
           <div className="flex items-center justify-between">
