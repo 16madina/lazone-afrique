@@ -24,6 +24,7 @@ interface Listing {
 interface MapboxMapProps {
   listings: Listing[];
   selectedCityCoords?: {lat: number, lng: number} | null;
+  mapStyle?: string;
 }
 
 // Format price for map display (price already in local currency)
@@ -49,7 +50,7 @@ function formatMapPrice(priceInLocalCurrency?: number | null, currencyCode?: str
   return numberPart;
 }
 
-const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) => {
+const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, mapStyle = 'streets' }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
@@ -114,12 +115,25 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
     // Initialiser la carte
     mapboxgl.accessToken = mapboxToken;
     
+    // Déterminer le style Mapbox selon la prop
+    const getMapboxStyle = (style: string) => {
+      switch (style) {
+        case 'satellite':
+          return 'mapbox://styles/mapbox/satellite-streets-v12';
+        case 'outdoors':
+          return 'mapbox://styles/mapbox/outdoors-v12';
+        case 'streets':
+        default:
+          return 'mapbox://styles/mapbox/streets-v12';
+      }
+    };
+    
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: getMapboxStyle(mapStyle),
       center: [15, 0], // Centre de l'Afrique
       zoom: 3,
-      pitch: 0,
+      pitch: 30,
       maxBounds: [[-30, -40], [60, 40]], // Limiter aux coordonnées de l'Afrique
       locale: {
         'NavigationControl.ZoomIn': 'Zoom avant',
@@ -213,12 +227,12 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
 
       // Ajouter les marqueurs pour chaque listing dispersé
       dispersedListings.forEach(listing => {
-        // Déterminer la couleur selon le prix
+        // Déterminer la couleur selon le prix avec des couleurs vibrantes
         const getPriceColor = (price: number) => {
-          if (price >= 1000000) return { bg: '#1e40af', shadow: 'rgba(30, 64, 175, 0.4)' }; // Bleu foncé pour les prix élevés
-          if (price >= 500000) return { bg: '#7c3aed', shadow: 'rgba(124, 58, 237, 0.4)' }; // Violet pour les prix moyens-élevés
-          if (price >= 200000) return { bg: '#0891b2', shadow: 'rgba(8, 145, 178, 0.4)' }; // Bleu cyan pour les prix moyens
-          return { bg: '#e11d48', shadow: 'rgba(225, 29, 72, 0.4)' }; // Rose pour les prix plus bas
+          if (price >= 1000000) return { bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', shadow: 'rgba(102, 126, 234, 0.6)', border: '#667eea' }; // Gradient violet pour les prix élevés
+          if (price >= 500000) return { bg: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', shadow: 'rgba(245, 87, 108, 0.6)', border: '#f5576c' }; // Gradient rose pour les prix moyens-élevés
+          if (price >= 200000) return { bg: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', shadow: 'rgba(0, 242, 254, 0.6)', border: '#00f2fe' }; // Gradient bleu cyan pour les prix moyens
+          return { bg: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', shadow: 'rgba(67, 233, 123, 0.6)', border: '#43e97b' }; // Gradient vert pour les prix plus bas
         };
 
         const priceColor = getPriceColor(listing.price);
@@ -229,35 +243,37 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
           <div style="
             background: ${priceColor.bg};
             color: white;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 700;
-            box-shadow: 0 2px 8px ${priceColor.shadow};
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 800;
+            box-shadow: 0 4px 15px ${priceColor.shadow}, 0 0 0 3px rgba(255,255,255,0.8);
             white-space: nowrap;
             cursor: pointer;
-            border: 1.5px solid white;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid ${priceColor.border};
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
             transform: scale(1);
-            min-width: 24px;
+            min-width: 32px;
             text-align: center;
             position: relative;
             z-index: 1;
+            letter-spacing: 0.3px;
+            backdrop-filter: blur(10px);
           ">
             ${formatMapPrice(listing.price, (listing as any).currency_code, formatPrice)}
           </div>
         `;
         
-        // Effet hover sur le marqueur
+        // Effet hover sur le marqueur avec animation améliorée
         markerElement.addEventListener('mouseenter', () => {
-          markerElement.style.transform = 'scale(1.2)';
-          markerElement.style.boxShadow = `0 4px 16px ${priceColor.shadow}`;
+          markerElement.style.transform = 'scale(1.3) translateY(-5px)';
+          markerElement.style.boxShadow = `0 8px 25px ${priceColor.shadow}, 0 0 0 4px rgba(255,255,255,0.9)`;
           markerElement.style.zIndex = '1000';
         });
         
         markerElement.addEventListener('mouseleave', () => {
           markerElement.style.transform = 'scale(1)';
-          markerElement.style.boxShadow = `0 2px 8px ${priceColor.shadow}`;
+          markerElement.style.boxShadow = `0 4px 15px ${priceColor.shadow}, 0 0 0 3px rgba(255,255,255,0.8)`;
           markerElement.style.zIndex = '1';
         });
 
@@ -287,34 +303,57 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
           className: 'custom-popup'
         })
           .setHTML(`
-            <div style="padding: 0; max-width: 200px; font-family: system-ui, -apple-system, sans-serif;">
-              <div style="position: relative;">
+            <div style="padding: 0; max-width: 220px; font-family: system-ui, -apple-system, sans-serif; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+              <div style="position: relative; overflow: hidden;">
                 <img 
                   src="${getListingImage(listing)}" 
                   alt="${listing.title}"
-                  style="width: 100%; height: 100px; object-fit: cover; border-radius: 6px 6px 0 0;"
+                  style="width: 100%; height: 120px; object-fit: cover; transition: transform 0.3s ease;"
+                  onmouseover="this.style.transform='scale(1.1)'"
+                  onmouseout="this.style.transform='scale(1)'"
                 />
+                <div style="
+                  position: absolute; 
+                  top: 8px; 
+                  right: 8px; 
+                  background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85));
+                  backdrop-filter: blur(10px);
+                  padding: 4px 10px;
+                  border-radius: 20px;
+                  font-size: 10px;
+                  font-weight: 700;
+                  color: #0E7490;
+                  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                ">
+                  ${listing.transaction_type === 'sale' ? '🏷️ Vente' : '🔑 Location'}
+                </div>
               </div>
               
-              <div style="padding: 10px;">
+              <div style="padding: 12px; background: linear-gradient(to bottom, #ffffff, #f9fafb);">
                 <div style="
-                  color: #0E7490; 
-                  font-size: 15px; 
-                  font-weight: 700; 
-                  margin-bottom: 4px;
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  -webkit-background-clip: text;
+                  -webkit-text-fill-color: transparent;
+                  background-clip: text;
+                  font-size: 16px; 
+                  font-weight: 800; 
+                  margin-bottom: 6px;
+                  letter-spacing: -0.5px;
                 ">
                    ${formatPrice(listing.price, (listing as any).currency_code)}
                 </div>
                 
                 <div style="
-                  font-weight: 500; 
-                  font-size: 12px; 
-                  margin-bottom: 6px; 
-                  line-height: 1.2;
-                  color: #374151;
+                  font-weight: 600; 
+                  font-size: 13px; 
+                  margin-bottom: 8px; 
+                  line-height: 1.3;
+                  color: #1f2937;
                   overflow: hidden;
                   text-overflow: ellipsis;
-                  white-space: nowrap;
+                  display: -webkit-box;
+                  -webkit-line-clamp: 2;
+                  -webkit-box-orient: vertical;
                 ">
                   ${listing.title}
                 </div>
@@ -322,27 +361,35 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords }) =
                  <div style="
                    font-size: 11px;
                    color: #6b7280;
-                   margin-bottom: 8px;
+                   margin-bottom: 10px;
+                   display: flex;
+                   align-items: center;
+                   gap: 4px;
                  ">
-                   📍 ${listing.city}
+                   <span style="font-size: 14px;">📍</span>
+                   <span style="font-weight: 500;">${listing.city}</span>
                  </div>
                 
                 <button 
                   onclick="window.location.href='/listing/${listing.id}'"
                   style="
-                    background: linear-gradient(135deg, #0E7490, #0891b2);
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                     color: white;
                     border: none;
-                    padding: 6px 12px;
-                    border-radius: 5px;
-                    font-size: 11px;
-                    font-weight: 600;
+                    padding: 8px 16px;
+                    border-radius: 8px;
+                    font-size: 12px;
+                    font-weight: 700;
                     cursor: pointer;
                     width: 100%;
                     transition: all 0.3s ease;
+                    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+                    letter-spacing: 0.3px;
                   "
+                  onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(102, 126, 234, 0.4)'"
+                  onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102, 126, 234, 0.3)'"
                 >
-                  Voir détails
+                  Voir les détails ➜
                 </button>
               </div>
             </div>

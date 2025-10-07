@@ -32,7 +32,7 @@ const Map = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedCityCoords, setSelectedCityCoords] = useState<{lat: number, lng: number} | null>(null);
   const [activeFilter, setActiveFilter] = useState<string>("all");
-  const [mapStyle, setMapStyle] = useState<string>("light");
+  const [mapStyle, setMapStyle] = useState<string>("streets");
   const [hasAutoLocated, setHasAutoLocated] = useState(false);
   const { selectedCountry } = useCountry();
 
@@ -167,9 +167,13 @@ const Map = () => {
     }
   };
 
-  // Changer le style de carte
+  // Changer le style de carte (rotation entre 3 styles)
   const toggleMapStyle = () => {
-    setMapStyle(prev => prev === "light" ? "satellite" : "light");
+    setMapStyle(prev => {
+      if (prev === "streets") return "satellite";
+      if (prev === "satellite") return "outdoors";
+      return "streets";
+    });
   };
 
   return (
@@ -280,16 +284,16 @@ const Map = () => {
           <Button 
             variant="outline" 
             size="icon" 
-            className="bg-background/95 backdrop-blur-sm shadow-lg"
+            className="glass shadow-elevation-3 border-2"
             onClick={toggleMapStyle}
-            title={mapStyle === "light" ? "Vue satellite" : "Vue carte"}
+            title={mapStyle === "streets" ? "Vue satellite" : mapStyle === "satellite" ? "Vue terrain" : "Vue carte"}
           >
             <Layers className="w-4 h-4" />
           </Button>
           <Button 
             variant="outline" 
             size="icon" 
-            className="bg-background/95 backdrop-blur-sm shadow-lg"
+            className="glass shadow-elevation-3 border-2"
             onClick={() => {
               // Recentrer sur l'Afrique
               setSelectedCityCoords(null);
@@ -303,7 +307,7 @@ const Map = () => {
 
         {/* Carte Mapbox avec les marqueurs de prix */}
         <div className="w-full h-full">
-          <MapboxMap listings={filteredListings} selectedCityCoords={selectedCityCoords} />
+          <MapboxMap listings={filteredListings} selectedCityCoords={selectedCityCoords} mapStyle={mapStyle} />
         </div>
 
         {/* Listings Counter */}
