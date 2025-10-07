@@ -1,12 +1,17 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MapPin, Search, Filter, Locate, Layers, Navigation } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { MapPin, Search, Filter, Locate, Layers, Navigation, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import Header from "@/components/Header";
+import { useNavigate } from "react-router-dom";
 import BottomNavigation from "@/components/BottomNavigation";
 import MapboxMap from "@/components/MapboxMap";
 import { useCountry } from "@/contexts/CountryContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUnreadNotifications } from "@/hooks/useUnreadNotifications";
+import logoIcon from "@/assets/lazone-logo-icon.png";
 
 interface Listing {
   id: string;
@@ -35,6 +40,14 @@ const Map = () => {
   const [mapStyle, setMapStyle] = useState<string>("streets");
   const [hasAutoLocated, setHasAutoLocated] = useState(false);
   const { selectedCountry } = useCountry();
+  const { user, profile } = useAuth();
+  const { unreadCount } = useUnreadNotifications();
+  const navigate = useNavigate();
+
+  const getUserInitials = (name: string | null | undefined) => {
+    if (!name) return "U";
+    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  };
 
   console.log("Map component rendering, listings count:", listings.length);
 
@@ -178,9 +191,63 @@ const Map = () => {
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      <Header />
+      {/* Custom Map Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 glass shadow-elevation-2 border-b border-border/50">
+        <div className="flex items-center justify-between px-4 h-14">
+          {/* Logo */}
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
+            <img src={logoIcon} alt="LaZone" className="h-8 w-8" />
+            <span className="text-xl font-display font-bold bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">
+              LaZone
+            </span>
+          </div>
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-3">
+            {user && (
+              <>
+                {/* Notifications */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative"
+                  onClick={() => navigate("/profile?tab=notifications")}
+                >
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-orange-500">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </Badge>
+                  )}
+                </Button>
+
+                {/* User Avatar */}
+                <Avatar 
+                  className="h-9 w-9 cursor-pointer ring-2 ring-background shadow-md"
+                  onClick={() => navigate("/profile")}
+                >
+                  <AvatarImage src={profile?.avatar_url || undefined} />
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-orange-500 text-white text-sm font-semibold">
+                    {getUserInitials(profile?.full_name)}
+                  </AvatarFallback>
+                </Avatar>
+              </>
+            )}
+            {!user && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => navigate("/auth")}
+                className="font-medium"
+              >
+                Se connecter
+              </Button>
+            )}
+          </div>
+        </div>
+      </header>
       
-      <main className="flex-1 relative animate-fade-in overflow-hidden">
+      <main className="flex-1 relative animate-fade-in overflow-hidden pt-14">
         {/* Search Bar */}
         <div className="absolute top-4 left-4 right-4 z-10">
           <div className="bg-background/95 backdrop-blur-sm rounded-xl p-4 shadow-lg space-y-3">
