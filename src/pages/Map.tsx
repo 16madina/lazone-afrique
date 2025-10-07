@@ -249,7 +249,7 @@ const Map = () => {
       
       <main className="flex-1 relative animate-fade-in overflow-hidden pt-14">
         {/* Search Bar */}
-        <div className="absolute top-4 left-4 right-4 z-10">
+        <div className="absolute top-[72px] left-4 right-4 z-10">
           <div className="bg-background/95 backdrop-blur-sm rounded-xl p-4 shadow-lg space-y-3">
             <div className="flex gap-2">
               <div className="flex-1 relative">
@@ -347,7 +347,7 @@ const Map = () => {
         </div>
 
         {/* Map Controls */}
-        <div className="absolute top-20 right-4 z-10 flex flex-col gap-3">
+        <div className="absolute top-[200px] right-4 z-10 flex flex-col gap-3">
           <Button 
             variant="outline" 
             size="icon" 
