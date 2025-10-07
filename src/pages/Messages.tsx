@@ -110,10 +110,30 @@ const Messages = () => {
     return displayName.substring(0, 2).toUpperCase();
   };
 
-  // Format message time
+  // Format message time with smart display
   const formatMessageTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    // Si aujourd'hui, afficher l'heure
+    if (diffDays === 0) {
+      return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }
+    
+    // Si hier
+    if (diffDays === 1) {
+      return 'Hier';
+    }
+    
+    // Si dans la semaine, afficher le jour
+    if (diffDays < 7) {
+      return date.toLocaleDateString('fr-FR', { weekday: 'short' });
+    }
+    
+    // Sinon afficher jj/mm
+    return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
   };
 
   // Check if message is from current user
@@ -157,11 +177,11 @@ const Messages = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-muted/30">
       <Header />
       
       {/* Tab Navigation */}
-      <div className="border-b border-border bg-background">
+      <div className="border-b border-border bg-background glass">
         <div className="flex">
           <Button
             variant={activeTab === 'messages' ? 'default' : 'ghost'}
@@ -191,38 +211,23 @@ const Messages = () => {
           {/* Conversations List */}
           <div className={`
             ${selectedConversationId ? 'hidden md:flex' : 'flex'} 
-            flex-col w-full md:w-1/3 border-r border-border
+            flex-col w-full md:w-1/3 bg-background
           `}>
-            {/* Search and Filters */}
-            <div className="p-4 border-b border-border">
-              <div className="relative mb-4">
+            {/* Header */}
+            <div className="p-6 border-b border-border/50">
+              <h1 className="text-3xl font-display font-bold text-foreground mb-4">Messages</h1>
+              
+              <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input 
-                  placeholder="Rechercher une conversation..." 
-                  className="pl-10"
+                  placeholder="Rechercher..." 
+                  className="pl-10 glass border-0"
                 />
-              </div>
-              
-              <div className="flex gap-2">
-                <Button 
-                  variant={!showUnreadOnly ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setShowUnreadOnly(false)}
-                >
-                  Tous
-                </Button>
-                <Button 
-                  variant={showUnreadOnly ? "default" : "outline"}
-                  size="sm" 
-                  onClick={() => setShowUnreadOnly(true)}
-                >
-                  Non lus
-                </Button>
               </div>
             </div>
 
             {/* Conversations */}
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {filteredConversations.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center p-8">
                   <MessageCircle className="w-12 h-12 text-muted-foreground mb-4" />
@@ -236,60 +241,73 @@ const Messages = () => {
                     key={conversation.id}
                     onClick={() => {
                       setSelectedConversationId(conversation.id);
-                      // Marquer la conversation comme lue
                       if (conversation.unread_count > 0) {
                         markConversationAsRead(conversation.id);
                       }
                     }}
                     className={`
-                      p-4 border-b border-border cursor-pointer transition-colors hover:bg-muted/50
-                      ${selectedConversationId === conversation.id ? 'bg-muted' : ''}
+                      glass-card p-4 cursor-pointer transition-all duration-300 ease-spring hover:shadow-elevation-3 hover:scale-[1.01]
+                      ${selectedConversationId === conversation.id ? 'shadow-elevation-2 scale-[1.01]' : ''}
                     `}
                   >
-                    <div className="flex items-center gap-3">
-                       <div className="relative">
-                         <Avatar className="w-12 h-12">
-                           <AvatarImage 
-                             src={getConversationAvatarUrl(conversation)} 
-                             alt={getConversationDisplayName(conversation)}
-                             onError={(e) => {
-                               console.log('Avatar failed to load:', getConversationAvatarUrl(conversation));
-                             }}
-                           />
-                           <AvatarFallback className="bg-gradient-primary text-primary-foreground">
-                             {getConversationAvatar(conversation)}
-                           </AvatarFallback>
-                         </Avatar>
+                    <div className="flex items-start gap-3">
+                      {/* Avatar */}
+                      <div className="relative flex-shrink-0">
+                        <Avatar className="w-14 h-14 ring-2 ring-background shadow-lg">
+                          <AvatarImage 
+                            src={getConversationAvatarUrl(conversation)} 
+                            alt={getConversationDisplayName(conversation)}
+                          />
+                          <AvatarFallback className="bg-gradient-primary text-primary-foreground font-semibold">
+                            {getConversationAvatar(conversation)}
+                          </AvatarFallback>
+                        </Avatar>
                         {isParticipantOnline(conversation) && (
-                          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-accent rounded-full border-2 border-background" />
+                          <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-background shadow-md" />
                         )}
                       </div>
 
+                      {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-semibold truncate">
+                        <div className="flex items-start justify-between mb-1">
+                          <h3 className="font-display font-bold text-base text-foreground">
                             {getConversationDisplayName(conversation)}
                           </h3>
-                          <span className="text-xs text-muted-foreground ml-2">
+                          <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
                             {formatMessageTime(conversation.updated_at)}
                           </span>
                         </div>
 
-                        <p className="text-sm text-muted-foreground truncate mt-1">
-                          {conversation.latest_message?.content || "Aucun message"}
+                        {/* Property Title */}
+                        <p className="text-sm font-medium text-foreground/90 mb-2 line-clamp-1">
+                          {conversation.property?.title || 'Conversation'}
                         </p>
 
-                        <div className="flex items-center justify-between mt-2">
-                          <Badge variant="outline" className="text-xs">
-                            {conversation.property?.title || 'Conversation'}
-                          </Badge>
-                          {conversation.unread_count > 0 && (
-                            <Badge className="bg-primary text-primary-foreground">
-                              {conversation.unread_count}
+                        {/* Last Message */}
+                        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                          {conversation.latest_message?.content || "Commencer la conversation..."}
+                        </p>
+
+                        {/* Badge if unread */}
+                        {conversation.unread_count > 0 && (
+                          <div className="mt-2">
+                            <Badge className="bg-primary text-primary-foreground shadow-md">
+                              {conversation.unread_count} nouveau{conversation.unread_count > 1 ? 'x' : ''}
                             </Badge>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
+
+                      {/* Property Thumbnail */}
+                      {(conversation.property as any)?.image && (
+                        <div className="flex-shrink-0 ml-2">
+                          <img 
+                            src={(conversation.property as any).image} 
+                            alt={conversation.property.title}
+                            className="w-16 h-16 rounded-lg object-cover shadow-md ring-1 ring-border"
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))
