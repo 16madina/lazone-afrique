@@ -158,35 +158,35 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
   };
 
   return (
-    <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden animate-fade-in">
-      {/* Background Image with Overlay */}
+    <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden animate-fade-in pt-20">
+      {/* Background Image with Overlay - Opacité augmentée pour meilleure lisibilité */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 hover:scale-105"
         style={{ backgroundImage: `url(${currentHeroImage})` }}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-foreground/70 via-foreground/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black/60" />
       </div>
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 text-center">
         <div className="max-w-4xl mx-auto space-y-8">
-          {/* Hero Logo */}
-          <div className="flex justify-start items-center space-y-4">
-            <div className="flex flex-col items-start max-w-4xl">
-              <div className="flex items-center gap-0">
+          {/* Hero Logo - Centré avec ombre pour visibilité */}
+          <div className="flex justify-center items-center">
+            <div className="flex flex-col items-center max-w-4xl">
+              <div className="flex items-center gap-0 drop-shadow-2xl">
                 <img 
                   src={mainLogo} 
                   alt="Logo principal"
-                  className="w-32 h-32 md:w-48 md:h-48 object-contain"
+                  className="w-24 h-24 md:w-36 md:h-36 object-contain"
                 />
                 <img 
                   src={lazoneTextLogo} 
                   alt="LaZone"
-                  className="w-64 h-32 md:w-96 md:h-48 object-contain mt-4 -ml-12"
+                  className="w-48 h-24 md:w-72 md:h-36 object-contain mt-4 -ml-8"
                 />
               </div>
-              <div className="text-center">
-                <p className="text-xl md:text-2xl font-fredoka text-primary-foreground font-semibold leading-tight">
+              <div className="text-center mt-4 bg-black/30 backdrop-blur-sm px-6 py-3 rounded-full">
+                <p className="text-lg md:text-2xl font-fredoka text-white font-semibold leading-tight drop-shadow-lg">
                   Trouve ton chez toi dans ta Zone
                 </p>
               </div>
@@ -271,9 +271,11 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
           {/* Featured Sponsored Properties */}
           {sponsoredListings.length > 0 ? (
             <div className="space-y-4 animate-fade-in">
-              <h3 className="text-xl font-display font-semibold text-primary-foreground text-center">
-                🌟 Annonces Sponsorisées
-              </h3>
+              <div className="bg-black/40 backdrop-blur-sm px-6 py-2 rounded-full inline-block mx-auto">
+                <h3 className="text-xl md:text-2xl font-display font-bold text-white text-center drop-shadow-lg">
+                  🌟 Annonces Sponsorisées
+                </h3>
+              </div>
               <div className="grid grid-cols-3 gap-2 sm:gap-4 max-w-4xl mx-auto">
                 {sponsoredListings.map((listing) => (
                   <div 
@@ -306,36 +308,40 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
                   </div>
                 ))}
               </div>
-              <div className="text-center space-y-3">
+               <div className="text-center space-y-3">
                 <SponsorshipDialog listingId="demo">
-                  <Button variant="default" className="bg-gradient-primary hover:opacity-90 transition-all duration-200 active:scale-95 shadow-elevation-3">
-                    <Star className="w-4 h-4 mr-2" />
+                  <Button variant="default" className="bg-gradient-primary hover:opacity-90 transition-all duration-200 active:scale-95 shadow-elevation-3 text-base">
+                    <Star className="w-5 h-5 mr-2" />
                     Voir tarifs & sponsoriser
                   </Button>
                 </SponsorshipDialog>
-                <div className="text-xs text-primary-foreground/70 flex items-center justify-center gap-1">
-                  <Info className="w-3 h-3" />
-                  Packages à partir de 15$ - Boost 3 à 30 jours
+                <div className="bg-black/30 backdrop-blur-sm px-4 py-2 rounded-full inline-flex items-center gap-2 text-white">
+                  <Info className="w-4 h-4" />
+                  <span className="text-sm font-medium">Packages à partir de 15$ - Boost 3 à 30 jours</span>
                 </div>
               </div>
             </div>
           ) : (
             /* Fallback content when no sponsored listings */
             <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-primary-foreground text-center">
-                🌟 Annonces Sponsorisées
-              </h3>
+              <div className="bg-black/40 backdrop-blur-sm px-6 py-2 rounded-full inline-block mx-auto">
+                <h3 className="text-xl md:text-2xl font-display font-bold text-white text-center drop-shadow-lg">
+                  🌟 Annonces Sponsorisées
+                </h3>
+              </div>
               <div className="text-center space-y-3">
-                <p className="text-primary-foreground/80">Aucune annonce sponsorisée pour le moment</p>
+                <div className="bg-black/30 backdrop-blur-sm px-6 py-3 rounded-2xl inline-block">
+                  <p className="text-white font-medium">Aucune annonce sponsorisée pour le moment</p>
+                </div>
                 <SponsorshipDialog listingId="demo">
-                  <Button variant="default" className="bg-gradient-primary hover:opacity-90">
-                    <Star className="w-4 h-4 mr-2" />
+                  <Button variant="default" className="bg-gradient-primary hover:opacity-90 text-base">
+                    <Star className="w-5 h-5 mr-2" />
                     Voir tarifs & sponsoriser
                   </Button>
                 </SponsorshipDialog>
-                <div className="text-xs text-primary-foreground/70 flex items-center justify-center gap-1">
-                  <Info className="w-3 h-3" />
-                  Packages à partir de 15$ - Boost 3 à 30 jours
+                <div className="bg-black/30 backdrop-blur-sm px-4 py-2 rounded-full inline-flex items-center gap-2 text-white">
+                  <Info className="w-4 h-4" />
+                  <span className="text-sm font-medium">Packages à partir de 15$ - Boost 3 à 30 jours</span>
                 </div>
               </div>
             </div>
