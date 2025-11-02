@@ -798,31 +798,73 @@ const AdminPanel = () => {
                   try {
                     setLoading(true);
                     
+                    console.log('🔧 Mise à jour des paramètres du site...', editableSettings);
+                    
+                    // Vérifier d'abord si l'utilisateur a le rôle admin
+                    const { data: roleCheck, error: roleError } = await supabase
+                      .from('user_roles')
+                      .select('role')
+                      .eq('user_id', user?.id)
+                      .eq('role', 'admin')
+                      .maybeSingle();
+                    
+                    console.log('👤 Vérification du rôle admin:', { roleCheck, roleError, userId: user?.id });
+                    
+                    if (roleError || !roleCheck) {
+                      console.error('❌ Utilisateur sans rôle admin dans la base:', { roleError, roleCheck });
+                      
+                      // Essayer d'ajouter le rôle admin
+                      console.log('🔄 Tentative d\'ajout du rôle admin...');
+                      const { error: insertError } = await supabase
+                        .from('user_roles')
+                        .insert({ user_id: user?.id, role: 'admin' });
+                      
+                      if (insertError) {
+                        console.error('❌ Impossible d\'ajouter le rôle admin:', insertError);
+                        toast({
+                          title: 'Erreur de permissions',
+                          description: 'Vous n\'avez pas les permissions nécessaires. Veuillez contacter un administrateur système.',
+                          variant: 'destructive'
+                        });
+                        return;
+                      }
+                      console.log('✅ Rôle admin ajouté avec succès');
+                    }
+                    
                     // Mise à jour des paramètres
                     const updates = [
-                      { setting_key: 'contact_email', setting_value: editableSettings.contact_email, updated_by: user?.id },
-                      { setting_key: 'contact_phone', setting_value: editableSettings.contact_phone, updated_by: user?.id },
-                      { setting_key: 'contact_hours', setting_value: editableSettings.contact_hours, updated_by: user?.id }
+                      { setting_key: 'contact_email', setting_value: editableSettings.contact_email },
+                      { setting_key: 'contact_phone', setting_value: editableSettings.contact_phone },
+                      { setting_key: 'contact_hours', setting_value: editableSettings.contact_hours }
                     ];
 
                     for (const update of updates) {
+                      console.log('📝 Mise à jour de', update.setting_key, ':', update.setting_value);
                       const { error } = await supabase
                         .from('site_settings')
-                        .update({ setting_value: update.setting_value, updated_by: update.updated_by })
+                        .update({ 
+                          setting_value: update.setting_value,
+                          updated_by: user?.id 
+                        })
                         .eq('setting_key', update.setting_key);
                       
-                      if (error) throw error;
+                      if (error) {
+                        console.error('❌ Erreur lors de la mise à jour de', update.setting_key, ':', error);
+                        throw error;
+                      }
+                      console.log('✅ Paramètre mis à jour:', update.setting_key);
                     }
 
+                    console.log('✅ Tous les paramètres ont été mis à jour avec succès');
                     toast({
                       title: 'Succès',
                       description: 'Paramètres mis à jour avec succès'
                     });
                   } catch (error: any) {
-                    console.error('Error updating settings:', error);
+                    console.error('❌ Erreur lors de la mise à jour des paramètres:', error);
                     toast({
                       title: 'Erreur',
-                      description: 'Impossible de mettre à jour les paramètres',
+                      description: error.message || 'Impossible de mettre à jour les paramètres',
                       variant: 'destructive'
                     });
                   } finally {
