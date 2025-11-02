@@ -141,6 +141,34 @@ All colors MUST be HSL.
     padding-bottom: env(safe-area-inset-bottom);
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Optimize scrolling performance */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Performance optimizations for animations and scrolling */
+  .glass-card,
+  .glass-button,
+  [class*="animate-"] {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  /* Improve scroll performance */
+  .overflow-y-auto,
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Poppins', 'Inter', sans-serif;
   }

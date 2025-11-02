@@ -11,12 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowUpDown, Grid3X3, List, Globe, ChevronLeft, ChevronRight, Filter, Sparkles } from "lucide-react";
+import { ArrowUpDown, Grid3X3, List, Globe, Filter, Sparkles } from "lucide-react";
 import { useFavorites } from "@/hooks/useFavorites";
-import { usePagination } from "@/hooks/usePagination";
+import { useAutoInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { toast } from "sonner";
 import { useSecureProfiles } from "@/hooks/useSecureProfiles";
 import { AIRecommendations } from "@/components/AIRecommendations";
+import { PaginationMetadata, LoadMoreButton } from "@/components/PaginationMetadata";
 
 interface Listing {
   id: string;
@@ -73,25 +74,16 @@ const Index = () => {
   const { isFavorite } = useFavorites();
   const { getPublicProfile } = useSecureProfiles();
   
-  // Pagination for properties
+  // Infinite scroll for properties
   const {
-    currentItems: paginatedProperties,
-    currentPage,
-    totalPages,
-    hasNextPage,
-    hasPreviousPage,
-    goToNextPage,
-    goToPreviousPage,
-    goToPage,
-    startIndex,
-    endIndex,
+    displayedItems: displayedProperties,
+    hasMore,
+    isLoading: isLoadingMore,
+    loadMore,
+    sentinelRef,
+    loadedItems,
     totalItems
-  } = usePagination({ items: properties, itemsPerPage: 12 });
-
-  // Scroll to top when page changes
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [currentPage]);
+  } = useAutoInfiniteScroll({ items: properties, itemsPerPage: 12 });
 
   // Fetch properties for selected country from Supabase
   useEffect(() => {
@@ -382,7 +374,7 @@ const Index = () => {
                 <Globe className="w-3 h-3" />
                 {totalItems > 0 ? (
                   <span>
-                    Affichage {startIndex}-{endIndex} de {totalItems} propriétés en {selectedCountry.name}
+                    {totalItems} propriétés disponibles en {selectedCountry.name}
                   </span>
                 ) : (
                   <span>Aucune propriété trouvée en {selectedCountry.name}</span>
@@ -412,6 +404,17 @@ const Index = () => {
           </div>
         </div>
 
+        {/* Pagination Metadata */}
+        {properties.length > 0 && !loading && (
+          <div className="mb-6 animate-fade-in">
+            <PaginationMetadata
+              currentItems={loadedItems}
+              totalItems={totalItems}
+              isLoading={isLoadingMore}
+            />
+          </div>
+        )}
+
         {/* Properties Grid */}
         {loading ? (
           <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
@@ -420,48 +423,88 @@ const Index = () => {
             ))}
           </div>
         ) : properties.length > 0 ? (
-          <div className={`grid gap-6 ${
-            viewMode === "grid" 
-              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" 
-              : "grid-cols-1"
-          }`}>
-            {paginatedProperties.map((property) => {
-              const profile = property.profiles;
-              const agentName = profile?.full_name || "Propriétaire";
-              const agentType = profile?.user_type === 'proprietaire' ? 'individual' : 
-                              profile?.user_type === 'agence' ? 'agency' : 'broker';
-              
-              return (
-                <PerformanceOptimizedPropertyCard 
-                  key={property.id} 
-                  id={property.id}
-                  title={property.title}
-                  price={property.price}
-                  currencyCode={(property as any).currency_code || (property.country_code === 'CI' ? 'XOF' : 'XOF')}
-                  location={`${property.city}, ${getCountryName(property.country_code)}`}
-                  type={property.transaction_type === 'rent' ? 'rent' : 'sale'}
-                  propertyType={property.property_type as any || "house"}
-                  photos={property.photos}
-                  image={property.image || "/placeholder.svg"}
-                  bedrooms={property.bedrooms}
-                  bathrooms={property.bathrooms}
-                  surface={property.surface_area || 120}
-                  agent={{
-                    name: agentName,
-                    type: agentType,  
-                    rating: 4.5,
-                    verified: true,
-                    avatar_url: (profile as any)?.avatar_url,
-                    user_id: property.user_id,
-                    phone: profile?.phone
-                  }}
-                  features={property.features || ["Moderne", "Bien situé"]}
-                  isSponsored={property.is_sponsored && property.sponsored_until && new Date(property.sponsored_until) > new Date()}
-                  isFavorite={isFavorite(property.id)}
+          <>
+            <div className={`grid gap-6 ${
+              viewMode === "grid" 
+                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" 
+                : "grid-cols-1"
+            }`}>
+              {displayedProperties.map((property) => {
+                const profile = property.profiles;
+                const agentName = profile?.full_name || "Propriétaire";
+                const agentType = profile?.user_type === 'proprietaire' ? 'individual' : 
+                                profile?.user_type === 'agence' ? 'agency' : 'broker';
+                
+                return (
+                  <PerformanceOptimizedPropertyCard 
+                    key={property.id} 
+                    id={property.id}
+                    title={property.title}
+                    price={property.price}
+                    currencyCode={(property as any).currency_code || (property.country_code === 'CI' ? 'XOF' : 'XOF')}
+                    location={`${property.city}, ${getCountryName(property.country_code)}`}
+                    type={property.transaction_type === 'rent' ? 'rent' : 'sale'}
+                    propertyType={property.property_type as any || "house"}
+                    photos={property.photos}
+                    image={property.image || "/placeholder.svg"}
+                    bedrooms={property.bedrooms}
+                    bathrooms={property.bathrooms}
+                    surface={property.surface_area || 120}
+                    agent={{
+                      name: agentName,
+                      type: agentType,  
+                      rating: 4.5,
+                      verified: true,
+                      avatar_url: (profile as any)?.avatar_url,
+                      user_id: property.user_id,
+                      phone: profile?.phone
+                    }}
+                    features={property.features || ["Moderne", "Bien situé"]}
+                    isSponsored={property.is_sponsored && property.sponsored_until && new Date(property.sponsored_until) > new Date()}
+                    isFavorite={isFavorite(property.id)}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Infinite Scroll Sentinel */}
+            <div ref={sentinelRef} className="h-20 flex items-center justify-center">
+              {isLoadingMore && (
+                <div className="flex flex-col items-center gap-3 py-8">
+                  <div className="flex gap-2">
+                    {[...Array(3)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-3 h-3 rounded-full bg-primary animate-bounce"
+                        style={{ animationDelay: `${i * 150}ms` }}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-sm text-muted-foreground">Chargement des annonces...</p>
+                </div>
+              )}
+            </div>
+
+            {/* Manual Load More Button (Mobile Friendly) */}
+            {hasMore && !isLoadingMore && (
+              <div className="mt-8">
+                <LoadMoreButton
+                  onClick={loadMore}
+                  isLoading={isLoadingMore}
+                  hasMore={hasMore}
                 />
-              );
-            })}
-          </div>
+              </div>
+            )}
+
+            {/* End of List Indicator */}
+            {!hasMore && displayedProperties.length > 0 && (
+              <div className="text-center py-12 animate-fade-in">
+                <Badge variant="secondary" className="px-6 py-3 text-base">
+                  ✓ Vous avez vu toutes les annonces disponibles
+                </Badge>
+              </div>
+            )}
+          </>
         ) : (
           /* Empty State */
           <div className="text-center py-16 animate-fade-in">
@@ -476,86 +519,6 @@ const Index = () => {
             <Badge variant="outline" className="mb-4">
               Pays disponibles: Côte d'Ivoire, Guinée, Sénégal, Maroc, Nigeria, Ghana, Kenya, Afrique du Sud
             </Badge>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {!loading && totalItems > 12 && (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8">
-            <div className="text-sm text-muted-foreground">
-              Page {currentPage} sur {totalPages} ({totalItems} propriétés)
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  goToPreviousPage();
-                  setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
-                }}
-                disabled={!hasPreviousPage}
-                className="flex items-center gap-1"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Précédent
-              </Button>
-              
-              {/* Page numbers */}
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                  const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
-                  if (pageNum <= totalPages) {
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={currentPage === pageNum ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => {
-                          goToPage(pageNum);
-                          setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
-                        }}
-                        className="w-8 h-8 p-0"
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  }
-                  return null;
-                })}
-              </div>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  goToNextPage();
-                  setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
-                }}
-                disabled={!hasNextPage}
-                className="flex items-center gap-1"
-              >
-                Suivant
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Load More for smaller screens */}
-        {!loading && properties.length > 0 && totalPages > 1 && (
-          <div className="text-center sm:hidden">
-            <Button 
-              variant="outline" 
-              size="lg"
-              onClick={() => {
-                goToNextPage();
-                setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
-              }}
-              disabled={!hasNextPage}
-            >
-              {hasNextPage ? 'Voir plus de propriétés' : 'Toutes les propriétés affichées'}
-            </Button>
           </div>
         )}
       </main>
