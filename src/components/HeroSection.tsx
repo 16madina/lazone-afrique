@@ -34,16 +34,16 @@ interface SponsoredListing {
 }
 
 const HeroSection = ({ onSearch }: HeroSectionProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [transactionType, setTransactionType] = useState("");
   const [propertyType, setPropertyType] = useState("");
   const [location, setLocation] = useState("");
   const [sponsoredListings, setSponsoredListings] = useState<SponsoredListing[]>([]);
   const { selectedCountry, formatPrice } = useCountry();
 
   // Progressive form state
+  const showPropertyType = transactionType !== "";
   const showLocation = propertyType !== "";
-  const showSearchQuery = location !== "";
-  const showSearchButton = searchQuery !== "";
+  const showSearchButton = location !== "";
 
   // Fetch sponsored listings
   useEffect(() => {
@@ -104,7 +104,7 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
       onSearch({
         location,
         propertyType,
-        searchQuery
+        searchQuery: ""
       });
     }
   };
@@ -166,24 +166,40 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
           {/* Progressive Search Form */}
           <div className="glass-card rounded-2xl p-3 shadow-elevation-4 max-w-xl mx-auto animate-slide-up">
             <div className="space-y-3">
-              {/* Step 1: Property Type (Always visible) */}
+              {/* Step 1: Transaction Type (Always visible) */}
               <div className="space-y-1 animate-fade-in">
-                <label className="text-sm font-medium text-muted-foreground">Type de bien</label>
-                <Select value={propertyType} onValueChange={setPropertyType}>
+                <label className="text-sm font-medium text-muted-foreground">Type de transaction</label>
+                <Select value={transactionType} onValueChange={setTransactionType}>
                   <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Maison, Appartement, Villa..." />
+                    <SelectValue placeholder="Achat ou Location" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="apartment">Appartement</SelectItem>
-                    <SelectItem value="house">Maison</SelectItem>
-                    <SelectItem value="villa">Villa</SelectItem>
-                    <SelectItem value="land">Terrain</SelectItem>
-                    <SelectItem value="commercial">Commercial</SelectItem>
+                    <SelectItem value="sale">Achat</SelectItem>
+                    <SelectItem value="rent">Location</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Step 2: Location (Shown after property type) */}
+              {/* Step 2: Property Type (Shown after transaction type) */}
+              {showPropertyType && (
+                <div className="space-y-1 animate-slide-up">
+                  <label className="text-sm font-medium text-muted-foreground">Type de bien</label>
+                  <Select value={propertyType} onValueChange={setPropertyType}>
+                    <SelectTrigger className="h-12">
+                      <SelectValue placeholder="Maison, Appartement, Villa..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="apartment">Appartement</SelectItem>
+                      <SelectItem value="house">Maison</SelectItem>
+                      <SelectItem value="villa">Villa</SelectItem>
+                      <SelectItem value="land">Terrain</SelectItem>
+                      <SelectItem value="commercial">Commercial</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Step 3: Location (Shown after property type) */}
               {showLocation && (
                 <div className="space-y-1 animate-slide-up">
                   <label className="text-sm font-medium text-muted-foreground">Localisation</label>
@@ -203,20 +219,7 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
                 </div>
               )}
 
-              {/* Step 3: Search Query (Shown after location) */}
-              {showSearchQuery && (
-                <div className="space-y-1 animate-slide-up">
-                  <label className="text-sm font-medium text-muted-foreground">Recherche</label>
-                  <Input
-                    placeholder="Mots-clés..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full h-12"
-                  />
-                </div>
-              )}
-
-              {/* Step 4: Search Button (Shown after search query) */}
+              {/* Step 4: Search Button (Shown after location) */}
               {showSearchButton && (
                 <Button 
                   onClick={handleSearch}
