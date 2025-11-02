@@ -374,7 +374,7 @@ const Profile = () => {
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       
-      <main className="flex-1 container mx-auto px-4 py-6 pb-20 animate-fade-in">
+      <main className="flex-1 container mx-auto px-4 pt-24 pb-20 animate-fade-in">
         <Tabs defaultValue="profile" className="space-y-6" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="profile">Profil</TabsTrigger>
