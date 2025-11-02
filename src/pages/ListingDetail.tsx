@@ -257,28 +257,48 @@ const ListingDetail = () => {
 
   if (error || !listing) {
     return (
-      <div className="flex flex-col min-h-screen bg-background">
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
         <Header />
-        <main className="flex-1 p-4">
-          <div className="max-w-4xl mx-auto">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate(-1)}
-              className="mb-4"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Retour
-            </Button>
-            <Card>
-              <CardContent className="text-center py-12">
-                <h3 className="text-lg font-semibold mb-2">Annonce non trouvée</h3>
-                <p className="text-muted-foreground">{error}</p>
-                <Button 
-                  onClick={() => navigate(-1)}
-                  className="mt-4"
-                >
-                  Retour
-                </Button>
+        <main className="flex-1 p-4 flex items-center justify-center">
+          <div className="max-w-2xl w-full mx-auto animate-fade-in">
+            <Card className="glass-card border-destructive/20 shadow-elevation-4">
+              <CardContent className="text-center py-16 px-6 space-y-6">
+                <div className="glass-button p-6 rounded-full w-24 h-24 mx-auto flex items-center justify-center">
+                  <X className="w-12 h-12 text-destructive" />
+                </div>
+                
+                <div className="space-y-2">
+                  <h2 className="text-3xl font-bold bg-gradient-to-r from-destructive via-destructive/80 to-destructive bg-clip-text text-transparent">
+                    Annonce indisponible
+                  </h2>
+                  <p className="text-muted-foreground text-lg">
+                    Cette annonce n'existe pas ou n'est plus disponible
+                  </p>
+                  {error && (
+                    <p className="text-sm text-muted-foreground/70">
+                      {error}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate(-1)}
+                    className="ripple"
+                    aria-label="Retour à la page précédente"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Retour
+                  </Button>
+                  <Button 
+                    onClick={() => navigate('/')}
+                    className="ripple"
+                    aria-label="Retourner à l'accueil"
+                  >
+                    Retour à l'accueil
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
