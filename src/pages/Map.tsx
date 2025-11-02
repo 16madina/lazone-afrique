@@ -373,7 +373,7 @@ const Map = () => {
         </div>
 
         {/* Carte Mapbox avec les marqueurs de prix */}
-        <div className="w-full h-full">
+        <div className="absolute inset-0">
           <MapboxMap listings={filteredListings} selectedCityCoords={selectedCityCoords} mapStyle={mapStyle} />
         </div>
 
