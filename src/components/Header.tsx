@@ -97,9 +97,7 @@ const Header = () => {
         </button>
 
         {/* Country Selector */}
-        <div className="hidden md:block">
-          <CountrySelector />
-        </div>
+        <CountrySelector />
 
         {/* Actions */}
         <div className="flex items-center space-x-2">
