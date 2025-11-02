@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Header from "@/components/Header";
+import { EnhancedHeader } from "@/components/EnhancedHeader";
 import HeroSection from "@/components/HeroSection";
 import PropertyFilters, { FilterState } from "@/components/PropertyFilters";
 import PerformanceOptimizedPropertyCard from "@/components/PerformanceOptimizedPropertyCard";
@@ -320,7 +320,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <EnhancedHeader />
       <HeroSection onSearch={handleHeroSearch} />
       
       {/* Main Content */}
