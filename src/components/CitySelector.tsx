@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
@@ -48,11 +47,6 @@ const CitySelector: React.FC<CitySelectorProps> = ({
     setOpen(false);
   };
 
-  const handleInputChange = (inputValue: string) => {
-    setSearchValue(inputValue);
-    onChange(inputValue);
-  };
-
   return (
     <div className="space-y-2">
       <Label>Localisation</Label>
@@ -60,33 +54,27 @@ const CitySelector: React.FC<CitySelectorProps> = ({
         <div className="flex-1">
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-              <div className="relative">
-                <Input
-                  placeholder="Tapez votre ville..."
-                  value={searchValue}
-                  onChange={(e) => handleInputChange(e.target.value)}
-                  onFocus={() => setOpen(true)}
-                  className="pr-10"
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                  onClick={() => setOpen(!open)}
-                >
-                  <ChevronDown className={cn(
-                    "h-4 w-4 transition-transform",
-                    open && "transform rotate-180"
-                  )} />
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                role="combobox"
+                aria-expanded={open}
+                className="w-full justify-between"
+              >
+                {value || "Tapez votre ville..."}
+                <ChevronDown className={cn(
+                  "ml-2 h-4 w-4 shrink-0 opacity-50 transition-transform",
+                  open && "transform rotate-180"
+                )} />
+              </Button>
             </PopoverTrigger>
             <PopoverContent className="w-full p-0" align="start">
-              <Command>
+              <Command shouldFilter={false}>
                 <CommandInput
                   placeholder={`Rechercher dans ${selectedCountry.name}...`}
                   value={searchValue}
-                  onValueChange={handleInputChange}
+                  onValueChange={(val) => {
+                    setSearchValue(val);
+                  }}
                 />
                 <CommandList>
                   <CommandEmpty>
