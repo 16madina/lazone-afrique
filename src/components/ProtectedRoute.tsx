@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
 import { PageLoader } from './PageLoader';
 
 interface ProtectedRouteProps {
@@ -8,10 +9,11 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
-  const { user, profile, loading } = useAuth();
+  const { user, loading } = useAuth();
+  const { isAdmin, loading: roleLoading } = useUserRole();
   
   // Afficher le loader pendant le chargement
-  if (loading) {
+  if (loading || roleLoading) {
     return <PageLoader />;
   }
   
@@ -20,8 +22,8 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
     return <Navigate to="/auth" replace />;
   }
   
-  // V?rifier les droits admin si requis
-  if (requireAdmin && profile?.user_type !== 'admin') {
+  // Vérifier les droits admin si requis
+  if (requireAdmin && !isAdmin) {
     return <Navigate to="/" replace />;
   }
   
