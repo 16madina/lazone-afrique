@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
 import { Mail, Phone, Shield, HelpCircle, Trash2, FileText } from "lucide-react";
 import lazoneTextLogo from "@/assets/lazone-text-logo.png";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const Footer = () => {
+  const { settings } = useSiteSettings();
+
   return (
     <footer className="bg-card border-t mt-16">
       <div className="container mx-auto px-4 py-12">
@@ -69,14 +72,14 @@ const Footer = () => {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li className="flex items-center gap-2">
                 <Mail className="w-3 h-3" />
-                <a href="mailto:support@lazone.app" className="hover:text-primary transition-colors">
-                  support@lazone.app
+                <a href={`mailto:${settings.contact_email}`} className="hover:text-primary transition-colors">
+                  {settings.contact_email}
                 </a>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-3 h-3" />
-                <a href="tel:+2250700000000" className="hover:text-primary transition-colors">
-                  +225 07 00 00 00 00
+                <a href={`tel:${settings.contact_phone.replace(/\s/g, '')}`} className="hover:text-primary transition-colors">
+                  {settings.contact_phone}
                 </a>
               </li>
             </ul>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -88,6 +89,19 @@ const AdminPanel = () => {
     listingId: '',
     duration: 7
   });
+  const { settings: siteSettings, loading: settingsLoading } = useSiteSettings();
+  const [editableSettings, setEditableSettings] = useState({
+    contact_email: '',
+    contact_phone: '',
+    contact_hours: ''
+  });
+
+  // Synchroniser les settings quand ils sont chargés
+  useEffect(() => {
+    if (siteSettings && !settingsLoading) {
+      setEditableSettings(siteSettings);
+    }
+  }, [siteSettings, settingsLoading]);
 
   const fetchUsers = async () => {
     try {
@@ -166,6 +180,10 @@ const AdminPanel = () => {
         variant: 'destructive'
       });
     }
+  };
+
+  const fetchSiteSettings = async () => {
+    // Plus besoin car on utilise le hook useSiteSettings
   };
 
   useEffect(() => {
@@ -376,11 +394,12 @@ const AdminPanel = () => {
       </div>
 
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="users">Utilisateurs</TabsTrigger>
           <TabsTrigger value="listings">Annonces</TabsTrigger>
           <TabsTrigger value="sponsorship">Sponsoring</TabsTrigger>
           <TabsTrigger value="limits">Limites</TabsTrigger>
+          <TabsTrigger value="settings">Paramètres</TabsTrigger>
           <TabsTrigger value="actions">Actions</TabsTrigger>
         </TabsList>
 
@@ -733,9 +752,91 @@ const AdminPanel = () => {
           <ListingLimitsAdmin />
         </TabsContent>
 
-        {/* Limits Management */}
-        <TabsContent value="limits" className="space-y-4">
-          <ListingLimitsAdmin />
+        {/* Site Settings Management */}
+        <TabsContent value="settings" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="w-5 h-5" />
+                Paramètres du Site
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="contact_email">Email de contact</Label>
+                <Input
+                  id="contact_email"
+                  type="email"
+                  value={editableSettings.contact_email}
+                  onChange={(e) => setEditableSettings({...editableSettings, contact_email: e.target.value})}
+                  placeholder="support@lazone.app"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="contact_phone">Téléphone de contact</Label>
+                <Input
+                  id="contact_phone"
+                  value={editableSettings.contact_phone}
+                  onChange={(e) => setEditableSettings({...editableSettings, contact_phone: e.target.value})}
+                  placeholder="+225 07 00 00 00 00"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="contact_hours">Horaires de contact</Label>
+                <Input
+                  id="contact_hours"
+                  value={editableSettings.contact_hours}
+                  onChange={(e) => setEditableSettings({...editableSettings, contact_hours: e.target.value})}
+                  placeholder="Du lundi au vendredi, 9h-18h"
+                />
+              </div>
+
+              <Button 
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    
+                    // Mise à jour des paramètres
+                    const updates = [
+                      { setting_key: 'contact_email', setting_value: editableSettings.contact_email, updated_by: user?.id },
+                      { setting_key: 'contact_phone', setting_value: editableSettings.contact_phone, updated_by: user?.id },
+                      { setting_key: 'contact_hours', setting_value: editableSettings.contact_hours, updated_by: user?.id }
+                    ];
+
+                    for (const update of updates) {
+                      const { error } = await supabase
+                        .from('site_settings')
+                        .update({ setting_value: update.setting_value, updated_by: update.updated_by })
+                        .eq('setting_key', update.setting_key);
+                      
+                      if (error) throw error;
+                    }
+
+                    toast({
+                      title: 'Succès',
+                      description: 'Paramètres mis à jour avec succès'
+                    });
+                  } catch (error: any) {
+                    console.error('Error updating settings:', error);
+                    toast({
+                      title: 'Erreur',
+                      description: 'Impossible de mettre à jour les paramètres',
+                      variant: 'destructive'
+                    });
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading}
+                className="w-full"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Sauvegarder les paramètres
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Admin Actions Log */}

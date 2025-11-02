@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -344,6 +345,68 @@ export default function Settings() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Danger Zone - Account Deletion */}
+        <Card className="border-destructive mt-8">
+          <CardHeader>
+            <CardTitle className="text-destructive flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-alert-triangle"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+              Zone Dangereuse
+            </CardTitle>
+            <CardDescription>
+              Actions irréversibles sur votre compte
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="p-4 bg-destructive/10 rounded-lg">
+              <h3 className="font-semibold text-destructive mb-2">Supprimer mon compte</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Une fois supprimé, votre compte sera désactivé pendant 30 jours. Après cette période, toutes vos données personnelles seront définitivement supprimées.
+              </p>
+              <ul className="text-sm text-muted-foreground space-y-1 mb-4 list-disc pl-5">
+                <li>Vos annonces seront dépubliées immédiatement</li>
+                <li>Vos messages resteront visibles pour les autres utilisateurs</li>
+                <li>Vous pouvez réactiver votre compte dans les 30 jours en vous reconnectant</li>
+                <li>Après 30 jours, la suppression sera définitive et irréversible</li>
+              </ul>
+              <Button
+                variant="destructive"
+                onClick={async () => {
+                  if (confirm("⚠️ ATTENTION : Êtes-vous sûr de vouloir supprimer votre compte ?\n\nVotre compte sera désactivé pendant 30 jours avant suppression définitive.\n\nTapez 'SUPPRIMER' pour confirmer.")) {
+                    const confirmation = prompt("Tapez SUPPRIMER pour confirmer la suppression de votre compte");
+                    if (confirmation === "SUPPRIMER") {
+                      try {
+                        // Appel à l'edge function pour supprimer le compte
+                        const { error } = await supabase.auth.admin.deleteUser(user?.id || '');
+                        
+                        if (error) throw error;
+                        
+                        toast({
+                          title: "Compte supprimé",
+                          description: "Votre compte a été désactivé. Vous avez 30 jours pour le réactiver.",
+                        });
+                        
+                        // Déconnexion
+                        await supabase.auth.signOut();
+                        window.location.href = "/";
+                      } catch (error: any) {
+                        toast({
+                          title: "Erreur",
+                          description: "Impossible de supprimer le compte. Contactez le support.",
+                          variant: "destructive",
+                        });
+                      }
+                    }
+                  }
+                }}
+                className="w-full"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2 mr-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                Supprimer définitivement mon compte
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="flex justify-end mt-6">
           <Button

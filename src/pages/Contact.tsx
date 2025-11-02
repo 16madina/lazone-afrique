@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Mail, Phone, MessageSquare, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,9 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const Contact = () => {
   const [loading, setLoading] = useState(false);
+  const { settings: contactInfo } = useSiteSettings();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -141,8 +143,8 @@ const Contact = () => {
                   <p className="text-muted-foreground mb-2">
                     Pour toute question ou assistance :
                   </p>
-                  <a href="mailto:support@lazone.app" className="text-primary font-medium hover:underline">
-                    support@lazone.app
+                  <a href={`mailto:${contactInfo.contact_email}`} className="text-primary font-medium hover:underline">
+                    {contactInfo.contact_email}
                   </a>
                 </CardContent>
               </Card>
@@ -156,10 +158,10 @@ const Contact = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground mb-2">
-                    Du lundi au vendredi, 9h-18h :
+                    {contactInfo.contact_hours}
                   </p>
-                  <a href="tel:+2250700000000" className="text-primary font-medium hover:underline">
-                    +225 07 00 00 00 00
+                  <a href={`tel:${contactInfo.contact_phone.replace(/\s/g, '')}`} className="text-primary font-medium hover:underline">
+                    {contactInfo.contact_phone}
                   </a>
                 </CardContent>
               </Card>

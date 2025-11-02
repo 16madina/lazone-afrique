@@ -765,21 +765,21 @@ export type Database = {
           created_at: string
           id: string
           viewed_user_id: string
-          viewer_ip: unknown | null
+          viewer_ip: unknown
           viewer_user_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           viewed_user_id: string
-          viewer_ip?: unknown | null
+          viewer_ip?: unknown
           viewer_user_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           viewed_user_id?: string
-          viewer_ip?: unknown | null
+          viewer_ip?: unknown
           viewer_user_id?: string | null
         }
         Relationships: []
@@ -841,6 +841,30 @@ export type Database = {
           updated_at?: string
           user_id?: string
           user_type?: Database["public"]["Enums"]["user_type"]
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          id: string
+          setting_key: string
+          setting_value: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          setting_key: string
+          setting_value: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          setting_key?: string
+          setting_value?: string
+          updated_at?: string | null
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -1057,6 +1081,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_subscriptions: {
         Row: {
           auto_renew: boolean
@@ -1219,14 +1264,15 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: number
       }
-      is_admin: {
-        Args: { user_uuid?: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
         Returns: boolean
       }
-      is_listing_sponsored: {
-        Args: { listing_id: string }
-        Returns: boolean
-      }
+      is_admin: { Args: { user_uuid?: string }; Returns: boolean }
+      is_listing_sponsored: { Args: { listing_id: string }; Returns: boolean }
       record_profile_view: {
         Args: { target_user_id: string; viewer_ip?: unknown }
         Returns: undefined
@@ -1262,6 +1308,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "admin" | "moderator" | "user"
       user_type: "proprietaire" | "demarcheur" | "agence"
     }
     CompositeTypes: {
@@ -1390,6 +1437,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "moderator", "user"],
       user_type: ["proprietaire", "demarcheur", "agence"],
     },
   },
