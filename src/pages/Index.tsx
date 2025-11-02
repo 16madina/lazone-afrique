@@ -355,7 +355,7 @@ const Index = () => {
                 </Button>
               </SheetTrigger>
               
-              <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+              <SheetContent side="right" className="max-w-md overflow-y-auto">
                 <SheetHeader>
                   <SheetTitle>Filtres de recherche</SheetTitle>
                 </SheetHeader>
@@ -378,7 +378,7 @@ const Index = () => {
                 </Button>
               </SheetTrigger>
               
-              <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+              <SheetContent side="right" className="max-w-md overflow-y-auto">
                 <SheetHeader>
                   <SheetTitle>Recommandations IA</SheetTitle>
                 </SheetHeader>
