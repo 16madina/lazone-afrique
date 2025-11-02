@@ -17,6 +17,11 @@ import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Sponsorship from "./pages/Sponsorship";
+import Favorites from "./pages/Favorites";
+import Admin from "./pages/Admin";
+import Payment from "./pages/Payment";
+import About from "./pages/About";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +43,11 @@ const AppContent = () => {
       <Route path="/profile" element={<Profile />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/sponsorship/:listingId" element={<Sponsorship />} />
+      <Route path="/favorites" element={<Favorites />} />
+      <Route path="/admin" element={<Admin />} />
+      <Route path="/payment" element={<Payment />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/settings" element={<Settings />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
