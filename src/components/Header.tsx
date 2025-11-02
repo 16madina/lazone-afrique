@@ -80,10 +80,11 @@ const Header = () => {
       `}
     >
       <div className="container mx-auto px-4 h-full flex items-center justify-between">
-        {/* Logo */}
-        <div 
-          className="flex items-center space-x-2 cursor-pointer transition-transform duration-200 hover:scale-105 active:scale-95" 
+          {/* Logo */}
+        <button
+          className="flex items-center space-x-2 cursor-pointer transition-transform duration-200 hover:scale-105 active:scale-95 min-h-[44px] ripple" 
           onClick={() => navigate('/')}
+          aria-label="Aller à l'accueil"
         >
           <img 
             src={lazoneLogo} 
@@ -93,7 +94,7 @@ const Header = () => {
           <span className={`font-display font-bold bg-gradient-primary bg-clip-text text-transparent transition-all duration-300 ${scrolled ? 'text-lg' : 'text-xl'}`}>
             LaZone
           </span>
-        </div>
+        </button>
 
         {/* Country Selector */}
         <div className="hidden md:block">
@@ -165,9 +166,10 @@ const Header = () => {
               <DropdownMenuTrigger asChild>
                 <Button 
                   variant="ghost" 
-                  className="flex items-center gap-2 h-auto p-2 hover:bg-accent/50 transition-all duration-200 active:scale-95"
+                  className="flex items-center gap-2 min-h-[44px] min-w-[44px] p-2 hover:bg-accent/50 transition-all duration-200 active:scale-95"
+                  aria-label="Menu utilisateur"
                 >
-                  <Avatar className={`transition-all duration-300 ${scrolled ? 'w-7 h-7' : 'w-8 h-8'}`}>
+                  <Avatar className={`transition-all duration-300 ${scrolled ? 'w-9 h-9' : 'w-10 h-10'}`}>
                     {profile?.avatar_url && (
                       <AvatarImage src={profile.avatar_url} alt={profile.full_name || 'Utilisateur'} />
                     )}

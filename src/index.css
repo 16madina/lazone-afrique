@@ -188,8 +188,20 @@ All colors MUST be HSL.
       font-size: 16px;
     }
     
-    /* Improve touch targets */
-    button, a, [role="button"] {
+    /* Improve touch targets - enforce minimum 44x44px */
+    button, a, [role="button"], [role="link"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Enhanced touch feedback */
+    button:active, a:active, [role="button"]:active {
+      transform: scale(0.97);
+      opacity: 0.9;
+    }
+    
+    /* Ensure icon buttons are touch-friendly */
+    button[data-state], [role="button"][data-state] {
       min-height: 44px;
       min-width: 44px;
     }
@@ -340,7 +352,7 @@ All colors MUST be HSL.
     }
   }
   
-  /* Ripple Effect */
+  /* Ripple Effect - Enhanced for touch feedback */
   @keyframes ripple {
     0% {
       transform: scale(0);
@@ -365,14 +377,30 @@ All colors MUST be HSL.
     width: 0;
     height: 0;
     border-radius: 50%;
-    background: hsla(45, 100%, 58%, 0.3);
+    background: hsla(45, 100%, 58%, 0.4);
     transform: translate(-50%, -50%);
     pointer-events: none;
   }
 
   .ripple:active::after {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
     animation: ripple 0.6s ease-out;
+  }
+  
+  /* Touch feedback utilities */
+  .touch-feedback {
+    transition: transform 0.1s ease, opacity 0.1s ease;
+  }
+  
+  .touch-feedback:active {
+    transform: scale(0.97);
+    opacity: 0.9;
+  }
+  
+  /* Prevent double-tap zoom on buttons */
+  button, [role="button"], a {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 }

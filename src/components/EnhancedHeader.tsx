@@ -74,9 +74,10 @@ export const EnhancedHeader = () => {
           {/* Add Property Button */}
           {user && (
             <Button 
-              size="sm" 
+              size="default" 
               onClick={() => navigate("/add-property")}
-              className="hidden sm:flex items-center gap-2"
+              className="hidden sm:flex items-center gap-2 ripple"
+              aria-label="Publier une annonce"
             >
               <Plus className="w-4 h-4" />
               Publier
@@ -90,7 +91,11 @@ export const EnhancedHeader = () => {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                <Button 
+                  variant="ghost" 
+                  className="relative h-11 w-11 min-h-[44px] min-w-[44px] rounded-full ripple"
+                  aria-label="Menu utilisateur"
+                >
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name || ""} />
                     <AvatarFallback>
@@ -157,10 +162,21 @@ export const EnhancedHeader = () => {
             </DropdownMenu>
           ) : (
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
+              <Button 
+                variant="ghost" 
+                size="default" 
+                onClick={() => navigate("/auth")}
+                className="ripple"
+                aria-label="Se connecter"
+              >
                 Connexion
               </Button>
-              <Button size="sm" onClick={() => navigate("/auth")}>
+              <Button 
+                size="default" 
+                onClick={() => navigate("/auth")}
+                className="ripple"
+                aria-label="S'inscrire"
+              >
                 S'inscrire
               </Button>
             </div>
@@ -169,7 +185,12 @@ export const EnhancedHeader = () => {
           {/* Mobile Menu Toggle */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="ripple"
+                aria-label="Ouvrir le menu"
+              >
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
