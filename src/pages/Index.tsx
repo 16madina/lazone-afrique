@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { EnhancedHeader } from "@/components/EnhancedHeader";
+import EnhancedHeader from "@/components/EnhancedHeader";
 import HeroSection from "@/components/HeroSection";
 import PropertyFilters, { FilterState } from "@/components/PropertyFilters";
 import PerformanceOptimizedPropertyCard from "@/components/PerformanceOptimizedPropertyCard";

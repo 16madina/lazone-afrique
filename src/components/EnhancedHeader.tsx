@@ -266,3 +266,5 @@ export const EnhancedHeader = () => {
     </header>
   );
 };
+
+export default EnhancedHeader;
