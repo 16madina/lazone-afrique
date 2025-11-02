@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import CountrySelector from "@/components/CountrySelector";
 import CitySelector from "@/components/CitySelector";
 import { CinePayPaymentMethod } from '@/components/CinePayPaymentMethod';
+import { AuthPromptInline } from '@/components/AuthPrompt';
 
 const AddProperty = () => {
   const navigate = useNavigate();
@@ -600,10 +601,18 @@ const AddProperty = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <Header />
       
       <main className="flex-1 container mx-auto px-4 py-6 pb-20 animate-fade-in">
+        {!user ? (
+          <AuthPromptInline
+            action="listing"
+            title="Publier une annonce"
+            description="Connectez-vous pour publier vos biens immobiliers et toucher des milliers d'acheteurs potentiels"
+          />
+        ) : (
+          <>
         {/* Statut des limites d'annonces - Hide in edit mode */}
         {!isEditMode && (
           <div className="mb-6">
@@ -1184,9 +1193,11 @@ const AddProperty = () => {
                    {isSubmitting ? (isEditMode ? "Mise à jour..." : "Publication...") : (isEditMode ? "Mettre à jour l'annonce" : "Publier l'annonce")}
                  </Button>
                )}
-            </div>
+             </div>
           </CardContent>
         </Card>
+        </>
+        )}
       </main>
 
       {/* Dialog de paiement pour les limites */}

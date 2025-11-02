@@ -1,15 +1,17 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { useCountry } from "@/contexts/CountryContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { MapPin, Heart, Bed, Bath, Square, Phone, MessageCircle, Star } from "lucide-react";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useContactActions } from "@/hooks/useContactActions";
 import { LazyImage } from "./LazyImage";
+import { AuthPrompt } from "@/components/AuthPrompt";
 
 interface PropertyCardProps {
   id: string;
@@ -58,12 +60,22 @@ const PerformanceOptimizedPropertyCard = memo(({
   isFavorite = false
 }: PropertyCardProps) => {
   const { formatPrice, selectedCountry } = useCountry();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { toggleFavorite, isFavorite: isInFavorites, loading: favLoading } = useFavorites();
   const { handlePhoneContact, handleMessageContact, loading: contactLoading } = useContactActions();
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [authAction, setAuthAction] = useState<"favorite" | "message">("favorite");
 
   const handleFavoriteClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    if (!user) {
+      setAuthAction("favorite");
+      setShowAuthPrompt(true);
+      return;
+    }
+    
     await toggleFavorite(id);
   };
 
@@ -100,6 +112,13 @@ const PerformanceOptimizedPropertyCard = memo(({
 
   const handleMessageClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    if (!user) {
+      setAuthAction("message");
+      setShowAuthPrompt(true);
+      return;
+    }
+    
     if (agent.user_id) {
       handleMessageContact(agent.user_id, id, title, agent.name);
     }
@@ -320,6 +339,13 @@ const PerformanceOptimizedPropertyCard = memo(({
           </div>
         </div>
       </CardContent>
+
+      {/* Auth Prompt Dialog */}
+      <AuthPrompt
+        open={showAuthPrompt}
+        onOpenChange={setShowAuthPrompt}
+        action={authAction}
+      />
     </Card>
   );
 });
