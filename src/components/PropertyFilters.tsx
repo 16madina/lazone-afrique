@@ -97,34 +97,19 @@ const PropertyFilters = ({ onFiltersChange, currentFilters }: PropertyFiltersPro
 
   return (
     <div className="space-y-4">
-      {/* Filter Toggle Button */}
-      <div className="flex items-center justify-between">
-        <Button 
-          variant="outline" 
-          onClick={() => setShowFilters(!showFilters)}
-          className="flex items-center gap-2"
-        >
-          <SlidersHorizontal className="w-4 h-4" />
-          Filtres
-          {activeFiltersCount > 0 && (
-            <Badge className="ml-2 bg-primary text-primary-foreground">
-              {activeFiltersCount}
-            </Badge>
-          )}
-        </Button>
-
-        {activeFiltersCount > 0 && (
+      {/* Clear Filters Button */}
+      {activeFiltersCount > 0 && (
+        <div className="flex justify-end">
           <Button 
-            variant="default" 
+            variant="destructive" 
             onClick={clearFilters} 
-            className="bg-red-500 hover:bg-red-600 text-white"
             size="sm"
           >
             <X className="w-4 h-4 mr-1" />
             Effacer tous les filtres
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Active Filters Display */}
       {activeFiltersCount > 0 && (
@@ -249,16 +234,9 @@ const PropertyFilters = ({ onFiltersChange, currentFilters }: PropertyFiltersPro
         </div>
       )}
 
-      {/* Expanded Filters */}
-      {showFilters && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="w-5 h-5" />
-              Filtres avancés
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
+      {/* Filters Content - Always visible in sidebar */}
+      <Card>
+        <CardContent className="space-y-6 pt-6">
             {/* Transaction Type */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -401,9 +379,8 @@ const PropertyFilters = ({ onFiltersChange, currentFilters }: PropertyFiltersPro
                 ))}
               </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

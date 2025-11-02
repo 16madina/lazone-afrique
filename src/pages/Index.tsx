@@ -17,7 +17,8 @@ import { useAutoInfiniteScroll } from "@/hooks/useInfiniteScroll";
 import { toast } from "sonner";
 import { useSecureProfiles } from "@/hooks/useSecureProfiles";
 import { AIRecommendations } from "@/components/AIRecommendations";
-import { PaginationMetadata, LoadMoreButton } from "@/components/PaginationMetadata";
+import { LoadMoreButton } from "@/components/PaginationMetadata";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 interface Listing {
   id: string;
@@ -326,33 +327,71 @@ const Index = () => {
 
         {/* Filters & Controls */}
         <div className="space-y-4">
-          {/* Property Filters and AI Recommendations Tabs */}
-          <Tabs defaultValue="filtres" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="filtres" className="flex items-center gap-2">
-                <Filter className="w-4 h-4" />
-                Filtres
-              </TabsTrigger>
-              <TabsTrigger value="recommendations" className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4" />
-                Recommandations IA
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="filtres" className="mt-6">
-              <PropertyFilters 
-                onFiltersChange={handleFiltersChange}
-                currentFilters={currentFilters}
-              />
-            </TabsContent>
-            
-            <TabsContent value="recommendations" className="mt-6">
-              <AIRecommendations 
-                countryCode={selectedCountry.code}
-                currentFilters={currentFilters}
-              />
-            </TabsContent>
-          </Tabs>
+          {/* Filter Button and AI Recommendations */}
+          <div className="flex items-center gap-4">
+            {/* Filters Sheet Trigger */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Filter className="w-4 h-4" />
+                  Filtres
+                  {Object.entries(currentFilters).filter(([key, value]) => {
+                    if (key === 'priceRange') return value[0] > 0 || value[1] < 1000000000;
+                    if (key === 'surface') return value[0] > 0 || value[1] < 1000;
+                    if (key === 'features') return (value as string[]).length > 0;
+                    if (key === 'location' || key === 'searchQuery') return value !== "";
+                    return value !== "";
+                  }).length > 0 && (
+                    <Badge className="ml-2 bg-primary text-primary-foreground">
+                      {Object.entries(currentFilters).filter(([key, value]) => {
+                        if (key === 'priceRange') return value[0] > 0 || value[1] < 1000000000;
+                        if (key === 'surface') return value[0] > 0 || value[1] < 1000;
+                        if (key === 'features') return (value as string[]).length > 0;
+                        if (key === 'location' || key === 'searchQuery') return value !== "";
+                        return value !== "";
+                      }).length}
+                    </Badge>
+                  )}
+                </Button>
+              </SheetTrigger>
+              
+              <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>Filtres de recherche</SheetTitle>
+                </SheetHeader>
+                
+                <div className="mt-6">
+                  <PropertyFilters 
+                    onFiltersChange={handleFiltersChange}
+                    currentFilters={currentFilters}
+                  />
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            {/* AI Recommendations Button */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4" />
+                  Recommandations IA
+                </Button>
+              </SheetTrigger>
+              
+              <SheetContent side="right" className="w-full sm:max-w-lg overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>Recommandations IA</SheetTitle>
+                </SheetHeader>
+                
+                <div className="mt-6">
+                  <AIRecommendations 
+                    countryCode={selectedCountry.code}
+                    currentFilters={currentFilters}
+                  />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
           
           {/* Sort & View Controls */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -404,16 +443,7 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Pagination Metadata */}
-        {properties.length > 0 && !loading && (
-          <div className="mb-6 animate-fade-in">
-            <PaginationMetadata
-              currentItems={loadedItems}
-              totalItems={totalItems}
-              isLoading={isLoadingMore}
-            />
-          </div>
-        )}
+        {/* Pagination Metadata - Hidden as requested */}
 
         {/* Properties Grid */}
         {loading ? (
