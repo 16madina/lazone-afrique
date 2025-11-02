@@ -40,6 +40,11 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
   const [sponsoredListings, setSponsoredListings] = useState<SponsoredListing[]>([]);
   const { selectedCountry, formatPrice } = useCountry();
 
+  // Progressive form state
+  const showLocation = propertyType !== "";
+  const showSearchQuery = location !== "";
+  const showSearchButton = searchQuery !== "";
+
   // Fetch sponsored listings
   useEffect(() => {
     const fetchSponsoredListings = async () => {
@@ -158,33 +163,15 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
             </div>
           </div>
 
-          {/* Search Form */}
+          {/* Progressive Search Form */}
           <div className="glass-card rounded-2xl p-3 shadow-elevation-4 max-w-xl mx-auto animate-slide-up">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-1">
-              {/* Location */}
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-muted-foreground">Localisation</label>
-                <Select value={location} onValueChange={setLocation}>
-                  <SelectTrigger>
-                    <MapPin className="w-4 h-4 mr-2" />
-                    <SelectValue placeholder="Ville ou quartier" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {selectedCountry.cities.map((city) => (
-                      <SelectItem key={city} value={city.toLowerCase()}>
-                        {city}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Property Type */}
-              <div className="space-y-1">
+            <div className="space-y-3">
+              {/* Step 1: Property Type (Always visible) */}
+              <div className="space-y-1 animate-fade-in">
                 <label className="text-sm font-medium text-muted-foreground">Type de bien</label>
                 <Select value={propertyType} onValueChange={setPropertyType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Appartement, Maison..." />
+                  <SelectTrigger className="h-12">
+                    <SelectValue placeholder="Maison, Appartement, Villa..." />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="apartment">Appartement</SelectItem>
@@ -196,28 +183,49 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
                 </Select>
               </div>
 
-              {/* Search Input */}
-              <div className="space-y-1 md:col-span-1">
-                <label className="text-sm font-medium text-muted-foreground">Recherche</label>
-                <Input
-                  placeholder="Mots-clés..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full"
-                />
-              </div>
+              {/* Step 2: Location (Shown after property type) */}
+              {showLocation && (
+                <div className="space-y-1 animate-slide-up">
+                  <label className="text-sm font-medium text-muted-foreground">Localisation</label>
+                  <Select value={location} onValueChange={setLocation}>
+                    <SelectTrigger className="h-12">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      <SelectValue placeholder="Ville ou quartier" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {selectedCountry.cities.map((city) => (
+                        <SelectItem key={city} value={city.toLowerCase()}>
+                          {city}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
-              {/* Search Button */}
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-muted-foreground opacity-0">Action</label>
+              {/* Step 3: Search Query (Shown after location) */}
+              {showSearchQuery && (
+                <div className="space-y-1 animate-slide-up">
+                  <label className="text-sm font-medium text-muted-foreground">Recherche</label>
+                  <Input
+                    placeholder="Mots-clés..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full h-12"
+                  />
+                </div>
+              )}
+
+              {/* Step 4: Search Button (Shown after search query) */}
+              {showSearchButton && (
                 <Button 
                   onClick={handleSearch}
-                  className="w-full h-10 bg-gradient-primary hover:opacity-90 transition-all duration-300 active:scale-95 shadow-elevation-2"
+                  className="w-full h-12 bg-gradient-primary hover:opacity-90 transition-all duration-300 active:scale-95 shadow-elevation-2 animate-slide-up"
                 >
                   <Search className="w-4 h-4 mr-2" />
                   Rechercher
                 </Button>
-              </div>
+              )}
             </div>
 
             {/* Quick Filters */}
