@@ -6,12 +6,25 @@ import { useCountry } from "@/contexts/CountryContext";
 import { Search, MapPin, Filter, Star, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import heroImage from "@/assets/hero-african-villa.jpg";
+import villaRiviera from "@/assets/villa-riviera-piscine.jpg";
+import villaCocody from "@/assets/villa-cocody-luxury.jpg";
+import appartementPlateau from "@/assets/appartement-plateau-standing.jpg";
+import duplexMarcory from "@/assets/duplex-marcory.jpg";
 import propertyHouse from "@/assets/property-house.jpg";
 import propertyApartment from "@/assets/property-apartment.jpg";
 import propertyLand from "@/assets/property-land.jpg";
 import mainLogo from "@/assets/main-logo.png";
 import lazoneTextLogo from "@/assets/lazone-text-logo.png";
 import SponsorshipDialog from "@/components/SponsorshipDialog";
+
+// Images de fond qui changent à chaque visite
+const heroBackgrounds = [
+  heroImage,
+  villaRiviera,
+  villaCocody,
+  appartementPlateau,
+  duplexMarcory
+];
 
 interface HeroSectionProps {
   onSearch?: (filters: {
@@ -38,7 +51,14 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
   const [propertyType, setPropertyType] = useState("");
   const [location, setLocation] = useState("");
   const [sponsoredListings, setSponsoredListings] = useState<SponsoredListing[]>([]);
+  const [currentHeroImage, setCurrentHeroImage] = useState("");
   const { selectedCountry, formatPrice } = useCountry();
+
+  // Sélectionner une image aléatoire au chargement
+  useEffect(() => {
+    const randomIndex = Math.floor(Math.random() * heroBackgrounds.length);
+    setCurrentHeroImage(heroBackgrounds[randomIndex]);
+  }, []);
 
   // Progressive form state
   const showPropertyType = transactionType !== "";
@@ -132,7 +152,7 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
       {/* Background Image with Overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 hover:scale-105"
-        style={{ backgroundImage: `url(${heroImage})` }}
+        style={{ backgroundImage: `url(${currentHeroImage})` }}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-foreground/70 via-foreground/50 to-transparent" />
       </div>
