@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "67169478305",
+    "project_id": "lazone-71d4a",
+    "storage_bucket": "lazone-71d4a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:67169478305:android:800a18dd1044d9c1feb2e0",
+        "android_client_info": {
+          "package_name": "com.lazone.afrique"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDyinV5MLUFJXH_gy8ltiVL011nhWwMx-Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
