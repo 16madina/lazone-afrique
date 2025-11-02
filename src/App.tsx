@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,20 +8,23 @@ import { CountryProvider } from "@/contexts/CountryContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NativeInitializer } from "@/components/NativeInitializer";
 import { SplashScreen } from "@/components/SplashScreen";
-import Index from "./pages/Index";
-import Map from "./pages/Map";
-import ListingDetail from "./pages/ListingDetail";
-import AddProperty from "./pages/AddProperty";
-import Messages from "./pages/Messages";
-import Profile from "./pages/Profile";
-import Auth from "./pages/Auth";
-import NotFound from "./pages/NotFound";
-import Sponsorship from "./pages/Sponsorship";
-import Favorites from "./pages/Favorites";
-import Admin from "./pages/Admin";
-import Payment from "./pages/Payment";
-import About from "./pages/About";
-import Settings from "./pages/Settings";
+import { PageLoader } from "@/components/PageLoader";
+
+// Lazy load all page components for better performance
+const Index = lazy(() => import("./pages/Index"));
+const Map = lazy(() => import("./pages/Map"));
+const ListingDetail = lazy(() => import("./pages/ListingDetail"));
+const AddProperty = lazy(() => import("./pages/AddProperty"));
+const Messages = lazy(() => import("./pages/Messages"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Auth = lazy(() => import("./pages/Auth"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Sponsorship = lazy(() => import("./pages/Sponsorship"));
+const Favorites = lazy(() => import("./pages/Favorites"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Payment = lazy(() => import("./pages/Payment"));
+const About = lazy(() => import("./pages/About"));
+const Settings = lazy(() => import("./pages/Settings"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,23 +37,25 @@ const queryClient = new QueryClient({
 
 const AppContent = () => {
   return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/map" element={<Map />} />
-      <Route path="/listing/:id" element={<ListingDetail />} />
-      <Route path="/add-property" element={<AddProperty />} />
-      <Route path="/messages" element={<Messages />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/auth" element={<Auth />} />
-      <Route path="/sponsorship/:listingId" element={<Sponsorship />} />
-      <Route path="/favorites" element={<Favorites />} />
-      <Route path="/admin" element={<Admin />} />
-      <Route path="/payment" element={<Payment />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/settings" element={<Settings />} />
-      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/map" element={<Map />} />
+        <Route path="/listing/:id" element={<ListingDetail />} />
+        <Route path="/add-property" element={<AddProperty />} />
+        <Route path="/messages" element={<Messages />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/sponsorship/:listingId" element={<Sponsorship />} />
+        <Route path="/favorites" element={<Favorites />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/payment" element={<Payment />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/settings" element={<Settings />} />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
   );
 };
 

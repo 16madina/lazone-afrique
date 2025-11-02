@@ -262,6 +262,25 @@ All colors MUST be HSL.
     }
   }
   
+  .animate-scale-in {
+    animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  @keyframes scaleIn {
+    from {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  
+  .animate-shimmer {
+    animation: shimmer-gold 2s infinite ease-in-out;
+  }
+  
   /* Skeleton shimmer - Enhanced Gold Shimmer */
   .skeleton-shimmer {
     position: relative;
