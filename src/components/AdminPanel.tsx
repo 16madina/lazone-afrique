@@ -489,7 +489,7 @@ const AdminPanel = () => {
                          {listing.is_sponsored && listing.sponsored_until && new Date(listing.sponsored_until) > new Date() && (
                            <Badge variant="default" className="bg-gradient-primary">
                              <Crown className="w-3 h-3 mr-1" />
-                             Sponsorisée
+                             Sponsorisée jusqu'au {new Date(listing.sponsored_until).toLocaleDateString('fr-FR')}
                            </Badge>
                          )}
                        </div>
@@ -498,6 +498,52 @@ const AdminPanel = () => {
                        </p>
                     </div>
                     <div className="flex gap-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="bg-gradient-to-r from-primary to-primary/80"
+                          >
+                            <Crown className="w-4 h-4 mr-1" />
+                            Sponsoriser
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Sponsoriser gratuitement</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div>
+                              <p className="text-sm text-muted-foreground mb-2">
+                                Annonce: <span className="font-medium">{listing.title}</span>
+                              </p>
+                            </div>
+                            <div>
+                              <Label htmlFor={`duration-${listing.id}`}>Durée du sponsoring (jours)</Label>
+                              <Input
+                                id={`duration-${listing.id}`}
+                                type="number"
+                                min="1"
+                                max="365"
+                                defaultValue="7"
+                                onChange={(e) => setSponsorForm({listingId: listing.id, duration: parseInt(e.target.value) || 7})}
+                              />
+                            </div>
+                            <Button 
+                              onClick={async () => {
+                                setSponsorForm({listingId: listing.id, duration: sponsorForm.duration || 7});
+                                await handleFreeSponsor();
+                              }} 
+                              className="w-full"
+                              disabled={loading}
+                            >
+                              <Crown className="w-4 h-4 mr-2" />
+                              Confirmer le sponsoring gratuit
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                       <Button
                         variant="outline"
                         size="sm"
