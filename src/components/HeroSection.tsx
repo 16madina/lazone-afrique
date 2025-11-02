@@ -5,11 +5,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useCountry } from "@/contexts/CountryContext";
 import { Search, MapPin, Filter, Star, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import heroImage from "@/assets/hero-african-villa.jpg";
-import villaRiviera from "@/assets/villa-riviera-piscine.jpg";
-import villaCocody from "@/assets/villa-cocody-luxury.jpg";
-import appartementPlateau from "@/assets/appartement-plateau-standing.jpg";
-import duplexMarcory from "@/assets/duplex-marcory.jpg";
+import heroBg1 from "@/assets/hero-bg-1.jpg";
+import heroBg2 from "@/assets/hero-bg-2.jpg";
+import heroBg3 from "@/assets/hero-bg-3.jpg";
+import heroBg4 from "@/assets/hero-bg-4.jpg";
+import heroBg5 from "@/assets/hero-bg-5.jpg";
+import heroBg6 from "@/assets/hero-bg-6.jpg";
+import heroBg7 from "@/assets/hero-bg-7.jpg";
+import heroBg8 from "@/assets/hero-bg-8.jpg";
+import heroBg9 from "@/assets/hero-bg-9.jpg";
+import heroBg10 from "@/assets/hero-bg-10.jpg";
 import propertyHouse from "@/assets/property-house.jpg";
 import propertyApartment from "@/assets/property-apartment.jpg";
 import propertyLand from "@/assets/property-land.jpg";
@@ -19,11 +24,16 @@ import SponsorshipDialog from "@/components/SponsorshipDialog";
 
 // Images de fond qui changent à chaque visite
 const heroBackgrounds = [
-  heroImage,
-  villaRiviera,
-  villaCocody,
-  appartementPlateau,
-  duplexMarcory
+  heroBg1,
+  heroBg2,
+  heroBg3,
+  heroBg4,
+  heroBg5,
+  heroBg6,
+  heroBg7,
+  heroBg8,
+  heroBg9,
+  heroBg10
 ];
 
 interface HeroSectionProps {
