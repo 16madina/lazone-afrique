@@ -587,7 +587,7 @@ const AddProperty = () => {
     return (
       <div className="flex flex-col min-h-screen bg-background">
         <Header />
-        <main className="flex-1 container mx-auto px-4 py-6 pb-20 animate-fade-in">
+        <main className="flex-1 container mx-auto px-4 pt-20 pb-20 animate-fade-in">
           <div className="flex items-center justify-center py-20">
             <div className="text-center">
               <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
@@ -604,7 +604,7 @@ const AddProperty = () => {
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <Header />
       
-      <main className="flex-1 container mx-auto px-4 py-6 pb-20 animate-fade-in">
+      <main className="flex-1 container mx-auto px-4 pt-20 pb-20 animate-fade-in">
         {!user ? (
           <AuthPromptInline
             action="listing"

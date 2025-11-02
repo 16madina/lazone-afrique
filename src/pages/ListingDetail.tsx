@@ -217,7 +217,7 @@ const ListingDetail = () => {
     return (
       <div className="flex flex-col min-h-screen bg-background">
         <Header />
-        <main className="flex-1 p-4">
+        <main className="flex-1 p-4 pt-20">
           <div className="max-w-4xl mx-auto">
             <div className="animate-pulse space-y-4">
               <div className="h-8 bg-muted rounded w-1/4"></div>
@@ -240,7 +240,7 @@ const ListingDetail = () => {
     return (
       <div className="flex flex-col min-h-screen bg-background">
         <Header />
-        <main className="flex-1 p-4">
+        <main className="flex-1 p-4 pt-20">
           <div className="max-w-4xl mx-auto">
             <div className="animate-pulse space-y-4">
               <div className="h-8 bg-muted rounded w-1/4"></div>
@@ -259,7 +259,7 @@ const ListingDetail = () => {
     return (
       <div className="flex flex-col min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
         <Header />
-        <main className="flex-1 p-4 flex items-center justify-center">
+        <main className="flex-1 p-4 pt-20 flex items-center justify-center">
           <div className="max-w-2xl w-full mx-auto animate-fade-in">
             <Card className="glass-card border-destructive/20 shadow-elevation-4">
               <CardContent className="text-center py-16 px-6 space-y-6">
@@ -312,7 +312,7 @@ const ListingDetail = () => {
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-6 pt-20">
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Navigation */}
           <Button 

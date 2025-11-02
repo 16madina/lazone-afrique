@@ -322,7 +322,7 @@ const Index = () => {
       <HeroSection onSearch={handleHeroSearch} />
       
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 space-y-8">
+      <main className="container mx-auto px-4 pt-20 pb-8 space-y-8">
 
         {/* Filters & Controls */}
         <div className="space-y-4">

@@ -181,7 +181,7 @@ const Messages = () => {
       <Header />
       
       {/* Tab Navigation */}
-      <div className="border-b border-border bg-background glass">
+      <div className="border-b border-border bg-background glass pt-16">
         <div className="flex">
           <Button
             variant={activeTab === 'messages' ? 'default' : 'ghost'}
