@@ -46,13 +46,15 @@ const paymentMethods: PaymentMethod[] = [
     icon: <Phone className="h-5 w-5 text-orange-500" />,
     requiresPhone: false // Géré par le composant CinePay
   },
-  {
-    id: 'card',
-    name: 'Carte Visa/Mastercard',
-    description: 'Paiement par carte bancaire via Stripe',
-    icon: <CreditCard className="h-5 w-5 text-gray-600" />,
-    requiresCard: true
-  },
+  // STRIPE: Option retirée car non implémentée
+  // Décommenter et implémenter l'edge function Stripe si nécessaire
+  // {
+  //   id: 'card',
+  //   name: 'Carte Visa/Mastercard',
+  //   description: 'Paiement par carte bancaire via Stripe',
+  //   icon: <CreditCard className="h-5 w-5 text-gray-600" />,
+  //   requiresCard: true
+  // },
   {
     id: 'bank_transfer',
     name: 'Virement bancaire',
