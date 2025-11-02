@@ -46,8 +46,12 @@ const BottomNavigation = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-border/50 pb-safe md:hidden shadow-elevation-4">
-      <div className="flex items-center justify-around px-2 py-2">
+    <nav 
+      className="fixed bottom-0 left-0 right-0 z-50 glass-strong border-t border-white/30 pb-safe md:hidden shadow-elevation-5 backdrop-blur-2xl"
+      role="navigation"
+      aria-label="Navigation principale mobile"
+    >
+      <div className="flex items-center justify-around px-2 py-2.5">
         {navItems.map((item, index) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
@@ -56,35 +60,42 @@ const BottomNavigation = () => {
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
+              aria-label={item.label}
+              aria-current={isActive ? 'page' : undefined}
               className={`
-                relative flex flex-col items-center justify-center p-2 rounded-2xl min-w-[60px] h-14
-                transition-all duration-300 ease-spring group active:scale-95
+                relative flex flex-col items-center justify-center p-2.5 rounded-2xl min-w-[64px] h-16
+                transition-all duration-300 ease-spring group active:scale-90 ripple
                 ${isActive 
-                  ? 'text-primary bg-primary/15 shadow-elevation-1' 
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  ? 'text-primary bg-gradient-to-br from-primary/20 to-primary/10 shadow-elevation-2 scale-105' 
+                  : 'text-muted-foreground hover:text-foreground hover:bg-white/30 dark:hover:bg-white/10'
                 }
                 ${item.isAction 
-                  ? 'bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-elevation-3 scale-110' 
+                  ? 'bg-gradient-to-br from-[hsl(48,100%,70%)] via-[hsl(45,100%,58%)] to-[hsl(42,95%,48%)] text-[hsl(25,40%,15%)] hover:opacity-95 shadow-elevation-4 scale-115 hover:scale-120 font-bold' 
                   : ''
                 }
               `}
             >
-              {/* Icon */}
+              {/* Icon Container */}
               <div className={`
-                relative transition-transform duration-200
-                ${isActive ? 'scale-110' : 'group-hover:scale-105'}
-                ${item.isAction ? 'bg-white/20 p-1 rounded-lg' : ''}
+                relative transition-all duration-300
+                ${isActive ? 'scale-110 -translate-y-0.5' : 'group-hover:scale-105 group-hover:-translate-y-0.5'}
+                ${item.isAction ? 'bg-white/20 p-1.5 rounded-xl shadow-inner' : ''}
               `}>
                 <Icon 
                   className={`
                     w-5 h-5 
-                    ${item.isAction ? 'text-primary-foreground' : ''}
+                    ${item.isAction ? 'text-[hsl(25,40%,15%)]' : ''}
+                    ${isActive ? 'drop-shadow-lg' : ''}
                   `}
+                  aria-hidden="true"
                 />
                 
-                {/* Badge */}
+                {/* Badge with animation */}
                 {item.badge && (
-                  <Badge className="absolute -top-2 -right-2 w-5 h-5 p-0 flex items-center justify-center text-xs bg-destructive text-destructive-foreground animate-bounce-in">
+                  <Badge 
+                    className="absolute -top-2 -right-2 w-5 h-5 p-0 flex items-center justify-center text-xs bg-destructive text-destructive-foreground animate-bounce-in shadow-elevation-3 ring-2 ring-background"
+                    aria-label={`${item.badge} notifications non lues`}
+                  >
                     {item.badge}
                   </Badge>
                 )}
@@ -92,16 +103,21 @@ const BottomNavigation = () => {
 
               {/* Label */}
               <span className={`
-                text-xs mt-1 font-medium transition-all duration-200
-                ${isActive ? 'text-primary' : ''}
-                ${item.isAction ? 'text-primary-foreground' : ''}
+                text-xs mt-1.5 font-semibold transition-all duration-300
+                ${isActive ? 'text-primary scale-105' : ''}
+                ${item.isAction ? 'text-[hsl(25,40%,15%)] font-bold' : ''}
               `}>
                 {item.label}
               </span>
 
-              {/* Active Indicator */}
+              {/* Active Indicator with glow */}
               {isActive && !item.isAction && (
-                <div className="absolute bottom-0 w-8 h-0.5 bg-primary rounded-t-full animate-slide-up" />
+                <div className="absolute bottom-0 w-10 h-1 bg-gradient-to-r from-transparent via-primary to-transparent rounded-t-full animate-slide-up shadow-warm" />
+              )}
+              
+              {/* Ripple glow effect for action button */}
+              {item.isAction && (
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
               )}
             </button>
           );
