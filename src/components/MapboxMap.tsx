@@ -193,14 +193,16 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
       });
 
       // Click handler
-      el.addEventListener('click', () => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
         setSelectedListing(listing);
         
-        // Fly to the selected listing
-        map.current?.flyTo({
+        // Just center on the listing without too much zoom/movement
+        map.current?.easeTo({
           center: [listing.lng, listing.lat],
-          zoom: 14,
-          duration: 1000
+          zoom: Math.max(map.current.getZoom(), 12),
+          duration: 500,
+          padding: { bottom: 200 } // Add padding for the preview card
         });
       });
 
