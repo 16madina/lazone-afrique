@@ -8,15 +8,23 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCountry } from "@/contexts/CountryContext";
 import CountrySelector from "@/components/CountrySelector";
 import { NotificationCenter } from "@/components/NotificationCenter";
-import { Globe, Menu, Plus, User, Settings, LogOut, BarChart3, Heart, MessageCircle } from "lucide-react";
+import { Globe, Menu, Plus, User, Settings, LogOut, BarChart3, Heart, MessageCircle, ChevronDown, Map } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import lazoneLogo from "@/assets/lazone-logo.png";
 
 export const EnhancedHeader = () => {
   const { user, profile, signOut } = useAuth();
-  const { selectedCountry } = useCountry();
+  const { selectedCountry, setSelectedCountry, countries } = useCountry();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleCountryMapNavigation = (countryCode: string) => {
+    const country = countries.find(c => c.code === countryCode);
+    if (country) {
+      setSelectedCountry(country);
+      navigate("/map");
+    }
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -48,12 +56,43 @@ export const EnhancedHeader = () => {
           >
             Accueil
           </Link>
-          <Link 
-            to="/map" 
-            className="text-sm font-medium hover:text-primary transition-colors"
-          >
-            Carte
-          </Link>
+          
+          {/* Map with Country Selector */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1 h-auto p-2"
+              >
+                <Map className="w-4 h-4" />
+                Carte
+                <ChevronDown className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuLabel className="flex items-center gap-2">
+                <Globe className="w-4 h-4" />
+                Choisir un pays
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {countries.map((country) => (
+                <DropdownMenuItem
+                  key={country.code}
+                  onClick={() => handleCountryMapNavigation(country.code)}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <span className="text-lg">{country.flag}</span>
+                  <span className="flex-1">{country.name}</span>
+                  {selectedCountry.code === country.code && (
+                    <Badge variant="secondary" className="text-xs">
+                      Actuel
+                    </Badge>
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {user && (
             <Link 
               to="/messages" 
