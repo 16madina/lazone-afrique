@@ -17,6 +17,7 @@ export interface MapListing {
   title: string;
   price: number;
   city: string;
+  neighborhood?: string | null;
   country_code: string;
   lat: number;
   lng: number;
@@ -34,6 +35,7 @@ const Map = () => {
   const [filteredListings, setFilteredListings] = useState<MapListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchCity, setSearchCity] = useState('');
+  const [searchNeighborhood, setSearchNeighborhood] = useState('');
   const [cityCoords, setCityCoords] = useState<{ lng: number; lat: number } | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     type: "",
@@ -63,6 +65,7 @@ const Map = () => {
             title,
             price,
             city,
+            neighborhood,
             country_code,
             lat,
             lng,
@@ -137,7 +140,8 @@ const Map = () => {
     // Location filter
     if (filters.location) {
       filtered = filtered.filter(l => 
-        l.city?.toLowerCase().includes(filters.location.toLowerCase())
+        l.city?.toLowerCase().includes(filters.location.toLowerCase()) ||
+        l.neighborhood?.toLowerCase().includes(filters.location.toLowerCase())
       );
     }
 
@@ -145,7 +149,8 @@ const Map = () => {
     if (filters.searchQuery) {
       filtered = filtered.filter(l =>
         l.title?.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
-        l.city?.toLowerCase().includes(filters.searchQuery.toLowerCase())
+        l.city?.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
+        l.neighborhood?.toLowerCase().includes(filters.searchQuery.toLowerCase())
       );
     }
 
@@ -158,13 +163,14 @@ const Map = () => {
 
   const handleCitySearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchCity.trim()) {
-      toast.error('Veuillez entrer un nom de ville');
+    if (!searchCity.trim() && !searchNeighborhood.trim()) {
+      toast.error('Veuillez entrer un nom de ville ou quartier');
       return;
     }
 
     try {
-      console.log('🔍 Recherche de ville:', searchCity);
+      const searchLocation = searchNeighborhood.trim() || searchCity.trim();
+      console.log('🔍 Recherche de localisation:', searchLocation);
       
       // Get Mapbox token
       const { data: tokenData, error: tokenError } = await supabase.functions.invoke('get-mapbox-token');
@@ -183,9 +189,10 @@ const Map = () => {
 
       console.log('✅ Token récupéré, recherche en cours...');
 
-      // Geocode the city - search globally without country restriction
-      const searchQuery = encodeURIComponent(searchCity.trim());
-      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${searchQuery}.json?access_token=${tokenData.token}&types=place,locality&limit=5`;
+      // Geocode the location (city or neighborhood) - search globally without country restriction
+      const searchQuery = encodeURIComponent(searchLocation);
+      const types = searchNeighborhood.trim() ? 'neighborhood,place,locality' : 'place,locality';
+      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${searchQuery}.json?access_token=${tokenData.token}&types=${types}&limit=5`;
       
       console.log('🌍 URL de recherche:', url);
       
@@ -216,10 +223,10 @@ const Map = () => {
         }
         
         setCityCoords({ lng, lat });
-        toast.success(`Ville trouvée: ${placeName}`);
+        toast.success(`Localisation trouvée: ${placeName}`);
       } else {
-        console.warn('❌ Aucune ville trouvée pour:', searchCity);
-        toast.error(`Aucune ville trouvée pour "${searchCity}"`);
+        console.warn('❌ Aucune localisation trouvée pour:', searchLocation);
+        toast.error(`Aucune localisation trouvée pour "${searchLocation}"`);
       }
     } catch (error) {
       console.error('❌ Erreur lors de la recherche:', error);
@@ -235,10 +242,21 @@ const Map = () => {
         {/* Search and Filters Bar */}
         <div className="sticky top-16 md:top-20 z-40 bg-background border-b border-border shadow-sm">
           <div className="w-full px-4 py-3">
-            {/* City Search Bar */}
+            {/* Location Search Bar */}
             <form onSubmit={handleCitySearch} className="mb-3">
-              <div className="flex items-center gap-2 w-full max-w-2xl">
-                <div className="relative flex-1">
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full max-w-2xl">
+                <div className="relative flex-1 w-full">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Rechercher un quartier..."
+                    value={searchNeighborhood}
+                    onChange={(e) => setSearchNeighborhood(e.target.value)}
+                    className="pl-9 h-10"
+                  />
+                </div>
+                <span className="text-sm text-muted-foreground hidden sm:inline">ou</span>
+                <div className="relative flex-1 w-full">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="text"
@@ -248,7 +266,7 @@ const Map = () => {
                     className="pl-9 h-10"
                   />
                 </div>
-                <Button type="submit" size="sm" className="shrink-0">
+                <Button type="submit" size="sm" className="shrink-0 w-full sm:w-auto">
                   Rechercher
                 </Button>
               </div>
