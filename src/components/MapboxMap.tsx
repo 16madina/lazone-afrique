@@ -1,0 +1,267 @@
+import React, { useEffect, useRef, useState } from 'react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { supabase } from '@/integrations/supabase/client';
+import { useCountry } from '@/contexts/CountryContext';
+import { MapListing } from '@/pages/Map';
+import { Card } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { Bed, Bath, Maximize2, MapPin } from 'lucide-react';
+
+interface MapboxMapProps {
+  listings: MapListing[];
+}
+
+const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const [mapboxToken, setMapboxToken] = useState<string | null>(null);
+  const [selectedListing, setSelectedListing] = useState<MapListing | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { formatPrice } = useCountry();
+  const navigate = useNavigate();
+
+  // Fetch Mapbox token
+  useEffect(() => {
+    const getMapboxToken = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('get-mapbox-token');
+        if (error) throw error;
+        if (data?.token) {
+          setMapboxToken(data.token);
+        }
+      } catch (err) {
+        console.error('Error fetching Mapbox token:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    getMapboxToken();
+  }, []);
+
+  // Initialize map
+  useEffect(() => {
+    if (!mapContainer.current || !mapboxToken || map.current) return;
+
+    mapboxgl.accessToken = mapboxToken;
+
+    // Calculate center of all listings
+    const center = listings.length > 0
+      ? [
+          listings.reduce((sum, l) => sum + l.lng, 0) / listings.length,
+          listings.reduce((sum, l) => sum + l.lat, 0) / listings.length
+        ]
+      : [0, 0];
+
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: center as [number, number],
+      zoom: listings.length > 0 ? 11 : 2,
+      pitch: 0,
+    });
+
+    // Add navigation controls
+    map.current.addControl(
+      new mapboxgl.NavigationControl({
+        visualizePitch: true,
+        showZoom: true,
+        showCompass: true
+      }),
+      'top-right'
+    );
+
+    // Add geolocate control
+    map.current.addControl(
+      new mapboxgl.GeolocateControl({
+        positionOptions: { enableHighAccuracy: true },
+        trackUserLocation: true,
+        showUserHeading: true
+      }),
+      'top-right'
+    );
+
+    return () => {
+      map.current?.remove();
+    };
+  }, [mapboxToken, listings.length]);
+
+  // Update markers when listings change
+  useEffect(() => {
+    if (!map.current || !mapboxToken) return;
+
+    // Remove existing markers
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+
+    // Add new markers
+    listings.forEach((listing) => {
+      if (!listing.lat || !listing.lng) return;
+
+      // Create price marker element
+      const el = document.createElement('div');
+      el.className = 'price-marker';
+      el.style.cssText = `
+        background: ${listing.is_sponsored ? 'linear-gradient(135deg, #f59e0b, #f97316)' : 'hsl(var(--primary))'};
+        color: white;
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border: 2px solid white;
+        white-space: nowrap;
+      `;
+      el.textContent = formatPrice(listing.price);
+
+      // Hover effects
+      el.addEventListener('mouseenter', () => {
+        el.style.transform = 'scale(1.15) translateY(-4px)';
+        el.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.25)';
+        el.style.zIndex = '1000';
+      });
+
+      el.addEventListener('mouseleave', () => {
+        el.style.transform = 'scale(1) translateY(0)';
+        el.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+        el.style.zIndex = '1';
+      });
+
+      // Click handler
+      el.addEventListener('click', () => {
+        setSelectedListing(listing);
+        
+        // Fly to the selected listing
+        map.current?.flyTo({
+          center: [listing.lng, listing.lat],
+          zoom: 14,
+          duration: 1000
+        });
+      });
+
+      // Create marker
+      const marker = new mapboxgl.Marker(el)
+        .setLngLat([listing.lng, listing.lat])
+        .addTo(map.current!);
+
+      markersRef.current.push(marker);
+    });
+
+    // Fit bounds to show all markers
+    if (listings.length > 0) {
+      const bounds = new mapboxgl.LngLatBounds();
+      listings.forEach(listing => {
+        if (listing.lat && listing.lng) {
+          bounds.extend([listing.lng, listing.lat]);
+        }
+      });
+      
+      map.current.fitBounds(bounds, {
+        padding: { top: 100, bottom: 100, left: 100, right: 100 },
+        maxZoom: 15,
+        duration: 1000
+      });
+    }
+  }, [listings, mapboxToken, formatPrice]);
+
+  const handleListingClick = (listingId: string) => {
+    navigate(`/listing/${listingId}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
+        <div className="text-center">
+          <div className="w-12 h-12 mx-auto mb-4 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-muted-foreground">Initialisation de la carte...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative w-full h-full">
+      <div ref={mapContainer} className="absolute inset-0" />
+      
+      {/* Listing Preview Card */}
+      {selectedListing && (
+        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10 w-[90%] max-w-md">
+          <Card 
+            className="overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 bg-card/95 backdrop-blur-sm"
+            onClick={() => handleListingClick(selectedListing.id)}
+          >
+            <div className="flex gap-4 p-4">
+              {/* Image */}
+              <div className="relative w-32 h-32 flex-shrink-0 rounded-lg overflow-hidden">
+                <img
+                  src={selectedListing.photos?.[0] || '/placeholder.svg'}
+                  alt={selectedListing.title}
+                  className="w-full h-full object-cover"
+                />
+                {selectedListing.is_sponsored && (
+                  <Badge className="absolute top-2 left-2 bg-gradient-to-r from-amber-500 to-orange-500">
+                    Sponsorisé
+                  </Badge>
+                )}
+              </div>
+
+              {/* Details */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <h3 className="font-semibold text-foreground line-clamp-2 text-sm">
+                    {selectedListing.title}
+                  </h3>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedListing(null);
+                    }}
+                    className="text-muted-foreground hover:text-foreground flex-shrink-0"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
+                  <MapPin className="h-3 w-3" />
+                  <span className="line-clamp-1">{selectedListing.city}</span>
+                </div>
+
+                <div className="flex items-center gap-3 mb-2 text-xs text-muted-foreground">
+                  {selectedListing.bedrooms && (
+                    <div className="flex items-center gap-1">
+                      <Bed className="h-3 w-3" />
+                      <span>{selectedListing.bedrooms}</span>
+                    </div>
+                  )}
+                  {selectedListing.bathrooms && (
+                    <div className="flex items-center gap-1">
+                      <Bath className="h-3 w-3" />
+                      <span>{selectedListing.bathrooms}</span>
+                    </div>
+                  )}
+                  {selectedListing.surface_area && (
+                    <div className="flex items-center gap-1">
+                      <Maximize2 className="h-3 w-3" />
+                      <span>{selectedListing.surface_area} m²</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="text-lg font-bold text-primary">
+                  {formatPrice(selectedListing.price)}
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default MapboxMap;
