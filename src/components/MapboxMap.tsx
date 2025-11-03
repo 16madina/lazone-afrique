@@ -192,18 +192,10 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
         el.style.zIndex = '10';
       });
 
-      // Click handler
+      // Click handler - show listing card immediately without moving map
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         setSelectedListing(listing);
-        
-        // Just center on the listing without too much zoom/movement
-        map.current?.easeTo({
-          center: [listing.lng, listing.lat],
-          zoom: Math.max(map.current.getZoom(), 12),
-          duration: 500,
-          padding: { bottom: 200 } // Add padding for the preview card
-        });
       });
 
       // Create marker
