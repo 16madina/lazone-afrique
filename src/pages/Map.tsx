@@ -256,7 +256,6 @@ const Map = () => {
             {/* Filters */}
             <div className="flex items-center justify-between w-full max-w-2xl">
               <div className="flex items-center gap-3">
-                <CountrySelector />
                 <span className="text-sm text-muted-foreground">
                   {filteredListings.length} annonce{filteredListings.length > 1 ? 's' : ''} trouvée{filteredListings.length > 1 ? 's' : ''}
                 </span>

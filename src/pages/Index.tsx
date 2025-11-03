@@ -331,9 +331,6 @@ const Index = () => {
         <div className="space-y-4">
           {/* Filter Button and AI Recommendations */}
           <div className="flex items-center gap-4 flex-wrap">
-            {/* Country Selector */}
-            <CountrySelector />
-            
             {/* Filters Sheet Trigger */}
             <Sheet>
               <SheetTrigger asChild>

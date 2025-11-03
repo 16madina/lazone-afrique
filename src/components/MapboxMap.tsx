@@ -24,7 +24,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
   const [selectedListing, setSelectedListing] = useState<MapListing | null>(null);
   const [loading, setLoading] = useState(true);
   const [userLocationFound, setUserLocationFound] = useState(false);
-  const { formatPrice } = useCountry();
+  const { formatPrice, selectedCountry } = useCountry();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -237,6 +237,22 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
       duration: 1500
     });
   }, [cityCoords]);
+
+  // Handle country change - center map on selected country
+  useEffect(() => {
+    if (!map.current || !selectedCountry || userLocationFound) return;
+
+    console.log('🌍 Country changed to:', selectedCountry.name, 'coords:', selectedCountry.coordinates);
+    
+    // Don't recenter if user has manually interacted with map
+    if (selectedCountry.coordinates) {
+      map.current.flyTo({
+        center: [selectedCountry.coordinates.lng, selectedCountry.coordinates.lat],
+        zoom: selectedCountry.coordinates.zoom || 6,
+        duration: 1500
+      });
+    }
+  }, [selectedCountry, userLocationFound]);
 
   const handleListingClick = (listingId: string) => {
     navigate(`/listing/${listingId}`);
