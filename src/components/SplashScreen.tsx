@@ -7,21 +7,36 @@ interface SplashScreenProps {
 
 export const SplashScreen = ({ onFinish }: SplashScreenProps) => {
   const [isVisible, setIsVisible] = useState(true);
+  const [shouldRender, setShouldRender] = useState(true);
 
   useEffect(() => {
+    console.log('🎬 SplashScreen mounted');
     const timer = setTimeout(() => {
+      console.log('⏰ Starting fade out animation');
       setIsVisible(false);
-      setTimeout(onFinish, 150);
+      setTimeout(() => {
+        console.log('✅ SplashScreen finished, calling onFinish');
+        setShouldRender(false);
+        onFinish();
+      }, 300); // Wait for fade-out animation to complete
     }, 1200); // Synchronized with native splash
 
-    return () => clearTimeout(timer);
+    return () => {
+      console.log('🧹 SplashScreen unmounting');
+      clearTimeout(timer);
+    };
   }, [onFinish]);
+
+  if (!shouldRender) {
+    return null;
+  }
 
   return (
     <div 
-      className={`fixed inset-0 bg-gradient-to-br from-primary/90 to-secondary/90 z-50 flex items-center justify-center transition-all duration-300 ${
-        isVisible ? 'animate-fade-in opacity-100' : 'animate-fade-out opacity-0'
+      className={`fixed inset-0 bg-gradient-to-br from-primary/90 to-secondary/90 flex items-center justify-center transition-all duration-300 ${
+        isVisible ? 'animate-fade-in opacity-100 z-[9999]' : 'animate-fade-out opacity-0 z-[9999]'
       }`}
+      style={{ pointerEvents: isVisible ? 'auto' : 'none' }}
     >
       <div className={`text-center transition-all duration-300 ${
         isVisible ? 'animate-scale-in scale-100' : 'animate-scale-out scale-95'

@@ -71,17 +71,22 @@ const App = () => {
   const [showSplash, setShowSplash] = useState(() => {
     // Check if splash has already been shown in this session
     const hasShownSplash = sessionStorage.getItem('splashShown');
+    console.log('🎯 Checking splash screen status:', { hasShownSplash, shouldShow: !hasShownSplash });
     return !hasShownSplash;
   });
 
   const handleSplashFinish = () => {
+    console.log('🎉 Splash screen finished, hiding it');
     setShowSplash(false);
     sessionStorage.setItem('splashShown', 'true');
   };
 
   if (showSplash) {
+    console.log('📺 Rendering splash screen');
     return <SplashScreen onFinish={handleSplashFinish} />;
   }
+
+  console.log('🚀 Rendering main app');
 
   return (
     <QueryClientProvider client={queryClient}>
