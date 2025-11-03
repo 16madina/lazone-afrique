@@ -6,7 +6,8 @@ import BottomNavigation from '@/components/BottomNavigation';
 import PropertyFilters, { FilterState } from '@/components/PropertyFilters';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Filter } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Filter, Search } from 'lucide-react';
 import MapboxMap from '@/components/MapboxMap';
 import { toast } from 'sonner';
 
@@ -31,6 +32,8 @@ const Map = () => {
   const [listings, setListings] = useState<MapListing[]>([]);
   const [filteredListings, setFilteredListings] = useState<MapListing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchCity, setSearchCity] = useState('');
+  const [cityCoords, setCityCoords] = useState<{ lng: number; lat: number } | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     type: "",
     propertyType: "",
@@ -149,14 +152,66 @@ const Map = () => {
     setFilters(newFilters);
   };
 
+  const handleCitySearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchCity.trim()) return;
+
+    try {
+      // Get Mapbox token
+      const { data: tokenData } = await supabase.functions.invoke('get-mapbox-token');
+      if (!tokenData?.token) {
+        toast.error('Erreur de configuration de la carte');
+        return;
+      }
+
+      // Geocode the city
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchCity)}.json?access_token=${tokenData.token}&country=${selectedCountry.code}&types=place,locality`
+      );
+      
+      const data = await response.json();
+      
+      if (data.features && data.features.length > 0) {
+        const [lng, lat] = data.features[0].center;
+        setCityCoords({ lng, lat });
+        toast.success(`Ville trouvée: ${data.features[0].place_name}`);
+      } else {
+        toast.error('Ville introuvable');
+      }
+    } catch (error) {
+      console.error('Error geocoding city:', error);
+      toast.error('Erreur lors de la recherche de la ville');
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <EnhancedHeader />
       
       <main className="flex-1 pt-16 md:pt-20">
-        {/* Filters Bar */}
+        {/* Search and Filters Bar */}
         <div className="sticky top-16 md:top-20 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
           <div className="container mx-auto px-4 py-3">
+            {/* City Search Bar */}
+            <form onSubmit={handleCitySearch} className="mb-3">
+              <div className="flex items-center gap-2 max-w-md">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Rechercher une ville..."
+                    value={searchCity}
+                    onChange={(e) => setSearchCity(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <Button type="submit" size="sm">
+                  Rechercher
+                </Button>
+              </div>
+            </form>
+
+            {/* Filters */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">
@@ -188,7 +243,7 @@ const Map = () => {
         </div>
 
         {/* Map Container */}
-        <div className="relative h-[calc(100vh-8rem)] md:h-[calc(100vh-9rem)]">
+        <div className="relative h-[calc(100vh-10rem)] md:h-[calc(100vh-11rem)]">
           {loading ? (
             <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
               <div className="text-center">
@@ -197,7 +252,7 @@ const Map = () => {
               </div>
             </div>
           ) : (
-            <MapboxMap listings={filteredListings} />
+            <MapboxMap listings={filteredListings} cityCoords={cityCoords} />
           )}
         </div>
       </main>

@@ -12,9 +12,10 @@ import { useToast } from '@/hooks/use-toast';
 
 interface MapboxMapProps {
   listings: MapListing[];
+  cityCoords?: { lng: number; lat: number } | null;
 }
 
-const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
+const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
@@ -223,6 +224,17 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
       }, 2000);
     }
   }, [listings, mapboxToken, formatPrice, userLocationFound]);
+
+  // Handle city search coordinates
+  useEffect(() => {
+    if (!map.current || !cityCoords) return;
+
+    map.current.flyTo({
+      center: [cityCoords.lng, cityCoords.lat],
+      zoom: 13,
+      duration: 1500
+    });
+  }, [cityCoords]);
 
   const handleListingClick = (listingId: string) => {
     navigate(`/listing/${listingId}`);
