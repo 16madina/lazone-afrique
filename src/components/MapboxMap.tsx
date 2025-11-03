@@ -56,6 +56,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = useState(false);
   const { selectedCountry, formatPrice } = useCountry();
   const { user } = useAuth();
   const { toggleFavorite, isFavorite, loading: favoritesLoading } = useFavorites();
@@ -85,47 +86,66 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
 
   // Récupérer le token Mapbox depuis l'edge function
   useEffect(() => {
+    let isMounted = true;
+    
     const getMapboxToken = async () => {
       try {
         console.log('🗺️ [MAPBOX] Début de la récupération du token...');
         const { data, error } = await supabase.functions.invoke('get-mapbox-token');
         
-        console.log('🗺️ [MAPBOX] Réponse reçue:', { hasData: !!data, hasError: !!error });
+        console.log('🗺️ [MAPBOX] Réponse reçue:', { hasData: !!data, hasError: !!error, data });
+        
+        if (!isMounted) {
+          console.log('⚠️ [MAPBOX] Composant démonté, abandon');
+          return;
+        }
         
         if (error) {
-          console.error('❌ [MAPBOX] Erreur lors de la récupération du token:', error);
-          throw error;
+          console.error('❌ [MAPBOX] Erreur:', error);
+          setError('Erreur de chargement du token');
+          setLoading(false);
+          return;
         }
         
         if (data?.token) {
-          console.log('✅ [MAPBOX] Token récupéré avec succès, longueur:', data.token.length);
+          console.log('✅ [MAPBOX] Token OK, longueur:', data.token.length);
           setMapboxToken(data.token);
           setLoading(false);
         } else {
-          console.error('❌ [MAPBOX] Token non trouvé dans la réponse:', data);
-          throw new Error('Token Mapbox non trouvé dans la réponse');
+          console.error('❌ [MAPBOX] Pas de token dans la réponse');
+          setError('Token Mapbox introuvable');
+          setLoading(false);
         }
       } catch (err) {
-        console.error('❌ [MAPBOX] Erreur fatale:', err);
-        setError('Impossible de charger la carte. Veuillez réessayer.');
-        setLoading(false);
+        console.error('❌ [MAPBOX] Exception:', err);
+        if (isMounted) {
+          setError('Erreur de chargement');
+          setLoading(false);
+        }
       }
     };
 
     getMapboxToken();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
-    if (!mapContainer.current || !mapboxToken) {
-      console.log('⏸️ Attente du conteneur ou du token...', { 
+    if (!mapContainer.current || !mapboxToken || isInitializing) {
+      console.log('⏸️ [MAPBOX] En attente:', { 
         hasContainer: !!mapContainer.current, 
-        hasToken: !!mapboxToken 
+        hasToken: !!mapboxToken,
+        isInitializing
       });
       return;
     }
 
-    console.log('🗺️ Initialisation de la carte Mapbox...');
-    console.log('📊 Nombre de listings à afficher:', listings.length);
+    console.log('🗺️ [MAPBOX] Démarrage initialisation carte...');
+    console.log('📊 [MAPBOX] Listings à afficher:', listings.length);
+    
+    setIsInitializing(true);
 
     // Initialiser la carte
     mapboxgl.accessToken = mapboxToken;
@@ -169,6 +189,9 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
 
     // Centrer sur l'Afrique quand la carte est chargée
     map.current.on('load', () => {
+      console.log('✅ [MAPBOX] Carte chargée avec succès!');
+      setIsInitializing(false);
+      
       // Bounds approximatifs de l'Afrique
       const africaBounds: [number, number, number, number] = [-20, -35, 52, 37];
       map.current?.fitBounds(africaBounds, { padding: 50 });
