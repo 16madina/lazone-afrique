@@ -28,6 +28,18 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Format price to short version (450K, 4.5M, etc.)
+  const formatShortPrice = (price: number): string => {
+    if (price >= 1000000000) {
+      return `${(price / 1000000000).toFixed(1)}B`;
+    } else if (price >= 1000000) {
+      return `${(price / 1000000).toFixed(1)}M`;
+    } else if (price >= 1000) {
+      return `${Math.round(price / 1000)}K`;
+    }
+    return price.toString();
+  };
+
   // Fetch Mapbox token
   useEffect(() => {
     const getMapboxToken = async () => {
@@ -146,37 +158,39 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
 
       console.log(`📍 Adding marker for "${listing.title}" at [${listing.lng}, ${listing.lat}]`);
 
-      // Create price marker element with improved visibility
+      // Create price marker element - small circular design
       const el = document.createElement('div');
       el.className = 'price-marker';
       el.style.cssText = `
         background: ${listing.is_sponsored ? 'linear-gradient(135deg, #f59e0b, #f97316)' : '#E11D48'};
         color: white;
-        padding: 4px 8px;
-        border-radius: 12px;
-        font-weight: 600;
-        font-size: 11px;
+        padding: 6px 10px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 10px;
         cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
         border: 2px solid white;
         white-space: nowrap;
         position: relative;
         z-index: 10;
+        min-width: 40px;
+        text-align: center;
       `;
-      el.textContent = formatPrice(listing.price);
+      el.textContent = formatShortPrice(listing.price);
 
       // Hover effects
       el.addEventListener('mouseenter', () => {
-        el.style.transform = 'scale(1.1) translateY(-2px)';
-        el.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.25)';
+        el.style.transform = 'scale(1.2)';
+        el.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.4)';
         el.style.zIndex = '1000';
       });
 
       el.addEventListener('mouseleave', () => {
-        el.style.transform = 'scale(1) translateY(0)';
-        el.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
-        el.style.zIndex = '1';
+        el.style.transform = 'scale(1)';
+        el.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.3)';
+        el.style.zIndex = '10';
       });
 
       // Click handler
@@ -223,7 +237,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
         }
       }, 2000);
     }
-  }, [listings, mapboxToken, formatPrice, userLocationFound]);
+  }, [listings, mapboxToken, formatShortPrice, userLocationFound]);
 
   // Handle city search coordinates
   useEffect(() => {
