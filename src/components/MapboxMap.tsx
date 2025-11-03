@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Bed, Bath, Maximize2, MapPin } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface MapboxMapProps {
   listings: MapListing[];
@@ -17,11 +18,14 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const geolocateControlRef = useRef<mapboxgl.GeolocateControl | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [selectedListing, setSelectedListing] = useState<MapListing | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userLocationFound, setUserLocationFound] = useState(false);
   const { formatPrice } = useCountry();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   // Fetch Mapbox token
   useEffect(() => {
@@ -47,22 +51,20 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
 
     mapboxgl.accessToken = mapboxToken;
 
-    // Calculate center of all listings
-    const center = listings.length > 0
-      ? [
-          listings.reduce((sum, l) => sum + l.lng, 0) / listings.length,
-          listings.reduce((sum, l) => sum + l.lat, 0) / listings.length
-        ]
-      : [0, 0];
-
+    // Default center (Abidjan, Côte d'Ivoire as fallback)
+    const defaultCenter: [number, number] = [-4.0083, 5.3600];
+    
+    // Start with default center and moderate zoom
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v11',
-      center: center as [number, number],
-      zoom: listings.length > 0 ? 11 : 2,
+      center: defaultCenter,
+      zoom: 12,
       pitch: 0,
       projection: { name: 'mercator' }
     });
+
+    console.log('🗺️ Map initialized with default center:', defaultCenter);
 
     // Add navigation controls
     map.current.addControl(
@@ -74,20 +76,53 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
       'top-right'
     );
 
-    // Add geolocate control
-    map.current.addControl(
-      new mapboxgl.GeolocateControl({
-        positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: true,
-        showUserHeading: true
-      }),
-      'top-right'
-    );
+    // Add geolocate control with auto-trigger
+    const geolocateControl = new mapboxgl.GeolocateControl({
+      positionOptions: { enableHighAccuracy: true },
+      trackUserLocation: true,
+      showUserHeading: true,
+      showAccuracyCircle: true
+    });
+    
+    geolocateControlRef.current = geolocateControl;
+    map.current.addControl(geolocateControl, 'top-right');
+
+    // Listen for geolocation success
+    geolocateControl.on('geolocate', (e: any) => {
+      console.log('📍 User location found:', e.coords.latitude, e.coords.longitude);
+      setUserLocationFound(true);
+      
+      // Zoom to user location
+      map.current?.flyTo({
+        center: [e.coords.longitude, e.coords.latitude],
+        zoom: 13,
+        duration: 1500
+      });
+    });
+
+    // Listen for geolocation errors
+    geolocateControl.on('error', (e: any) => {
+      console.warn('⚠️ Geolocation error:', e.message);
+      toast({
+        title: "Localisation non disponible",
+        description: "Impossible d'accéder à votre position. La carte affiche la zone par défaut.",
+        variant: "destructive"
+      });
+    });
+
+    // Automatically trigger geolocation when map is loaded
+    map.current.on('load', () => {
+      console.log('🎯 Map loaded, triggering geolocation...');
+      // Small delay to ensure controls are ready
+      setTimeout(() => {
+        geolocateControl.trigger();
+      }, 500);
+    });
 
     return () => {
       map.current?.remove();
     };
-  }, [mapboxToken, listings.length]);
+  }, [mapboxToken, toast]);
 
   // Update markers when listings change
   useEffect(() => {
@@ -97,27 +132,36 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
 
+    // Debug: count valid listings
+    const validListings = listings.filter(l => l.lat && l.lng);
+    console.log(`📌 Creating markers for ${validListings.length}/${listings.length} listings with coordinates`);
+
     // Add new markers
     listings.forEach((listing) => {
-      if (!listing.lat || !listing.lng) return;
+      if (!listing.lat || !listing.lng) {
+        console.warn(`⚠️ Listing "${listing.title}" missing coordinates:`, listing);
+        return;
+      }
 
-      // Create price marker element
+      console.log(`📍 Adding marker for "${listing.title}" at [${listing.lng}, ${listing.lat}]`);
+
+      // Create price marker element with improved visibility
       const el = document.createElement('div');
       el.className = 'price-marker';
       el.style.cssText = `
         background: ${listing.is_sponsored ? 'linear-gradient(135deg, #f59e0b, #f97316)' : '#E11D48'};
         color: white;
-        padding: 8px 12px;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 13px;
+        padding: 10px 16px;
+        border-radius: 24px;
+        font-weight: 700;
+        font-size: 15px;
         cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        border: 2px solid white;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+        border: 3px solid white;
         white-space: nowrap;
         position: relative;
-        z-index: 1;
+        z-index: 10;
       `;
       el.textContent = formatPrice(listing.price);
 
@@ -154,8 +198,11 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
       markersRef.current.push(marker);
     });
 
-    // Fit bounds to show all markers
-    if (listings.length > 0) {
+    console.log(`✅ Total markers created: ${markersRef.current.length}`);
+
+    // Only fit bounds if user location hasn't been found yet
+    // This prevents the map from zooming out after user location is set
+    if (!userLocationFound && listings.length > 0) {
       const bounds = new mapboxgl.LngLatBounds();
       listings.forEach(listing => {
         if (listing.lat && listing.lng) {
@@ -163,13 +210,19 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
         }
       });
       
-      map.current.fitBounds(bounds, {
-        padding: { top: 100, bottom: 100, left: 100, right: 100 },
-        maxZoom: 15,
-        duration: 1000
-      });
+      // Delay to allow geolocation to happen first
+      setTimeout(() => {
+        if (!userLocationFound && map.current) {
+          console.log('🎯 Fitting bounds to show all listings');
+          map.current.fitBounds(bounds, {
+            padding: { top: 100, bottom: 100, left: 100, right: 100 },
+            maxZoom: 14,
+            duration: 1000
+          });
+        }
+      }, 2000);
     }
-  }, [listings, mapboxToken, formatPrice]);
+  }, [listings, mapboxToken, formatPrice, userLocationFound]);
 
   const handleListingClick = (listingId: string) => {
     navigate(`/listing/${listingId}`);
