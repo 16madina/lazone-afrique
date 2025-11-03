@@ -189,10 +189,24 @@ const Map = () => {
 
       console.log('✅ Token récupéré, recherche en cours...');
 
-      // Geocode the location (city or neighborhood) - search globally without country restriction
-      const searchQuery = encodeURIComponent(searchLocation);
-      const types = searchNeighborhood.trim() ? 'neighborhood,place,locality' : 'place,locality';
-      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${searchQuery}.json?access_token=${tokenData.token}&types=${types}&limit=5`;
+      // Build search query with country context for better results
+      let searchQuery = '';
+      if (searchNeighborhood.trim() && searchCity.trim()) {
+        // If both neighborhood and city are provided, search with full context
+        searchQuery = encodeURIComponent(`${searchNeighborhood.trim()}, ${searchCity.trim()}, ${selectedCountry.name}`);
+      } else if (searchNeighborhood.trim()) {
+        // Neighborhood only - add city context from selected country
+        searchQuery = encodeURIComponent(`${searchNeighborhood.trim()}, ${selectedCountry.name}`);
+      } else {
+        // City only - add country context
+        searchQuery = encodeURIComponent(`${searchCity.trim()}, ${selectedCountry.name}`);
+      }
+      
+      // Choose appropriate types based on what user is searching for
+      const types = searchNeighborhood.trim() ? 'neighborhood,locality,place' : 'place,locality';
+      
+      // Add country restriction and proximity to current country center
+      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${searchQuery}.json?access_token=${tokenData.token}&types=${types}&country=${selectedCountry.code.toLowerCase()}&limit=5`;
       
       console.log('🌍 URL de recherche:', url);
       
@@ -249,9 +263,9 @@ const Map = () => {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="text"
-                    placeholder="Rechercher un quartier..."
-                    value={searchNeighborhood}
-                    onChange={(e) => setSearchNeighborhood(e.target.value)}
+                    placeholder="Rechercher une ville..."
+                    value={searchCity}
+                    onChange={(e) => setSearchCity(e.target.value)}
                     className="pl-9 h-10"
                   />
                 </div>
@@ -260,9 +274,9 @@ const Map = () => {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="text"
-                    placeholder="Rechercher une ville..."
-                    value={searchCity}
-                    onChange={(e) => setSearchCity(e.target.value)}
+                    placeholder="Rechercher un quartier..."
+                    value={searchNeighborhood}
+                    onChange={(e) => setSearchNeighborhood(e.target.value)}
                     className="pl-9 h-10"
                   />
                 </div>
