@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import EnhancedHeader from "@/components/EnhancedHeader";
 import HeroSection from "@/components/HeroSection";
+import CountrySelector from "@/components/CountrySelector";
 import PropertyFilters, { FilterState } from "@/components/PropertyFilters";
 import PerformanceOptimizedPropertyCard from "@/components/PerformanceOptimizedPropertyCard";
 import PropertyCardSkeleton from "@/components/PropertyCardSkeleton";
@@ -329,7 +330,10 @@ const Index = () => {
         {/* Filters & Controls */}
         <div className="space-y-4">
           {/* Filter Button and AI Recommendations */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
+            {/* Country Selector */}
+            <CountrySelector />
+            
             {/* Filters Sheet Trigger */}
             <Sheet>
               <SheetTrigger asChild>

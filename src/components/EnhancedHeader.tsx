@@ -112,8 +112,6 @@ export const EnhancedHeader = () => {
 
         {/* Right Side Actions */}
         <div className="flex items-center gap-2">
-          {/* Country Selector - visible on all screen sizes */}
-          <CountrySelector />
 
           {/* Add Property Button */}
           {user && (

@@ -3,6 +3,7 @@ import { useCountry } from '@/contexts/CountryContext';
 import { supabase } from '@/integrations/supabase/client';
 import EnhancedHeader from '@/components/EnhancedHeader';
 import BottomNavigation from '@/components/BottomNavigation';
+import CountrySelector from '@/components/CountrySelector';
 import PropertyFilters, { FilterState } from '@/components/PropertyFilters';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,7 @@ const Map = () => {
   useEffect(() => {
     const fetchListings = async () => {
       setLoading(true);
+      console.log('🔍 Fetching listings for country:', selectedCountry.code, selectedCountry.name);
       try {
         const { data, error } = await supabase
           .from('listings')
@@ -79,10 +81,11 @@ const Map = () => {
 
         if (error) throw error;
         
+        console.log(`✅ Found ${data?.length || 0} listings for ${selectedCountry.name}:`, data);
         setListings(data || []);
         setFilteredListings(data || []);
       } catch (error) {
-        console.error('Error fetching listings:', error);
+        console.error('❌ Error fetching listings:', error);
         toast.error('Erreur lors du chargement des annonces');
       } finally {
         setLoading(false);
@@ -252,7 +255,8 @@ const Map = () => {
 
             {/* Filters */}
             <div className="flex items-center justify-between w-full max-w-2xl">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
+                <CountrySelector />
                 <span className="text-sm text-muted-foreground">
                   {filteredListings.length} annonce{filteredListings.length > 1 ? 's' : ''} trouvée{filteredListings.length > 1 ? 's' : ''}
                 </span>
