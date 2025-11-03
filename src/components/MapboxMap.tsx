@@ -212,11 +212,18 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
     // User controls map movement via manual zoom/pan or geolocation button
   }, [listings, mapboxToken, formatShortPrice, userLocationFound]);
 
-  // City search no longer moves map automatically
-  // User can manually navigate to searched city
-
-  // Country change no longer moves map automatically
-  // Map stays at user's current view position
+  // Zoom to searched city/neighborhood when cityCoords change
+  useEffect(() => {
+    if (!map.current || !cityCoords) return;
+    
+    console.log('🎯 Zooming to searched location:', cityCoords);
+    map.current.flyTo({
+      center: [cityCoords.lng, cityCoords.lat],
+      zoom: 14, // Closer zoom for city/neighborhood search
+      duration: 1500,
+      essential: true
+    });
+  }, [cityCoords]);
 
   const handleListingClick = (listingId: string) => {
     navigate(`/listing/${listingId}`);
