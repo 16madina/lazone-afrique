@@ -255,66 +255,53 @@ const Map = () => {
       <EnhancedHeader />
       
       <main className="flex-1">
-        {/* Search and Filters Bar */}
+        {/* Search and Filters Bar - Compact Version */}
         <div className="sticky top-16 md:top-20 z-40 bg-background border-b border-border shadow-sm">
-          <div className="w-full px-4 py-3">
+          <div className="w-full px-3 py-2">
             {/* Location Search Bar */}
-            <form onSubmit={handleCitySearch} className="mb-3">
-              <div className="flex flex-col sm:flex-row items-center gap-2 w-full max-w-2xl">
-                <div className="relative flex-1 w-full">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <form onSubmit={handleCitySearch} className="mb-2">
+              <div className="flex items-center gap-2 w-full">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="text"
-                    placeholder="Rechercher une ville..."
-                    value={searchCity}
-                    onChange={(e) => setSearchCity(e.target.value)}
-                    className="pl-9 h-10"
+                    placeholder="Ville ou quartier..."
+                    value={searchNeighborhood || searchCity}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setSearchNeighborhood(value);
+                      setSearchCity(value);
+                    }}
+                    className="pl-8 h-9 text-sm"
                   />
                 </div>
-                <span className="text-sm text-muted-foreground hidden sm:inline">ou</span>
-                <div className="relative flex-1 w-full">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Rechercher un quartier..."
-                    value={searchNeighborhood}
-                    onChange={(e) => setSearchNeighborhood(e.target.value)}
-                    className="pl-9 h-10"
-                  />
-                </div>
-                <Button type="submit" size="sm" className="shrink-0 w-full sm:w-auto">
-                  Rechercher
+                <Button type="submit" size="sm" className="h-9 px-3 shrink-0">
+                  <Search className="h-4 w-4" />
                 </Button>
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9 px-3 shrink-0">
+                      <Filter className="h-4 w-4" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="w-full sm:max-w-md overflow-y-auto">
+                    <SheetHeader>
+                      <SheetTitle>Filtres de recherche</SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-6">
+                      <PropertyFilters 
+                        onFiltersChange={handleFilterChange}
+                        currentFilters={filters}
+                      />
+                    </div>
+                  </SheetContent>
+                </Sheet>
               </div>
             </form>
 
-            {/* Filters */}
-            <div className="flex items-center justify-between w-full max-w-2xl">
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-muted-foreground">
-                  {filteredListings.length} annonce{filteredListings.length > 1 ? 's' : ''} trouvée{filteredListings.length > 1 ? 's' : ''}
-                </span>
-              </div>
-              
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2 shrink-0">
-                    <Filter className="h-4 w-4" />
-                    Filtres
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="w-full sm:max-w-md overflow-y-auto">
-                  <SheetHeader>
-                    <SheetTitle>Filtres de recherche</SheetTitle>
-                  </SheetHeader>
-                  <div className="mt-6">
-                    <PropertyFilters 
-                      onFiltersChange={handleFilterChange}
-                      currentFilters={filters}
-                    />
-                  </div>
-                </SheetContent>
-              </Sheet>
+            {/* Results Count */}
+            <div className="text-xs text-muted-foreground">
+              {filteredListings.length} annonce{filteredListings.length > 1 ? 's' : ''}
             </div>
           </div>
         </div>
