@@ -80,14 +80,13 @@ const Map = () => {
     }
   };
 
-  // Centrer sur le pays sélectionné au chargement de la page
+  // Géolocaliser l'utilisateur automatiquement au chargement de la page carte
   useEffect(() => {
     if (!hasAutoLocated) {
-      const { lat, lng } = selectedCountry.coordinates;
-      setSelectedCityCoords({ lat, lng });
+      handleLocateUser();
       setHasAutoLocated(true);
     }
-  }, [hasAutoLocated, selectedCountry]);
+  }, [hasAutoLocated]);
 
   // Fetch listings from Supabase
   useEffect(() => {

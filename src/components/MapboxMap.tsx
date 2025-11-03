@@ -474,17 +474,20 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
             }
           });
           
-          // Réinitialiser tous les marqueurs
+          // Réinitialiser tous les marqueurs (SANS cacher le contenu)
           document.querySelectorAll('.mapbox-price-marker').forEach(marker => {
-            (marker as HTMLElement).style.transform = 'scale(1)';
+            const htmlMarker = marker as HTMLElement;
+            htmlMarker.style.transform = 'scale(1)';
+            htmlMarker.style.zIndex = '1';
           });
           
           // Ouvrir le nouveau popup SANS bouger la carte
           popup.addTo(map.current!);
           popup.setLngLat([listing.adjustedLng, listing.adjustedLat]);
           
-          // Animation du marqueur uniquement (pas de déplacement de la carte)
+          // Animation du marqueur cliqué (pas de déplacement de la carte)
           markerElement.style.transform = 'scale(1.2)';
+          markerElement.style.zIndex = '1000';
           setTimeout(() => {
             markerElement.style.transform = 'scale(1.1)';
           }, 150);
