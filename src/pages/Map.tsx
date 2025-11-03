@@ -53,7 +53,8 @@ const Map = () => {
   useEffect(() => {
     const fetchListings = async () => {
       setLoading(true);
-      console.log('🔍 Fetching listings for country:', selectedCountry.code, selectedCountry.name);
+      const countryCodeUpper = selectedCountry.code.toUpperCase();
+      console.log('🔍 Fetching listings for country:', countryCodeUpper, selectedCountry.name);
       try {
         const { data, error } = await supabase
           .from('listings')
@@ -74,7 +75,7 @@ const Map = () => {
             is_sponsored
           `)
           .eq('status', 'published')
-          .eq('country_code', selectedCountry.code)
+          .eq('country_code', countryCodeUpper)
           .not('lat', 'is', null)
           .not('lng', 'is', null)
           .order('created_at', { ascending: false });
