@@ -158,38 +158,37 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
 
       console.log(`📍 Adding marker for "${listing.title}" at [${listing.lng}, ${listing.lat}]`);
 
-      // Create price marker element - small circular design
+      // Create price marker element - small compact bubble design
       const el = document.createElement('div');
       el.className = 'price-marker';
       el.style.cssText = `
         background: ${listing.is_sponsored ? 'linear-gradient(135deg, #f59e0b, #f97316)' : '#E11D48'};
         color: white;
-        padding: 6px 10px;
-        border-radius: 20px;
+        padding: 4px 8px;
+        border-radius: 12px;
         font-weight: 700;
-        font-size: 10px;
+        font-size: 11px;
         cursor: pointer;
         transition: all 0.2s ease;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         border: 2px solid white;
         white-space: nowrap;
+        display: inline-block;
         position: relative;
         z-index: 10;
-        min-width: 40px;
-        text-align: center;
       `;
       el.textContent = formatShortPrice(listing.price);
 
       // Hover effects
       el.addEventListener('mouseenter', () => {
-        el.style.transform = 'scale(1.2)';
-        el.style.boxShadow = '0 3px 10px rgba(0, 0, 0, 0.4)';
+        el.style.transform = 'scale(1.15)';
+        el.style.boxShadow = '0 3px 12px rgba(0, 0, 0, 0.4)';
         el.style.zIndex = '1000';
       });
 
       el.addEventListener('mouseleave', () => {
         el.style.transform = 'scale(1)';
-        el.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.3)';
+        el.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.3)';
         el.style.zIndex = '10';
       });
 
