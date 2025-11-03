@@ -1,170 +1,223 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Heart, MapPin, Bed, Bath, Square, Eye } from "lucide-react";
-import { useCountry } from "@/contexts/CountryContext";
-import { useFavorites } from "@/hooks/useFavorites";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Heart, Camera, Eye } from "lucide-react";
+import { useCountry } from '@/contexts/CountryContext';
 
 interface Listing {
   id: string;
   title: string;
   price: number;
-  city: string;
-  country_code: string;
   lat: number;
   lng: number;
-  image?: string;
-  photos?: string[] | null;
-  transaction_type?: string;
-  property_type?: string;
+  status: string;
+  image: string | null;
+  photos: string[] | null;
+  city: string;
+  country_code: string;
+  transaction_type: string | null;
   bedrooms?: number;
   bathrooms?: number;
-  surface_area?: number;
 }
 
 interface MapListingsListProps {
   listings: Listing[];
-  onListingHover?: (listingId: string | null) => void;
-  onListingClick?: (listing: Listing) => void;
+  currentIndex: number;
+  onIndexChange: (index: number) => void;
+  onViewDetails: (id: string) => void;
+  onClose: () => void;
 }
 
-export const MapListingsList = ({ listings, onListingHover, onListingClick }: MapListingsListProps) => {
-  const navigate = useNavigate();
+const MapListingsList: React.FC<MapListingsListProps> = ({
+  listings,
+  currentIndex,
+  onIndexChange,
+  onViewDetails,
+  onClose
+}) => {
   const { formatPrice } = useCountry();
-  const { isFavorite, toggleFavorite } = useFavorites();
-  const { user } = useAuth();
+  const listing = listings[currentIndex];
 
-  const getListingImage = (listing: Listing) => {
-    if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
-      return listing.photos[0];
-    }
-    if (listing.image && listing.image !== '/placeholder.svg' && !listing.image.includes('placeholder')) {
-      return listing.image;
-    }
-    return 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=300&fit=crop&auto=format';
-  };
+  if (!listing) return null;
 
-  const handleFavoriteClick = async (e: React.MouseEvent, listingId: string) => {
-    e.stopPropagation();
-    if (!user) {
-      toast.error("Connectez-vous pour ajouter aux favoris");
-      return;
-    }
-    await toggleFavorite(listingId);
-  };
+  const firstImage = listing.image || (listing.photos && listing.photos[0]) || null;
+  const totalListings = listings.length;
+  const hasVirtualTour = listing.photos && listing.photos.length > 5;
 
-  const handleListingClick = (listing: Listing) => {
-    if (onListingClick) {
-      onListingClick(listing);
-    } else {
-      navigate(`/listing/${listing.id}`);
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      onIndexChange(currentIndex - 1);
     }
   };
 
-  if (listings.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-        <MapPin className="w-16 h-16 mb-4 opacity-20" />
-        <p className="text-lg font-medium">Aucune annonce trouv?e</p>
-        <p className="text-sm">Modifiez vos filtres pour voir plus de r?sultats</p>
-      </div>
-    );
-  }
+  const handleNext = () => {
+    if (currentIndex < totalListings - 1) {
+      onIndexChange(currentIndex + 1);
+    }
+  };
+
+  const handleFirst = () => {
+    onIndexChange(0);
+  };
+
+  const handleLast = () => {
+    onIndexChange(totalListings - 1);
+  };
 
   return (
-    <div className="space-y-3 px-4 py-4">
-      {listings.map((listing) => (
-        <Card
-          key={listing.id}
-          className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] overflow-hidden"
-          onClick={() => handleListingClick(listing)}
-          onMouseEnter={() => onListingHover?.(listing.id)}
-          onMouseLeave={() => onListingHover?.(null)}
+    <Card className="w-[360px] shadow-elevation-3 border-0 overflow-hidden animate-slide-up">
+      <CardContent className="p-0 relative">
+        {/* Close Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background z-10"
+          onClick={onClose}
         >
-          <CardContent className="p-0">
-            <div className="flex gap-3">
-              {/* Image */}
-              <div className="relative w-32 h-32 flex-shrink-0">
-                <img
-                  src={getListingImage(listing)}
-                  alt={listing.title}
-                  className="w-full h-full object-cover"
-                />
-                
-                {/* Badge Type Transaction */}
-                <Badge 
-                  className="absolute top-2 left-2 text-xs"
-                  variant={listing.transaction_type === 'sale' ? 'default' : 'secondary'}
-                >
-                  {listing.transaction_type === 'sale' ? 'Vente' : 'Location'}
-                </Badge>
+          ✕
+        </Button>
 
-                {/* Bouton Favori */}
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="absolute top-2 right-2 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background"
-                  onClick={(e) => handleFavoriteClick(e, listing.id)}
-                >
-                  <Heart
-                    className={`w-4 h-4 ${
-                      isFavorite(listing.id) 
-                        ? 'fill-red-500 text-red-500' 
-                        : 'text-muted-foreground'
-                    }`}
-                  />
-                </Button>
-              </div>
-
-              {/* Informations */}
-              <div className="flex-1 py-3 pr-3 min-w-0">
-                {/* Prix */}
-                <div className="text-lg font-bold text-primary mb-1">
-                  {formatPrice(listing.price)}
-                </div>
-
-                {/* Titre */}
-                <h3 className="font-semibold text-sm line-clamp-2 mb-2">
-                  {listing.title}
-                </h3>
-
-                {/* Localisation */}
-                <div className="flex items-center gap-1 text-xs text-muted-foreground mb-2">
-                  <MapPin className="w-3 h-3" />
-                  <span className="truncate">{listing.city}</span>
-                </div>
-
-                {/* Caract?ristiques */}
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  {listing.bedrooms && (
-                    <div className="flex items-center gap-1">
-                      <Bed className="w-3 h-3" />
-                      <span>{listing.bedrooms}</span>
-                    </div>
-                  )}
-                  {listing.bathrooms && (
-                    <div className="flex items-center gap-1">
-                      <Bath className="w-3 h-3" />
-                      <span>{listing.bathrooms}</span>
-                    </div>
-                  )}
-                  {listing.surface_area && (
-                    <div className="flex items-center gap-1">
-                      <Square className="w-3 h-3" />
-                      <span>{listing.surface_area}m?</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+        {/* Image */}
+        <div className="relative h-48 bg-muted">
+          {firstImage ? (
+            <img 
+              src={firstImage} 
+              alt={listing.title}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Camera className="w-12 h-12 text-muted-foreground/30" />
             </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+          )}
+          
+          {/* Virtual Tour Badge */}
+          {hasVirtualTour && (
+            <Badge 
+              className="absolute top-3 left-3 bg-primary/90 backdrop-blur-sm hover:bg-primary"
+            >
+              <Eye className="w-3 h-3 mr-1" />
+              Visites virtuelles
+            </Badge>
+          )}
+
+          {/* Photo Count Badge */}
+          {listing.photos && listing.photos.length > 0 && (
+            <Badge 
+              variant="secondary"
+              className="absolute top-3 right-12 bg-background/90 backdrop-blur-sm"
+            >
+              <Camera className="w-3 h-3 mr-1" />
+              {listing.photos.length}
+            </Badge>
+          )}
+
+          {/* Favorite Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute bottom-3 right-3 bg-background/90 backdrop-blur-sm hover:bg-background rounded-full h-9 w-9"
+            onClick={(e) => {
+              e.stopPropagation();
+              // Toggle favorite logic here
+            }}
+          >
+            <Heart className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Details */}
+        <div className="p-4 space-y-3">
+          {/* Price */}
+          <div className="text-2xl font-bold">
+            {formatPrice(listing.price, (listing as any).currency_code)}
+          </div>
+
+          {/* Title */}
+          <div className="font-semibold text-base line-clamp-2">
+            {listing.title}
+          </div>
+
+          {/* Location */}
+          <div className="text-sm text-muted-foreground flex items-center gap-1">
+            📍 {listing.city}
+          </div>
+
+          {/* Property Info */}
+          {(listing.bedrooms || listing.bathrooms) && (
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              {listing.bedrooms && (
+                <div className="flex items-center gap-1">
+                  🛏️ {listing.bedrooms}
+                </div>
+              )}
+              {listing.bathrooms && (
+                <div className="flex items-center gap-1">
+                  🚿 {listing.bathrooms}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Transaction Type Badge */}
+          {listing.transaction_type && (
+            <Badge variant="outline" className="capitalize">
+              {listing.transaction_type === 'sale' ? 'Vente' : 'Location'}
+            </Badge>
+          )}
+        </div>
+
+        {/* Navigation Footer */}
+        <div className="border-t border-border bg-muted/30 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleFirst}
+              disabled={currentIndex === 0}
+            >
+              <ChevronsLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handlePrevious}
+              disabled={currentIndex === 0}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+          </div>
+
+          <div className="text-sm font-medium">
+            {currentIndex + 1} / {totalListings}
+          </div>
+
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleNext}
+              disabled={currentIndex === totalListings - 1}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleLast}
+              disabled={currentIndex === totalListings - 1}
+            >
+              <ChevronsRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

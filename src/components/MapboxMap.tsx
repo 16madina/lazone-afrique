@@ -9,6 +9,7 @@ import { useCountry } from '@/contexts/CountryContext';
 import { useNavigate } from 'react-router-dom';
 import MapToolbar, { MapTool, MapDisplayMode } from './MapToolbar';
 import MapSelectionOverlay from './MapSelectionOverlay';
+import MapListingsList from './MapListingsList';
 
 interface Listing {
   id: string;
@@ -69,6 +70,11 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
   const [displayMode, setDisplayMode] = useState<MapDisplayMode>('markers');
   const [selectedListings, setSelectedListings] = useState<any[]>([]);
   const [selectionShape, setSelectionShape] = useState<any>(null);
+  
+  // États pour l'affichage de la liste des listings
+  const [showListingCard, setShowListingCard] = useState(false);
+  const [nearbyListings, setNearbyListings] = useState<Listing[]>([]);
+  const [currentListingIndex, setCurrentListingIndex] = useState(0);
 
   // Expose favorite functions to window for popup access
   useEffect(() => {
@@ -284,6 +290,30 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
         return processedListings;
       };
 
+      // Fonction pour trouver les listings à proximité
+      const findNearbyListings = (centerListing: Listing, allListings: Array<Listing & { adjustedLat: number; adjustedLng: number }>, radiusKm: number = 5) => {
+        const R = 6371; // Rayon de la Terre en km
+        
+        return allListings
+          .filter(l => l.id !== centerListing.id)
+          .map(l => {
+            const dLat = (l.lat - centerListing.lat) * Math.PI / 180;
+            const dLng = (l.lng - centerListing.lng) * Math.PI / 180;
+            const a = 
+              Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(centerListing.lat * Math.PI / 180) * Math.cos(l.lat * Math.PI / 180) *
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const distance = R * c;
+            
+            return { listing: l, distance };
+          })
+          .filter(item => item.distance <= radiusKm)
+          .sort((a, b) => a.distance - b.distance)
+          .slice(0, 30)
+          .map(item => item.listing);
+      };
+
       // Disperser les marqueurs avant de les ajouter à la carte
       const dispersedListings = disperseMarkers(listings);
 
@@ -463,44 +493,58 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
             </div>
           `);
 
-        // Attacher le popup au marqueur SANS déplacer la carte
+        // Attacher le clic au marqueur pour afficher la carte de listing
         markerElement.addEventListener('click', (e) => {
           e.stopPropagation();
           
-          // Fermer tous les autres popups
-          document.querySelectorAll('.mapboxgl-popup').forEach(popup => {
-            if (popup.parentNode) {
-              popup.parentNode.removeChild(popup);
-            }
-          });
-          
-          // Réinitialiser tous les marqueurs (SANS cacher le contenu)
+          // Réinitialiser tous les marqueurs
           document.querySelectorAll('.mapbox-price-marker').forEach(marker => {
             const htmlMarker = marker as HTMLElement;
             htmlMarker.style.transform = 'scale(1)';
-            htmlMarker.style.zIndex = '1';
+            htmlMarker.style.opacity = '0.7';
           });
           
-          // Ouvrir le nouveau popup SANS bouger la carte
-          popup.addTo(map.current!);
-          popup.setLngLat([listing.adjustedLng, listing.adjustedLat]);
+          // Mettre en évidence le marqueur cliqué
+          markerElement.style.transform = 'scale(1.15)';
+          markerElement.style.opacity = '1';
           
-          // Animation du marqueur cliqué (pas de déplacement de la carte)
-          markerElement.style.transform = 'scale(1.2)';
-          markerElement.style.zIndex = '1000';
-          setTimeout(() => {
-            markerElement.style.transform = 'scale(1.1)';
-          }, 150);
+          // Trouver les listings à proximité
+          const nearby = findNearbyListings(listing, dispersedListings, 5);
+          const allNearbyListings = [listing, ...nearby];
+          
+          setNearbyListings(allNearbyListings);
+          setCurrentListingIndex(0);
+          setShowListingCard(true);
         });
 
-        // Gérer la fermeture du popup
-        popup.on('close', () => {
-          markerElement.style.transform = 'scale(1)';
+        // Effet de survol
+        markerElement.addEventListener('mouseenter', () => {
+          if (!showListingCard) {
+            markerElement.style.transform = 'scale(1.1)';
+          }
+        });
+        
+        markerElement.addEventListener('mouseleave', () => {
+          if (!showListingCard) {
+            markerElement.style.transform = 'scale(1)';
+          }
         });
       });
 
-      // Un seul écouteur pour fermer les popups quand on clique sur la carte
+      // Initialiser l'opacité des marqueurs
+      document.querySelectorAll('.mapbox-price-marker').forEach(marker => {
+        (marker as HTMLElement).style.opacity = '0.85';
+      });
+
+      // Un seul écouteur pour fermer la carte de listing quand on clique sur la carte
       map.current?.on('click', (e) => {
+        setShowListingCard(false);
+        // Réinitialiser tous les marqueurs
+        document.querySelectorAll('.mapbox-price-marker').forEach(marker => {
+          const htmlMarker = marker as HTMLElement;
+          htmlMarker.style.transform = 'scale(1)';
+          htmlMarker.style.opacity = '0.85';
+        });
         // Vérifier qu'on n'a pas cliqué sur un marqueur
         const target = e.originalEvent.target as HTMLElement;
         if (!target.closest('.mapbox-price-marker')) {
@@ -813,6 +857,29 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
     navigate(`/listing/${id}`);
   };
 
+  const handleListingIndexChange = (newIndex: number) => {
+    setCurrentListingIndex(newIndex);
+    
+    // Centrer la carte sur le nouveau listing (légèrement)
+    const listing = nearbyListings[newIndex];
+    if (listing && map.current) {
+      map.current.easeTo({
+        center: [listing.lng, listing.lat],
+        duration: 500
+      });
+    }
+  };
+
+  const handleCloseListingCard = () => {
+    setShowListingCard(false);
+    // Réinitialiser tous les marqueurs
+    document.querySelectorAll('.mapbox-price-marker').forEach(marker => {
+      const htmlMarker = marker as HTMLElement;
+      htmlMarker.style.transform = 'scale(1)';
+      htmlMarker.style.opacity = '0.85';
+    });
+  };
+
   if (loading) {
     return (
       <div className="absolute inset-0 bg-background rounded-lg flex items-center justify-center">
@@ -890,6 +957,19 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
           <p className="text-sm font-medium">
             Cliquez pour ajouter des points • <span className="px-2 py-1 bg-background/50 rounded font-mono text-xs">Entrée</span> pour terminer • <span className="px-2 py-1 bg-background/50 rounded font-mono text-xs">Échap</span> pour annuler
           </p>
+        </div>
+      )}
+      
+      {/* Carte de listing flottante */}
+      {showListingCard && nearbyListings.length > 0 && (
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 z-[1000] pointer-events-auto">
+          <MapListingsList
+            listings={nearbyListings}
+            currentIndex={currentListingIndex}
+            onIndexChange={handleListingIndexChange}
+            onViewDetails={handleViewListing}
+            onClose={handleCloseListingCard}
+          />
         </div>
       )}
     </div>
