@@ -527,6 +527,7 @@ export type Database = {
           land_type: string | null
           lat: number
           lng: number
+          neighborhood: string | null
           photos: string[] | null
           price: number
           price_currency: string
@@ -561,6 +562,7 @@ export type Database = {
           land_type?: string | null
           lat: number
           lng: number
+          neighborhood?: string | null
           photos?: string[] | null
           price: number
           price_currency?: string
@@ -595,6 +597,7 @@ export type Database = {
           land_type?: string | null
           lat?: number
           lng?: number
+          neighborhood?: string | null
           photos?: string[] | null
           price?: number
           price_currency?: string
