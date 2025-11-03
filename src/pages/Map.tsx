@@ -169,75 +169,37 @@ const Map = () => {
     }
 
     try {
+      // Prioritize neighborhood over city for better precision
       const searchLocation = searchNeighborhood.trim() || searchCity.trim();
       console.log('🔍 Recherche de localisation:', searchLocation);
       
-      // Get Mapbox token
-      const { data: tokenData, error: tokenError } = await supabase.functions.invoke('get-mapbox-token');
-      
-      if (tokenError) {
-        console.error('Erreur token:', tokenError);
-        toast.error('Erreur de configuration de la carte');
-        return;
-      }
-      
-      if (!tokenData?.token) {
-        console.error('Pas de token dans la réponse');
-        toast.error('Erreur de configuration de la carte');
-        return;
-      }
-
-      console.log('✅ Token récupéré, recherche en cours...');
-
-      // Build search query with country context for better results
-      let searchQuery = '';
-      if (searchNeighborhood.trim() && searchCity.trim()) {
-        // If both neighborhood and city are provided, search with full context
-        searchQuery = encodeURIComponent(`${searchNeighborhood.trim()}, ${searchCity.trim()}, ${selectedCountry.name}`);
-      } else if (searchNeighborhood.trim()) {
-        // Neighborhood only - add city context from selected country
-        searchQuery = encodeURIComponent(`${searchNeighborhood.trim()}, ${selectedCountry.name}`);
-      } else {
-        // City only - add country context
-        searchQuery = encodeURIComponent(`${searchCity.trim()}, ${selectedCountry.name}`);
-      }
-      
-      // Choose appropriate types based on what user is searching for
-      const types = searchNeighborhood.trim() ? 'neighborhood,locality,place' : 'place,locality';
-      
-      // Add country restriction and proximity to current country center
-      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${searchQuery}.json?access_token=${tokenData.token}&types=${types}&country=${selectedCountry.code.toLowerCase()}&limit=5`;
-      
-      console.log('🌍 URL de recherche:', url);
-      
-      const response = await fetch(url);
-      const data = await response.json();
-      
-      console.log('📍 Résultats geocoding:', data);
-      
-      if (data.features && data.features.length > 0) {
-        const feature = data.features[0];
-        const [lng, lat] = feature.center;
-        const placeName = feature.place_name || feature.text;
-        
-        // Extract country code from the result
-        const countryContext = feature.context?.find((c: any) => c.id.startsWith('country'));
-        const countryCode = countryContext?.short_code?.toUpperCase();
-        
-        console.log('✅ Ville trouvée:', placeName, 'Coords:', lng, lat, 'Pays:', countryCode);
-        
-        // Update country if found and different from current
-        if (countryCode && countryCode !== selectedCountry.code) {
-          const newCountry = countries.find(c => c.code === countryCode);
-          if (newCountry) {
-            setSelectedCountry(newCountry);
-            console.log('🔄 Changement de pays vers:', newCountry.name);
-            toast.success(`Changement de pays: ${newCountry.name}`);
-          }
+      // Use our geocode-city edge function which has local database of neighborhoods
+      const { data: geocodeData, error: geocodeError } = await supabase.functions.invoke('geocode-city', {
+        body: { 
+          city: searchLocation,
+          countryCode: selectedCountry.code 
         }
+      });
+      
+      if (geocodeError) {
+        console.error('❌ Erreur geocoding:', geocodeError);
+        toast.error('Erreur lors de la recherche');
+        return;
+      }
+      
+      if (geocodeData && geocodeData.lat && geocodeData.lng) {
+        console.log('✅ Localisation trouvée:', {
+          location: searchLocation,
+          coords: { lat: geocodeData.lat, lng: geocodeData.lng },
+          source: geocodeData.source,
+          foundExact: geocodeData.foundExact
+        });
         
-        setCityCoords({ lng, lat });
-        toast.success(`Localisation trouvée: ${placeName}`);
+        setCityCoords({ lng: geocodeData.lng, lat: geocodeData.lat });
+        
+        const sourceText = geocodeData.source === 'database' ? '(base locale)' : 
+                          geocodeData.source === 'mapbox' ? '(Mapbox)' : '(approximatif)';
+        toast.success(`Localisation trouvée: ${searchLocation} ${sourceText}`);
       } else {
         console.warn('❌ Aucune localisation trouvée pour:', searchLocation);
         toast.error(`Aucune localisation trouvée pour "${searchLocation}"`);
