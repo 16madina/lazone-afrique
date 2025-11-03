@@ -6,6 +6,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCountry } from '@/contexts/CountryContext';
+import { useNavigate } from 'react-router-dom';
+import MapToolbar, { MapTool, MapDisplayMode } from './MapToolbar';
+import MapSelectionOverlay from './MapSelectionOverlay';
 
 interface Listing {
   id: string;
@@ -59,6 +62,13 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
   const { selectedCountry, formatPrice } = useCountry();
   const { user } = useAuth();
   const { toggleFavorite, isFavorite, loading: favoritesLoading } = useFavorites();
+  const navigate = useNavigate();
+  
+  // États pour les outils de sélection
+  const [activeTool, setActiveTool] = useState<MapTool>('none');
+  const [displayMode, setDisplayMode] = useState<MapDisplayMode>('markers');
+  const [selectedListings, setSelectedListings] = useState<any[]>([]);
+  const [selectionShape, setSelectionShape] = useState<any>(null);
 
   // Expose favorite functions to window for popup access
   useEffect(() => {
@@ -510,6 +520,271 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
     }
   }, [selectedCityCoords]);
 
+  // Gérer le changement d'outil
+  const handleToolChange = (tool: MapTool) => {
+    console.log('[MAP] Outil change:', tool);
+    setActiveTool(tool);
+    
+    if (tool === 'none') {
+      // Effacer le shape de sélection s'il existe
+      if (selectionShape) {
+        selectionShape.remove();
+        setSelectionShape(null);
+      }
+    } else if (map.current) {
+      // Changer le curseur
+      map.current.getCanvas().style.cursor = 'crosshair';
+      
+      // Ajouter les événements de dessin
+      if (tool === 'circle') {
+        setupCircleTool();
+      } else if (tool === 'polygon') {
+        setupPolygonTool();
+      }
+    }
+  };
+
+  // Configurer l'outil de sélection circulaire
+  const setupCircleTool = () => {
+    if (!map.current) return;
+    
+    let center: [number, number] | null = null;
+    let circle: mapboxgl.Marker | null = null;
+
+    const onMouseDown = (e: mapboxgl.MapMouseEvent) => {
+      center = [e.lngLat.lng, e.lngLat.lat];
+    };
+
+    const onMouseUp = (e: mapboxgl.MapMouseEvent) => {
+      if (!center || !map.current) return;
+      
+      const end: [number, number] = [e.lngLat.lng, e.lngLat.lat];
+      const radius = calculateDistance(center, end);
+      
+      // Sélectionner les listings dans le cercle
+      const selected = listings.filter(listing => {
+        const distance = calculateDistance(center!, [listing.lng, listing.lat]);
+        return distance <= radius;
+      });
+      
+      setSelectedListings(selected);
+      console.log(`[MAP] ${selected.length} proprietes selectionnees`);
+      
+      // Réinitialiser le curseur et l'outil
+      map.current.getCanvas().style.cursor = '';
+      setActiveTool('none');
+      
+      // Nettoyer les événements
+      map.current.off('mousedown', onMouseDown);
+      map.current.off('mouseup', onMouseUp);
+    };
+
+    map.current.on('mousedown', onMouseDown);
+    map.current.on('mouseup', onMouseUp);
+  };
+
+  // Configurer l'outil de sélection polygonale
+  const setupPolygonTool = () => {
+    if (!map.current) return;
+    
+    const points: [number, number][] = [];
+    let tempMarkers: mapboxgl.Marker[] = [];
+
+    const onMapClick = (e: mapboxgl.MapMouseEvent) => {
+      const point: [number, number] = [e.lngLat.lng, e.lngLat.lat];
+      points.push(point);
+      
+      // Ajouter un marqueur temporaire
+      const marker = new mapboxgl.Marker({ color: '#3b82f6', scale: 0.5 })
+        .setLngLat(point)
+        .addTo(map.current!);
+      tempMarkers.push(marker);
+      
+      console.log(`[MAP] Point ${points.length} ajoute`);
+    };
+
+    const onKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && points.length >= 3) {
+        // Finaliser la sélection
+        const selected = listings.filter(listing => {
+          return isPointInPolygon([listing.lng, listing.lat], points);
+        });
+        
+        setSelectedListings(selected);
+        console.log(`[MAP] ${selected.length} proprietes selectionnees dans le polygone`);
+        
+        // Nettoyer
+        tempMarkers.forEach(m => m.remove());
+        tempMarkers = [];
+        map.current!.getCanvas().style.cursor = '';
+        setActiveTool('none');
+        map.current!.off('click', onMapClick);
+        document.removeEventListener('keypress', onKeyPress);
+      } else if (e.key === 'Escape') {
+        // Annuler
+        tempMarkers.forEach(m => m.remove());
+        tempMarkers = [];
+        points.length = 0;
+        map.current!.getCanvas().style.cursor = '';
+        setActiveTool('none');
+        map.current!.off('click', onMapClick);
+        document.removeEventListener('keypress', onKeyPress);
+      }
+    };
+
+    map.current.on('click', onMapClick);
+    document.addEventListener('keypress', onKeyPress);
+    
+    console.log('[MAP] Mode polygone active - Cliquez pour ajouter des points, Entree pour terminer, Echap pour annuler');
+  };
+
+  // Calculer la distance entre deux points (formule de Haversine)
+  const calculateDistance = (point1: [number, number], point2: [number, number]) => {
+    const R = 6371; // Rayon de la Terre en km
+    const dLat = (point2[1] - point1[1]) * Math.PI / 180;
+    const dLon = (point2[0] - point1[0]) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(point1[1] * Math.PI / 180) * Math.cos(point2[1] * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  // Vérifier si un point est dans un polygone (ray-casting algorithm)
+  const isPointInPolygon = (point: [number, number], polygon: [number, number][]) => {
+    let inside = false;
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      const xi = polygon[i][0], yi = polygon[i][1];
+      const xj = polygon[j][0], yj = polygon[j][1];
+      
+      const intersect = ((yi > point[1]) !== (yj > point[1]))
+        && (point[0] < (xj - xi) * (point[1] - yi) / (yj - yi) + xi);
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  };
+
+  // Gérer le changement de mode d'affichage
+  const handleDisplayModeChange = (mode: MapDisplayMode) => {
+    console.log('[MAP] Mode d\'affichage:', mode);
+    setDisplayMode(mode);
+    
+    if (mode === 'heatmap' && map.current) {
+      // Activer le mode heatmap
+      addHeatmapLayer();
+    } else if (map.current) {
+      // Retirer le heatmap si présent
+      if (map.current.getLayer('listings-heatmap')) {
+        map.current.removeLayer('listings-heatmap');
+      }
+      if (map.current.getSource('listings-heat')) {
+        map.current.removeSource('listings-heat');
+      }
+    }
+  };
+
+  // Ajouter une couche heatmap
+  const addHeatmapLayer = () => {
+    if (!map.current) return;
+    
+    // Retirer les couches existantes si présentes
+    if (map.current.getLayer('listings-heatmap')) {
+      map.current.removeLayer('listings-heatmap');
+    }
+    if (map.current.getSource('listings-heat')) {
+      map.current.removeSource('listings-heat');
+    }
+    
+    // Préparer les données pour le heatmap
+    const heatmapData: GeoJSON.FeatureCollection = {
+      type: 'FeatureCollection',
+      features: listings.map(listing => ({
+        type: 'Feature',
+        properties: {
+          price: listing.price
+        },
+        geometry: {
+          type: 'Point',
+          coordinates: [listing.lng, listing.lat]
+        }
+      }))
+    };
+    
+    map.current.addSource('listings-heat', {
+      type: 'geojson',
+      data: heatmapData
+    });
+    
+    map.current.addLayer({
+      id: 'listings-heatmap',
+      type: 'heatmap',
+      source: 'listings-heat',
+      paint: {
+        // Augmenter l'intensité selon le prix
+        'heatmap-weight': [
+          'interpolate',
+          ['linear'],
+          ['get', 'price'],
+          0, 0,
+          1000000, 1
+        ],
+        // Augmenter l'intensité avec le zoom
+        'heatmap-intensity': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          0, 1,
+          9, 3
+        ],
+        // Couleur du heatmap
+        'heatmap-color': [
+          'interpolate',
+          ['linear'],
+          ['heatmap-density'],
+          0, 'rgba(33,102,172,0)',
+          0.2, 'rgb(103,169,207)',
+          0.4, 'rgb(209,229,240)',
+          0.6, 'rgb(253,219,199)',
+          0.8, 'rgb(239,138,98)',
+          1, 'rgb(178,24,43)'
+        ],
+        // Ajuster le rayon selon le zoom
+        'heatmap-radius': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          0, 2,
+          9, 20
+        ],
+        // Transition d'opacité selon le zoom
+        'heatmap-opacity': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          7, 1,
+          9, 0.7
+        ]
+      }
+    });
+    
+    console.log('[MAP] Couche heatmap ajoutee');
+  };
+
+  // Effacer la sélection
+  const handleClearSelection = () => {
+    setSelectedListings([]);
+    if (selectionShape) {
+      selectionShape.remove();
+      setSelectionShape(null);
+    }
+  };
+
+  // Voir un listing
+  const handleViewListing = (id: string) => {
+    navigate(`/listing/${id}`);
+  };
+
   if (loading) {
     return (
       <div className="absolute inset-0 bg-background rounded-lg flex items-center justify-center">
@@ -557,6 +832,38 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="absolute inset-0 rounded-lg shadow-lg" />
       <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent to-background/5 rounded-lg" />
+      
+      {/* Barre d'outils */}
+      <MapToolbar
+        activeTool={activeTool}
+        displayMode={displayMode}
+        onToolChange={handleToolChange}
+        onDisplayModeChange={handleDisplayModeChange}
+        onClearSelection={handleClearSelection}
+        selectedCount={selectedListings.length}
+      />
+      
+      {/* Overlay de sélection */}
+      <MapSelectionOverlay
+        selectedListings={selectedListings}
+        onClose={handleClearSelection}
+        onViewListing={handleViewListing}
+      />
+      
+      {/* Instructions pour les outils */}
+      {activeTool === 'circle' && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 glass px-4 py-2 rounded-lg shadow-elevation-3 animate-fade-in">
+          <p className="text-sm font-medium">Cliquez et glissez pour dessiner un cercle</p>
+        </div>
+      )}
+      
+      {activeTool === 'polygon' && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 glass px-4 py-2 rounded-lg shadow-elevation-3 animate-fade-in">
+          <p className="text-sm font-medium">
+            Cliquez pour ajouter des points • <span className="px-2 py-1 bg-background/50 rounded font-mono text-xs">Entrée</span> pour terminer • <span className="px-2 py-1 bg-background/50 rounded font-mono text-xs">Échap</span> pour annuler
+          </p>
+        </div>
+      )}
     </div>
   );
 };
