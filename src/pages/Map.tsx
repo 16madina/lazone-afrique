@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Filter, Search } from 'lucide-react';
 import MapboxMap from '@/components/MapboxMap';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface MapListing {
   id: string;
@@ -50,6 +51,39 @@ const Map = () => {
   });
   
   const { selectedCountry, setSelectedCountry, countries } = useCountry();
+  const { user } = useAuth();
+
+  // Initialize country based on user's profile
+  useEffect(() => {
+    const loadUserCountry = async () => {
+      if (!user) return;
+      
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('country')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (profile?.country) {
+          // Find matching country in the countries list
+          const userCountry = countries.find(c => 
+            c.name.toLowerCase() === profile.country.toLowerCase() ||
+            c.code.toLowerCase() === profile.country.toLowerCase()
+          );
+          
+          if (userCountry && userCountry.code !== selectedCountry.code) {
+            setSelectedCountry(userCountry);
+            console.log('🌍 Pays de l\'utilisateur détecté:', userCountry.name);
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement du pays de l\'utilisateur:', error);
+      }
+    };
+
+    loadUserCountry();
+  }, [user, countries]);
 
   // Fetch listings from Supabase
   useEffect(() => {
