@@ -9,7 +9,7 @@ import { NativeInitializer } from "@/components/NativeInitializer";
 
 // Import direct de toutes les pages (pas de lazy loading)
 import Index from "./pages/Index";
-import Map from "./pages/Map";
+
 import ListingDetail from "./pages/ListingDetail";
 import AddProperty from "./pages/AddProperty";
 import Messages from "./pages/Messages";
@@ -40,7 +40,7 @@ const AppContent = () => {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
-      <Route path="/map" element={<Map />} />
+      
       <Route path="/listing/:id" element={<ListingDetail />} />
       <Route path="/add-property" element={<AddProperty />} />
       <Route path="/messages" element={<Messages />} />
