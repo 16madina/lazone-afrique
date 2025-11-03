@@ -152,14 +152,14 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
       el.style.cssText = `
         background: ${listing.is_sponsored ? 'linear-gradient(135deg, #f59e0b, #f97316)' : '#E11D48'};
         color: white;
-        padding: 10px 16px;
-        border-radius: 24px;
-        font-weight: 700;
-        font-size: 15px;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 11px;
         cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
-        border: 3px solid white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        border: 2px solid white;
         white-space: nowrap;
         position: relative;
         z-index: 10;
@@ -168,14 +168,14 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
 
       // Hover effects
       el.addEventListener('mouseenter', () => {
-        el.style.transform = 'scale(1.15) translateY(-4px)';
-        el.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.25)';
+        el.style.transform = 'scale(1.1) translateY(-2px)';
+        el.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.25)';
         el.style.zIndex = '1000';
       });
 
       el.addEventListener('mouseleave', () => {
         el.style.transform = 'scale(1) translateY(0)';
-        el.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+        el.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
         el.style.zIndex = '1';
       });
 
