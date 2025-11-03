@@ -286,7 +286,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
       
       {/* Listing Preview Card */}
       {selectedListing && (
-        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-10 w-[90%] max-w-md">
+        <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-10 w-[90%] max-w-md">
           <Card 
             className="overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 bg-card/95 backdrop-blur-sm"
             onClick={() => handleListingClick(selectedListing.id)}
