@@ -188,13 +188,13 @@ const Map = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <EnhancedHeader />
       
-      <main className="flex-1 pt-16 md:pt-20">
+      <main className="flex-1">
         {/* Search and Filters Bar */}
-        <div className="sticky top-16 md:top-20 z-10 bg-background/95 backdrop-blur-sm border-b border-border">
-          <div className="container mx-auto px-4 py-3">
+        <div className="sticky top-16 md:top-20 z-40 bg-background border-b border-border shadow-sm">
+          <div className="w-full px-4 py-3">
             {/* City Search Bar */}
             <form onSubmit={handleCitySearch} className="mb-3">
-              <div className="flex items-center gap-2 max-w-md">
+              <div className="flex items-center gap-2 w-full max-w-2xl">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -202,17 +202,17 @@ const Map = () => {
                     placeholder="Rechercher une ville..."
                     value={searchCity}
                     onChange={(e) => setSearchCity(e.target.value)}
-                    className="pl-9"
+                    className="pl-9 h-10"
                   />
                 </div>
-                <Button type="submit" size="sm">
+                <Button type="submit" size="sm" className="shrink-0">
                   Rechercher
                 </Button>
               </div>
             </form>
 
             {/* Filters */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between w-full max-w-2xl">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">
                   {filteredListings.length} annonce{filteredListings.length > 1 ? 's' : ''} trouvée{filteredListings.length > 1 ? 's' : ''}
@@ -221,7 +221,7 @@ const Map = () => {
               
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
+                  <Button variant="outline" size="sm" className="gap-2 shrink-0">
                     <Filter className="h-4 w-4" />
                     Filtres
                   </Button>
@@ -243,7 +243,7 @@ const Map = () => {
         </div>
 
         {/* Map Container */}
-        <div className="relative h-[calc(100vh-10rem)] md:h-[calc(100vh-11rem)]">
+        <div className="relative h-[calc(100vh-12rem)] md:h-[calc(100vh-13rem)]">
           {loading ? (
             <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
               <div className="text-center">

@@ -90,15 +90,17 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
 
     // Listen for geolocation success
     geolocateControl.on('geolocate', (e: any) => {
-      console.log('📍 User location found:', e.coords.latitude, e.coords.longitude);
-      setUserLocationFound(true);
-      
-      // Zoom to user location
-      map.current?.flyTo({
-        center: [e.coords.longitude, e.coords.latitude],
-        zoom: 13,
-        duration: 1500
-      });
+      if (e && e.coords) {
+        console.log('📍 User location found:', e.coords.latitude, e.coords.longitude);
+        setUserLocationFound(true);
+        
+        // Zoom to user location
+        map.current?.flyTo({
+          center: [e.coords.longitude, e.coords.latitude],
+          zoom: 13,
+          duration: 1500
+        });
+      }
     });
 
     // Listen for geolocation errors
