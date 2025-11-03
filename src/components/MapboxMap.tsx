@@ -57,10 +57,11 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
+      style: 'mapbox://styles/mapbox/streets-v11',
       center: center as [number, number],
       zoom: listings.length > 0 ? 11 : 2,
       pitch: 0,
+      projection: { name: 'mercator' }
     });
 
     // Add navigation controls
