@@ -58,7 +58,8 @@ const Map = () => {
       const countryCodeUpper = selectedCountry.code.toUpperCase();
       console.log('🔍 Fetching listings for country:', countryCodeUpper, selectedCountry.name);
       try {
-        const { data, error } = await supabase
+        // Build query
+        let query = supabase
           .from('listings')
           .select(`
             id,
@@ -78,10 +79,15 @@ const Map = () => {
             is_sponsored
           `)
           .eq('status', 'published')
-          .eq('country_code', countryCodeUpper)
           .not('lat', 'is', null)
-          .not('lng', 'is', null)
-          .order('created_at', { ascending: false });
+          .not('lng', 'is', null);
+        
+        // Only filter by country if not International
+        if (countryCodeUpper !== 'INT') {
+          query = query.eq('country_code', countryCodeUpper);
+        }
+        
+        const { data, error } = await query.order('created_at', { ascending: false });
 
         if (error) throw error;
         
