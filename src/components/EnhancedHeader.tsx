@@ -62,34 +62,39 @@ export const EnhancedHeader = () => {
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
-                className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1 h-auto p-2"
+                className="text-sm font-medium hover:text-primary hover:bg-accent transition-colors flex items-center gap-1.5 h-auto px-3 py-2"
               >
                 <Map className="w-4 h-4" />
-                Carte
-                <ChevronDown className="w-3 h-3" />
+                <span>Carte</span>
+                <ChevronDown className="w-3.5 h-3.5 opacity-50" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuLabel className="flex items-center gap-2">
+            <DropdownMenuContent align="start" className="w-64 max-h-96 overflow-y-auto bg-background z-[200]">
+              <DropdownMenuLabel className="flex items-center gap-2 text-base">
                 <Globe className="w-4 h-4" />
-                Choisir un pays
+                Sélectionner un pays
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {countries.map((country) => (
-                <DropdownMenuItem
-                  key={country.code}
-                  onClick={() => handleCountryMapNavigation(country.code)}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <span className="text-lg">{country.flag}</span>
-                  <span className="flex-1">{country.name}</span>
-                  {selectedCountry.code === country.code && (
-                    <Badge variant="secondary" className="text-xs">
-                      Actuel
-                    </Badge>
-                  )}
-                </DropdownMenuItem>
-              ))}
+              <div className="max-h-80 overflow-y-auto">
+                {countries.map((country) => (
+                  <DropdownMenuItem
+                    key={country.code}
+                    onClick={() => handleCountryMapNavigation(country.code)}
+                    className="flex items-center gap-3 cursor-pointer py-2.5 px-3"
+                  >
+                    <span className="text-xl">{country.flag}</span>
+                    <div className="flex-1 flex flex-col gap-0.5">
+                      <span className="font-medium">{country.name}</span>
+                      <span className="text-xs text-muted-foreground">{country.currency.code}</span>
+                    </div>
+                    {selectedCountry.code === country.code && (
+                      <Badge variant="secondary" className="text-xs ml-auto">
+                        ✓
+                      </Badge>
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
 
