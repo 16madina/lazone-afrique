@@ -120,10 +120,12 @@ const Map = () => {
       filtered = filtered.filter(l => l.bathrooms && l.bathrooms >= bathroomsNum);
     }
 
-    // Surface area filter
-    filtered = filtered.filter(
-      l => l.surface_area && l.surface_area >= filters.surface[0] && l.surface_area <= filters.surface[1]
-    );
+    // Surface area filter (only apply if user has changed from default)
+    if (filters.surface[0] > 0 || filters.surface[1] < 1000) {
+      filtered = filtered.filter(
+        l => l.surface_area && l.surface_area >= filters.surface[0] && l.surface_area <= filters.surface[1]
+      );
+    }
 
     // Location filter
     if (filters.location) {
