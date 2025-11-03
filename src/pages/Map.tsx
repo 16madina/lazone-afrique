@@ -154,32 +154,54 @@ const Map = () => {
 
   const handleCitySearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!searchCity.trim()) return;
+    if (!searchCity.trim()) {
+      toast.error('Veuillez entrer un nom de ville');
+      return;
+    }
 
     try {
+      console.log('🔍 Recherche de ville:', searchCity, 'dans le pays:', selectedCountry.code);
+      
       // Get Mapbox token
-      const { data: tokenData } = await supabase.functions.invoke('get-mapbox-token');
+      const { data: tokenData, error: tokenError } = await supabase.functions.invoke('get-mapbox-token');
+      
+      if (tokenError) {
+        console.error('Erreur token:', tokenError);
+        toast.error('Erreur de configuration de la carte');
+        return;
+      }
+      
       if (!tokenData?.token) {
+        console.error('Pas de token dans la réponse');
         toast.error('Erreur de configuration de la carte');
         return;
       }
 
-      // Geocode the city
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchCity)}.json?access_token=${tokenData.token}&country=${selectedCountry.code}&types=place,locality`
-      );
+      console.log('✅ Token récupéré, recherche en cours...');
+
+      // Geocode the city - search in the selected country
+      const searchQuery = encodeURIComponent(searchCity);
+      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${searchQuery}.json?access_token=${tokenData.token}&country=${selectedCountry.code.toLowerCase()}&types=place,locality&limit=5`;
       
+      console.log('🌍 URL de recherche:', url);
+      
+      const response = await fetch(url);
       const data = await response.json();
+      
+      console.log('📍 Résultats geocoding:', data);
       
       if (data.features && data.features.length > 0) {
         const [lng, lat] = data.features[0].center;
+        const placeName = data.features[0].place_name || data.features[0].text;
+        console.log('✅ Ville trouvée:', placeName, 'Coords:', lng, lat);
         setCityCoords({ lng, lat });
-        toast.success(`Ville trouvée: ${data.features[0].place_name}`);
+        toast.success(`Ville trouvée: ${placeName}`);
       } else {
-        toast.error('Ville introuvable');
+        console.warn('❌ Aucune ville trouvée pour:', searchCity);
+        toast.error(`Aucune ville trouvée pour "${searchCity}" dans ${selectedCountry.name}`);
       }
     } catch (error) {
-      console.error('Error geocoding city:', error);
+      console.error('❌ Erreur lors de la recherche:', error);
       toast.error('Erreur lors de la recherche de la ville');
     }
   };
