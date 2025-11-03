@@ -56,7 +56,6 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isInitializing, setIsInitializing] = useState(false);
   const { selectedCountry, formatPrice } = useCountry();
   const { user } = useAuth();
   const { toggleFavorite, isFavorite, loading: favoritesLoading } = useFavorites();
@@ -133,19 +132,16 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
   }, []);
 
   useEffect(() => {
-    if (!mapContainer.current || !mapboxToken || isInitializing) {
+    if (!mapContainer.current || !mapboxToken) {
       console.log('⏸️ [MAPBOX] En attente:', { 
         hasContainer: !!mapContainer.current, 
-        hasToken: !!mapboxToken,
-        isInitializing
+        hasToken: !!mapboxToken
       });
       return;
     }
 
     console.log('🗺️ [MAPBOX] Démarrage initialisation carte...');
     console.log('📊 [MAPBOX] Listings à afficher:', listings.length);
-    
-    setIsInitializing(true);
 
     // Initialiser la carte
     mapboxgl.accessToken = mapboxToken;
@@ -190,7 +186,6 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
     // Centrer sur l'Afrique quand la carte est chargée
     map.current.on('load', () => {
       console.log('✅ [MAPBOX] Carte chargée avec succès!');
-      setIsInitializing(false);
       
       // Bounds approximatifs de l'Afrique
       const africaBounds: [number, number, number, number] = [-20, -35, 52, 37];
