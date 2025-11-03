@@ -53,6 +53,7 @@ const AddProperty = () => {
     description: "",
     price: "",
     city: "",
+    neighborhood: "",
     location: "",
     bedrooms: "",
     bathrooms: "",
@@ -114,6 +115,7 @@ const AddProperty = () => {
           description: listing.description || "",
           price: listing.price?.toString() || "",
           city: listing.city || "",
+          neighborhood: listing.neighborhood || "",
           location: "", // This field doesn't exist in database
           bedrooms: listing.bedrooms?.toString() || "",
           bathrooms: listing.bathrooms?.toString() || "",
@@ -506,11 +508,12 @@ const AddProperty = () => {
       const photoUrls = uploadedPhotos.map(photo => photo.url);
       const videoUrl = uploadedVideo?.url || null;
 
-      // Get real coordinates for the city using geocoding
-      console.log(`Geocoding city: ${formData.city}, ${selectedCountry.code}`);
+      // Get real coordinates for the city/neighborhood using geocoding
+      const locationToGeocode = formData.neighborhood || formData.city;
+      console.log(`Geocoding location: ${locationToGeocode}, ${selectedCountry.code}`);
       const { data: geocodeData, error: geocodeError } = await supabase.functions.invoke('geocode-city', {
         body: {
-          city: formData.city,
+          city: locationToGeocode,
           countryCode: selectedCountry.code
         }
       });
@@ -538,6 +541,7 @@ const AddProperty = () => {
         currency_code: selectedCountry.currency.code, // Store currency code
         price_currency: selectedCountry.currency.code, // Store price currency
         city: formData.city,
+        neighborhood: formData.neighborhood || null,
         country_code: selectedCountry.code.toUpperCase(),
         user_id: user.id,
         lat: coordinates.lat,
@@ -755,6 +759,18 @@ const AddProperty = () => {
                     onGeolocation={handleGeolocation}
                     isGeolocating={isGeolocating}
                   />
+
+                  <div className="space-y-2">
+                    <Label>Quartier (optionnel mais recommandé)</Label>
+                    <Input 
+                      placeholder="ex: Cocody, Riviera, Marcory..." 
+                      value={formData.neighborhood}
+                      onChange={(e) => updateFormData('neighborhood', e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Le quartier permet de positionner précisément votre annonce sur la carte
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
