@@ -208,56 +208,15 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
 
     console.log(`✅ Total markers created: ${markersRef.current.length}`);
 
-    // Only fit bounds if user location hasn't been found yet
-    // This prevents the map from zooming out after user location is set
-    if (!userLocationFound && listings.length > 0) {
-      const bounds = new mapboxgl.LngLatBounds();
-      listings.forEach(listing => {
-        if (listing.lat && listing.lng) {
-          bounds.extend([listing.lng, listing.lat]);
-        }
-      });
-      
-      // Delay to allow geolocation to happen first
-      setTimeout(() => {
-        if (!userLocationFound && map.current) {
-          console.log('🎯 Fitting bounds to show all listings');
-          map.current.fitBounds(bounds, {
-            padding: { top: 100, bottom: 100, left: 100, right: 100 },
-            maxZoom: 14,
-            duration: 1000
-          });
-        }
-      }, 2000);
-    }
+    // Automatic map movement disabled - pins stay in place
+    // User controls map movement via manual zoom/pan or geolocation button
   }, [listings, mapboxToken, formatShortPrice, userLocationFound]);
 
-  // Handle city search coordinates
-  useEffect(() => {
-    if (!map.current || !cityCoords) return;
+  // City search no longer moves map automatically
+  // User can manually navigate to searched city
 
-    map.current.flyTo({
-      center: [cityCoords.lng, cityCoords.lat],
-      zoom: 13,
-      duration: 1500
-    });
-  }, [cityCoords]);
-
-  // Handle country change - center map on selected country
-  useEffect(() => {
-    if (!map.current || !selectedCountry) return;
-
-    console.log('🌍 Country changed to:', selectedCountry.name, 'coords:', selectedCountry.coordinates);
-    
-    // Always recenter when country changes
-    if (selectedCountry.coordinates) {
-      map.current.flyTo({
-        center: [selectedCountry.coordinates.lng, selectedCountry.coordinates.lat],
-        zoom: selectedCountry.coordinates.zoom || 6,
-        duration: 1500
-      });
-    }
-  }, [selectedCountry]);
+  // Country change no longer moves map automatically
+  // Map stays at user's current view position
 
   const handleListingClick = (listingId: string) => {
     navigate(`/listing/${listingId}`);
