@@ -129,7 +129,7 @@ function getKnownLocation(city: string, countryCode: string): { lat: number; lng
   const knownLocations: { [key: string]: { [key: string]: { lat: number; lng: number } } } = {
     'CI': {
       // Abidjan communes and neighborhoods
-      'cocody': { lat: 5.3478, lng: -4.0267 },
+      'cocody': { lat: 5.3600, lng: -3.9900 },
       'cocody angré': { lat: 5.4041, lng: -3.9888 },
       'angré': { lat: 5.4041, lng: -3.9888 },
       'deux plateaux': { lat: 5.3609, lng: -3.9975 },
