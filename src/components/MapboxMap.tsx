@@ -156,7 +156,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
     // Initialiser la carte
     mapboxgl.accessToken = mapboxToken;
     
-    // Déterminer le style Mapbox selon la prop
+    // Déterminer le style Mapbox selon la prop avec un style moderne
     const getMapboxStyle = (style: string) => {
       switch (style) {
         case 'satellite':
@@ -165,7 +165,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
           return 'mapbox://styles/mapbox/outdoors-v12';
         case 'streets':
         default:
-          return 'mapbox://styles/mapbox/streets-v12';
+          return 'mapbox://styles/mapbox/light-v11'; // Style moderne et épuré
       }
     };
     
@@ -193,13 +193,32 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
     });
     map.current.addControl(nav, 'top-right');
 
-    // Centrer sur l'Afrique quand la carte est chargée
+    // Centrer sur les listings quand la carte est chargée
     map.current.on('load', () => {
       console.log('✅ [MAPBOX] Carte chargée avec succès!');
       
-      // Bounds approximatifs de l'Afrique
-      const africaBounds: [number, number, number, number] = [-20, -35, 52, 37];
-      map.current?.fitBounds(africaBounds, { padding: 50 });
+      // Calculer les bounds des listings pour un zoom adapté
+      if (listings.length > 0) {
+        const bounds = new mapboxgl.LngLatBounds();
+        listings.forEach(listing => {
+          if (listing.lng && listing.lat) {
+            bounds.extend([listing.lng, listing.lat]);
+          }
+        });
+        
+        // Centrer la carte sur les listings avec un padding confortable
+        if (!bounds.isEmpty()) {
+          map.current?.fitBounds(bounds, { 
+            padding: { top: 100, bottom: 100, left: 100, right: 100 },
+            maxZoom: 15, // Éviter un zoom trop proche
+            duration: 1000
+          });
+        }
+      } else {
+        // Si aucun listing, afficher l'Afrique par défaut
+        const africaBounds: [number, number, number, number] = [-20, -35, 52, 37];
+        map.current?.fitBounds(africaBounds, { padding: 50 });
+      }
 
       // Configurer la langue française pour tous les layers de texte
       const style = map.current?.getStyle();
@@ -286,38 +305,44 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
           <div style="
             background: ${priceColor.bg};
             color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 800;
-            box-shadow: 0 4px 15px ${priceColor.shadow}, 0 0 0 3px rgba(255,255,255,0.8);
+            padding: 8px 14px;
+            border-radius: 24px;
+            font-size: 12px;
+            font-weight: 900;
+            box-shadow: 0 6px 20px ${priceColor.shadow}, 0 0 0 2px white, 0 0 0 4px ${priceColor.border};
             white-space: nowrap;
             cursor: pointer;
-            border: 2px solid ${priceColor.border};
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             transform: scale(1);
-            min-width: 32px;
+            min-width: 40px;
             text-align: center;
             position: relative;
             z-index: 1;
-            letter-spacing: 0.3px;
-            backdrop-filter: blur(10px);
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
           ">
-            ${formatMapPrice(listing.price, (listing as any).currency_code, formatPrice)}
+            💰 ${formatMapPrice(listing.price, (listing as any).currency_code, formatPrice)}
           </div>
         `;
         
-        // Effet hover sur le marqueur avec animation améliorée
+        // Effet hover sur le marqueur avec animation fluide et moderne
         markerElement.addEventListener('mouseenter', () => {
-          markerElement.style.transform = 'scale(1.3) translateY(-5px)';
-          markerElement.style.boxShadow = `0 8px 25px ${priceColor.shadow}, 0 0 0 4px rgba(255,255,255,0.9)`;
-          markerElement.style.zIndex = '1000';
+          const div = markerElement.querySelector('div') as HTMLElement;
+          if (div) {
+            div.style.transform = 'scale(1.15) translateY(-4px)';
+            div.style.boxShadow = `0 10px 30px ${priceColor.shadow}, 0 0 0 3px white, 0 0 0 5px ${priceColor.border}`;
+            div.style.zIndex = '1000';
+          }
         });
         
         markerElement.addEventListener('mouseleave', () => {
-          markerElement.style.transform = 'scale(1)';
-          markerElement.style.boxShadow = `0 4px 15px ${priceColor.shadow}, 0 0 0 3px rgba(255,255,255,0.8)`;
-          markerElement.style.zIndex = '1';
+          const div = markerElement.querySelector('div') as HTMLElement;
+          if (div) {
+            div.style.transform = 'scale(1)';
+            div.style.boxShadow = `0 6px 20px ${priceColor.shadow}, 0 0 0 2px white, 0 0 0 4px ${priceColor.border}`;
+            div.style.zIndex = '1';
+          }
         });
 
         // Créer le marqueur avec les coordonnées ajustées
@@ -438,7 +463,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
             </div>
           `);
 
-        // Attacher le popup au marqueur avec animation
+        // Attacher le popup au marqueur SANS déplacer la carte
         markerElement.addEventListener('click', (e) => {
           e.stopPropagation();
           
@@ -454,11 +479,11 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
             (marker as HTMLElement).style.transform = 'scale(1)';
           });
           
-          // Ouvrir le nouveau popup
+          // Ouvrir le nouveau popup SANS bouger la carte
           popup.addTo(map.current!);
           popup.setLngLat([listing.adjustedLng, listing.adjustedLat]);
           
-          // Animation du marqueur
+          // Animation du marqueur uniquement (pas de déplacement de la carte)
           markerElement.style.transform = 'scale(1.2)';
           setTimeout(() => {
             markerElement.style.transform = 'scale(1.1)';
