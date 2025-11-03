@@ -105,7 +105,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
       const el = document.createElement('div');
       el.className = 'price-marker';
       el.style.cssText = `
-        background: ${listing.is_sponsored ? 'linear-gradient(135deg, #f59e0b, #f97316)' : 'hsl(var(--primary))'};
+        background: ${listing.is_sponsored ? 'linear-gradient(135deg, #f59e0b, #f97316)' : '#E11D48'};
         color: white;
         padding: 8px 12px;
         border-radius: 20px;
@@ -116,6 +116,8 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings }) => {
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         border: 2px solid white;
         white-space: nowrap;
+        position: relative;
+        z-index: 1;
       `;
       el.textContent = formatPrice(listing.price);
 
