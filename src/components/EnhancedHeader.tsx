@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCountry } from "@/contexts/CountryContext";
+import { useCapacitor } from "@/hooks/useCapacitor";
 import CountrySelector from "@/components/CountrySelector";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { Globe, Menu, Plus, User, Settings, LogOut, BarChart3, Heart, MessageCircle, ChevronDown, Map } from "lucide-react";
@@ -15,6 +16,7 @@ import lazoneLogo from "@/assets/lazone-logo.png";
 export const EnhancedHeader = () => {
   const { user, profile, signOut } = useAuth();
   const { selectedCountry, setSelectedCountry, countries } = useCountry();
+  const { isNative } = useCapacitor();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -226,85 +228,87 @@ export const EnhancedHeader = () => {
             </div>
           )}
 
-          {/* Mobile Menu Toggle */}
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild className="md:hidden">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                className="ripple"
-                aria-label="Ouvrir le menu"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-full sm:w-80">
-              <div className="flex flex-col gap-4 mt-8">
-                {/* Country Selector Mobile */}
-                <div className="px-2">
-                  <CountrySelector />
-                </div>
+          {/* Mobile Menu Toggle - Only on web */}
+          {!isNative && (
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild className="md:hidden">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="ripple"
+                  aria-label="Ouvrir le menu"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full sm:w-80">
+                <div className="flex flex-col gap-4 mt-8">
+                  {/* Country Selector Mobile */}
+                  <div className="px-2">
+                    <CountrySelector />
+                  </div>
 
-                {/* Navigation Links */}
-                <nav className="flex flex-col gap-2">
-                  {menuItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <Button
-                        key={item.href}
-                        variant="ghost"
-                        className="justify-start"
+                  {/* Navigation Links */}
+                  <nav className="flex flex-col gap-2">
+                    {menuItems.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <Button
+                          key={item.href}
+                          variant="ghost"
+                          className="justify-start"
+                          onClick={() => {
+                            navigate(item.href);
+                            setMobileMenuOpen(false);
+                          }}
+                        >
+                          <Icon className="mr-2 h-4 w-4" />
+                          {item.label}
+                        </Button>
+                      );
+                    })}
+                  </nav>
+
+                  {/* Add Property Button Mobile */}
+                  {user && (
+                    <Button 
+                      onClick={() => {
+                        navigate("/add-property");
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Publier une annonce
+                    </Button>
+                  )}
+
+                  {/* Auth Buttons Mobile */}
+                  {!user && (
+                    <div className="flex flex-col gap-2 mt-4">
+                      <Button 
+                        variant="outline" 
                         onClick={() => {
-                          navigate(item.href);
+                          navigate("/auth");
                           setMobileMenuOpen(false);
                         }}
                       >
-                        <Icon className="mr-2 h-4 w-4" />
-                        {item.label}
+                        Connexion
                       </Button>
-                    );
-                  })}
-                </nav>
-
-                {/* Add Property Button Mobile */}
-                {user && (
-                  <Button 
-                    onClick={() => {
-                      navigate("/add-property");
-                      setMobileMenuOpen(false);
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Publier une annonce
-                  </Button>
-                )}
-
-                {/* Auth Buttons Mobile */}
-                {!user && (
-                  <div className="flex flex-col gap-2 mt-4">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        navigate("/auth");
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      Connexion
-                    </Button>
-                    <Button 
-                      onClick={() => {
-                        navigate("/auth");
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      S'inscrire
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </SheetContent>
-          </Sheet>
+                      <Button 
+                        onClick={() => {
+                          navigate("/auth");
+                          setMobileMenuOpen(false);
+                        }}
+                      >
+                        S'inscrire
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
+          )}
         </div>
       </div>
     </header>
