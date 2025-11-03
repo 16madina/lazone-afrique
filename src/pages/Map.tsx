@@ -46,7 +46,7 @@ const Map = () => {
     searchQuery: ""
   });
   
-  const { selectedCountry } = useCountry();
+  const { selectedCountry, setSelectedCountry, countries } = useCountry();
 
   // Fetch listings from Supabase
   useEffect(() => {
@@ -160,7 +160,7 @@ const Map = () => {
     }
 
     try {
-      console.log('🔍 Recherche de ville:', searchCity, 'dans le pays:', selectedCountry.code);
+      console.log('🔍 Recherche de ville:', searchCity);
       
       // Get Mapbox token
       const { data: tokenData, error: tokenError } = await supabase.functions.invoke('get-mapbox-token');
@@ -179,9 +179,9 @@ const Map = () => {
 
       console.log('✅ Token récupéré, recherche en cours...');
 
-      // Geocode the city - search in the selected country
-      const searchQuery = encodeURIComponent(searchCity);
-      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${searchQuery}.json?access_token=${tokenData.token}&country=${selectedCountry.code.toLowerCase()}&types=place,locality&limit=5`;
+      // Geocode the city - search globally without country restriction
+      const searchQuery = encodeURIComponent(searchCity.trim());
+      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${searchQuery}.json?access_token=${tokenData.token}&types=place,locality&limit=5`;
       
       console.log('🌍 URL de recherche:', url);
       
@@ -191,14 +191,31 @@ const Map = () => {
       console.log('📍 Résultats geocoding:', data);
       
       if (data.features && data.features.length > 0) {
-        const [lng, lat] = data.features[0].center;
-        const placeName = data.features[0].place_name || data.features[0].text;
-        console.log('✅ Ville trouvée:', placeName, 'Coords:', lng, lat);
+        const feature = data.features[0];
+        const [lng, lat] = feature.center;
+        const placeName = feature.place_name || feature.text;
+        
+        // Extract country code from the result
+        const countryContext = feature.context?.find((c: any) => c.id.startsWith('country'));
+        const countryCode = countryContext?.short_code?.toUpperCase();
+        
+        console.log('✅ Ville trouvée:', placeName, 'Coords:', lng, lat, 'Pays:', countryCode);
+        
+        // Update country if found and different from current
+        if (countryCode && countryCode !== selectedCountry.code) {
+          const newCountry = countries.find(c => c.code === countryCode);
+          if (newCountry) {
+            setSelectedCountry(newCountry);
+            console.log('🔄 Changement de pays vers:', newCountry.name);
+            toast.success(`Changement de pays: ${newCountry.name}`);
+          }
+        }
+        
         setCityCoords({ lng, lat });
         toast.success(`Ville trouvée: ${placeName}`);
       } else {
         console.warn('❌ Aucune ville trouvée pour:', searchCity);
-        toast.error(`Aucune ville trouvée pour "${searchCity}" dans ${selectedCountry.name}`);
+        toast.error(`Aucune ville trouvée pour "${searchCity}"`);
       }
     } catch (error) {
       console.error('❌ Erreur lors de la recherche:', error);
