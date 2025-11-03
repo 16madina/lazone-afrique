@@ -87,24 +87,27 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
   useEffect(() => {
     const getMapboxToken = async () => {
       try {
-        console.log('🗺️ Récupération du token Mapbox...');
+        console.log('🗺️ [MAPBOX] Début de la récupération du token...');
         const { data, error } = await supabase.functions.invoke('get-mapbox-token');
         
+        console.log('🗺️ [MAPBOX] Réponse reçue:', { hasData: !!data, hasError: !!error });
+        
         if (error) {
-          console.error('❌ Erreur lors de la récupération du token:', error);
+          console.error('❌ [MAPBOX] Erreur lors de la récupération du token:', error);
           throw error;
         }
         
         if (data?.token) {
-          console.log('✅ Token Mapbox récupéré avec succès');
+          console.log('✅ [MAPBOX] Token récupéré avec succès, longueur:', data.token.length);
           setMapboxToken(data.token);
+          setLoading(false);
         } else {
-          throw new Error('Token Mapbox non trouvé');
+          console.error('❌ [MAPBOX] Token non trouvé dans la réponse:', data);
+          throw new Error('Token Mapbox non trouvé dans la réponse');
         }
       } catch (err) {
-        console.error('❌ Erreur lors de la récupération du token Mapbox:', err);
-        setError('Impossible de charger la carte');
-      } finally {
+        console.error('❌ [MAPBOX] Erreur fatale:', err);
+        setError('Impossible de charger la carte. Veuillez réessayer.');
         setLoading(false);
       }
     };
