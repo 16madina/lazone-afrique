@@ -169,7 +169,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
         font-weight: 700;
         font-size: 11px;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         border: 2px solid white;
         white-space: nowrap;
