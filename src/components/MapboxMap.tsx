@@ -87,19 +87,22 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
   useEffect(() => {
     const getMapboxToken = async () => {
       try {
+        console.log('🗺️ Récupération du token Mapbox...');
         const { data, error } = await supabase.functions.invoke('get-mapbox-token');
         
         if (error) {
+          console.error('❌ Erreur lors de la récupération du token:', error);
           throw error;
         }
         
         if (data?.token) {
+          console.log('✅ Token Mapbox récupéré avec succès');
           setMapboxToken(data.token);
         } else {
           throw new Error('Token Mapbox non trouvé');
         }
       } catch (err) {
-        console.error('Erreur lors de la récupération du token Mapbox:', err);
+        console.error('❌ Erreur lors de la récupération du token Mapbox:', err);
         setError('Impossible de charger la carte');
       } finally {
         setLoading(false);
@@ -110,7 +113,16 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
   }, []);
 
   useEffect(() => {
-    if (!mapContainer.current || !mapboxToken) return;
+    if (!mapContainer.current || !mapboxToken) {
+      console.log('⏸️ Attente du conteneur ou du token...', { 
+        hasContainer: !!mapContainer.current, 
+        hasToken: !!mapboxToken 
+      });
+      return;
+    }
+
+    console.log('🗺️ Initialisation de la carte Mapbox...');
+    console.log('📊 Nombre de listings à afficher:', listings.length);
 
     // Initialiser la carte
     mapboxgl.accessToken = mapboxToken;
@@ -479,7 +491,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
 
   if (loading) {
     return (
-      <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
+      <div className="absolute inset-0 bg-background rounded-lg flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto text-primary mb-4 animate-spin">
             <svg className="w-full h-full" viewBox="0 0 24 24" fill="none">
@@ -489,7 +501,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
               </circle>
             </svg>
           </div>
-          <h3 className="text-lg font-semibold">Chargement de la carte...</h3>
+          <h3 className="text-lg font-semibold text-foreground">Chargement de la carte...</h3>
           <p className="text-muted-foreground">{listings.length} propriétés trouvées</p>
         </div>
       </div>
@@ -498,7 +510,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
 
   if (error) {
     return (
-      <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
+      <div className="absolute inset-0 bg-background rounded-lg flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 mx-auto text-destructive mb-4">
             <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -507,8 +519,14 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, selectedCityCoords, map
               <line x1="9" y1="9" x2="15" y2="15"/>
             </svg>
           </div>
-          <h3 className="text-lg font-semibold">Erreur de chargement</h3>
+          <h3 className="text-lg font-semibold text-foreground">Erreur de chargement</h3>
           <p className="text-muted-foreground">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity"
+          >
+            Réessayer
+          </button>
         </div>
       </div>
     );

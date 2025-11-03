@@ -49,7 +49,8 @@ const Map = () => {
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   };
 
-  console.log("Map component rendering, listings count:", listings.length);
+  console.log("📍 Map component rendering, listings count:", listings.length);
+  console.log("🗺️ Filtered listings count:", filteredListings.length);
 
   // Filtrer les villes en fonction de la recherche
   const filteredCities = selectedCountry.cities.filter(city =>
@@ -247,7 +248,7 @@ const Map = () => {
         </div>
       </header>
       
-      <main className="flex-1 relative animate-fade-in overflow-hidden pt-14">
+      <main className="flex-1 relative animate-fade-in overflow-hidden pt-14 min-h-0">
         {/* Search Bar */}
         <div className="absolute top-[72px] left-4 right-4 z-10">
           <div className="bg-background/95 backdrop-blur-sm rounded-xl p-4 shadow-lg space-y-3">
