@@ -306,7 +306,7 @@ const AddProperty = () => {
   };
 
   // Geolocation function
-  const handleGeolocation = () => {
+  const handleGeolocation = async () => {
     if (!navigator.geolocation) {
       toast.error("La géolocalisation n'est pas supportée par votre navigateur");
       return;
@@ -314,58 +314,76 @@ const AddProperty = () => {
 
     setIsGeolocating(true);
 
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          // Reverse geocoding to get city name from coordinates
-          const response = await fetch(
-            `https://api.mapbox.com/geocoding/v5/mapbox.places/${position.coords.longitude},${position.coords.latitude}.json?access_token=${process.env.MAPBOX_ACCESS_TOKEN}&types=place,locality&limit=1`
-          );
-          
-          if (response.ok) {
-            const data = await response.json();
-            if (data.features && data.features.length > 0) {
-              const placeName = data.features[0].text || data.features[0].place_name;
-              updateFormData('city', placeName);
-              toast.success("Localisation détectée avec succès!");
-            } else {
-              toast.error("Impossible de déterminer votre ville");
-            }
-          } else {
-            toast.error("Erreur lors de la géolocalisation");
-          }
-        } catch (error) {
-          console.error('Geolocation error:', error);
-          toast.error("Erreur lors de la géolocalisation");
-        } finally {
-          setIsGeolocating(false);
-        }
-      },
-      (error) => {
-        console.error('Geolocation error:', error);
+    try {
+      // First, get Mapbox token
+      const { data: tokenData, error: tokenError } = await supabase.functions.invoke('get-mapbox-token');
+      
+      if (tokenError || !tokenData?.token) {
+        console.error('Failed to get Mapbox token:', tokenError);
+        toast.error("Erreur de configuration");
         setIsGeolocating(false);
-        
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            toast.error("Autorisation de géolocalisation refusée");
-            break;
-          case error.POSITION_UNAVAILABLE:
-            toast.error("Position non disponible");
-            break;
-          case error.TIMEOUT:
-            toast.error("Délai de géolocalisation dépassé");
-            break;
-          default:
-            toast.error("Erreur de géolocalisation");
-            break;
-        }
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 600000
+        return;
       }
-    );
+
+      const mapboxToken = tokenData.token;
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            // Reverse geocoding to get city name from coordinates
+            const response = await fetch(
+              `https://api.mapbox.com/geocoding/v5/mapbox.places/${position.coords.longitude},${position.coords.latitude}.json?access_token=${mapboxToken}&types=place,locality,neighborhood&limit=1`
+            );
+            
+            if (response.ok) {
+              const data = await response.json();
+              if (data.features && data.features.length > 0) {
+                const placeName = data.features[0].text || data.features[0].place_name;
+                updateFormData('city', placeName);
+                toast.success("Localisation détectée: " + placeName);
+              } else {
+                toast.error("Impossible de déterminer votre ville");
+              }
+            } else {
+              toast.error("Erreur lors de la géolocalisation");
+            }
+          } catch (error) {
+            console.error('Geolocation error:', error);
+            toast.error("Erreur lors de la géolocalisation");
+          } finally {
+            setIsGeolocating(false);
+          }
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          setIsGeolocating(false);
+          
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              toast.error("Autorisation de géolocalisation refusée");
+              break;
+            case error.POSITION_UNAVAILABLE:
+              toast.error("Position non disponible");
+              break;
+            case error.TIMEOUT:
+              toast.error("Délai de géolocalisation dépassé");
+              break;
+            default:
+              toast.error("Erreur de géolocalisation");
+              break;
+          }
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 600000
+        }
+      );
+    } catch (error) {
+      console.error('Error getting Mapbox token:', error);
+      toast.error("Erreur de configuration");
+      setIsGeolocating(false);
+    }
   };
 
   const nextStep = () => {
