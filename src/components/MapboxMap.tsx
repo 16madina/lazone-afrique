@@ -106,26 +106,24 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
     // Listen for geolocation errors
     geolocateControl.on('error', (e: any) => {
       console.warn('⚠️ Geolocation error:', e.message);
-      toast({
-        title: "Localisation non disponible",
-        description: "Impossible d'accéder à votre position. La carte affiche la zone par défaut.",
-        variant: "destructive"
-      });
     });
 
-    // Automatically trigger geolocation when map is loaded
+    // Center map on selected country on load
     map.current.on('load', () => {
-      console.log('🎯 Map loaded, triggering geolocation...');
-      // Small delay to ensure controls are ready
-      setTimeout(() => {
-        geolocateControl.trigger();
-      }, 500);
+      console.log('🎯 Map loaded, centering on country:', selectedCountry.name);
+      if (selectedCountry.coordinates && map.current) {
+        map.current.flyTo({
+          center: [selectedCountry.coordinates.lng, selectedCountry.coordinates.lat],
+          zoom: selectedCountry.coordinates.zoom || 6,
+          duration: 1500
+        });
+      }
     });
 
     return () => {
       map.current?.remove();
     };
-  }, [mapboxToken, toast]);
+  }, [mapboxToken, toast, selectedCountry]);
 
   // Update markers when listings change
   useEffect(() => {
@@ -240,11 +238,11 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
 
   // Handle country change - center map on selected country
   useEffect(() => {
-    if (!map.current || !selectedCountry || userLocationFound) return;
+    if (!map.current || !selectedCountry) return;
 
     console.log('🌍 Country changed to:', selectedCountry.name, 'coords:', selectedCountry.coordinates);
     
-    // Don't recenter if user has manually interacted with map
+    // Always recenter when country changes
     if (selectedCountry.coordinates) {
       map.current.flyTo({
         center: [selectedCountry.coordinates.lng, selectedCountry.coordinates.lat],
@@ -252,7 +250,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
         duration: 1500
       });
     }
-  }, [selectedCountry, userLocationFound]);
+  }, [selectedCountry]);
 
   const handleListingClick = (listingId: string) => {
     navigate(`/listing/${listingId}`);
