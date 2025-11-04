@@ -48,10 +48,13 @@ export const EnhancedHeader = () => {
   return (
     <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <img src={lazoneLogo} alt="LaZone" className="h-8 w-auto" />
-        </Link>
+        {/* Logo and Country Selector */}
+        <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
+            <img src={lazoneLogo} alt="LaZone" className="h-8 w-auto" />
+          </Link>
+          <CountrySelector />
+        </div>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
@@ -114,10 +117,7 @@ export const EnhancedHeader = () => {
         </nav>
 
         {/* Right Side Actions */}
-        <div className="flex items-center gap-1">
-          {/* Country Selector on Index and Map pages */}
-          <CountrySelector />
-
+        <div className="flex items-center gap-2">
           {/* Add Property Button */}
           {user && (
             <Button 
