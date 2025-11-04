@@ -20,6 +20,9 @@ export const EnhancedHeader = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Debug log
+  console.log('🔍 EnhancedHeader - isNative:', isNative);
+
   const handleCountryMapNavigation = (countryCode: string) => {
     const country = countries.find(c => c.code === countryCode);
     if (country) {
