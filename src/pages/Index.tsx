@@ -99,6 +99,7 @@ const Index = () => {
             id,
             title,
             price,
+            currency_code,
             city,
             country_code,
             lat,
@@ -473,7 +474,7 @@ const Index = () => {
                     id={property.id}
                     title={property.title}
                     price={property.price}
-                    currencyCode={(property as any).currency_code || (property.country_code === 'CI' ? 'XOF' : 'XOF')}
+                    currencyCode={(property as any).currency_code || getDefaultCurrencyCode(property.country_code)}
                     location={`${property.city}, ${getCountryName(property.country_code)}`}
                     type={property.transaction_type === 'rent' ? 'rent' : 'sale'}
                     propertyType={property.property_type as any || "house"}
@@ -559,6 +560,29 @@ const Index = () => {
       <BottomNavigation />
     </div>
   );
+};
+
+// Helper function to get default currency code for a country
+const getDefaultCurrencyCode = (countryCode: string) => {
+  const countryCurrencies: { [key: string]: string } = {
+    'CI': 'XOF', 'SN': 'XOF', 'BF': 'XOF', 'ML': 'XOF', 'NE': 'XOF',
+    'TG': 'XOF', 'BJ': 'XOF', // West Africa CFA
+    'CM': 'XAF', 'GA': 'XAF', 'CG': 'XAF', 'TD': 'XAF', 'CF': 'XAF', // Central Africa CFA
+    'GN': 'GNF', // Guinea
+    'MA': 'MAD', // Morocco
+    'TN': 'TND', // Tunisia
+    'DZ': 'DZD', // Algeria
+    'GH': 'GHS', // Ghana
+    'NG': 'NGN', // Nigeria
+    'KE': 'KES', // Kenya
+    'ZA': 'ZAR', // South Africa
+    'EG': 'EGP', // Egypt
+    'ET': 'ETB', // Ethiopia
+    'TZ': 'TZS', // Tanzania
+    'UG': 'UGX', // Uganda
+    'RW': 'RWF', // Rwanda
+  };
+  return countryCurrencies[countryCode.toUpperCase()] || 'XOF';
 };
 
 // Helper function to get country name
