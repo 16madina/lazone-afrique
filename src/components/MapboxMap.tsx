@@ -323,6 +323,8 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
 
     // Cleanup function
     return () => {
+      if (!mapInstance.isStyleLoaded()) return;
+      
       if (mapInstance.getLayer('clusters')) {
         mapInstance.off('click', 'clusters', handleClusterClick);
         mapInstance.off('mouseenter', 'clusters', handleCursorPointer);
