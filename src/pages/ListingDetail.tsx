@@ -121,7 +121,7 @@ const ListingDetail = () => {
   }, [id, user, authLoading]);
 
   const formatPrice = (price: number) => {
-    // Le prix en base est en USD, on le convertit en devise locale
+    // Le prix est stocké dans la devise locale, on le formate directement
     return formatPriceWithCurrency ? formatPriceWithCurrency(price) : new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
   };
 

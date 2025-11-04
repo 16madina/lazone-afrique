@@ -534,6 +534,12 @@ const AddProperty = () => {
       // Prepare data for insertion - Store price in local currency
       const priceInLocalCurrency = parseFloat(formData.price);
       
+      // Debug logging to track price issues
+      console.log('💰 Prix saisi:', formData.price);
+      console.log('💰 Prix converti:', priceInLocalCurrency);
+      console.log('💰 Devise:', selectedCountry.currency.code);
+      console.log('💰 Pays:', selectedCountry.code);
+      
       const insertData: any = {
         title: formData.title,
         description: formData.description,
