@@ -23,6 +23,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
   const [selectedListing, setSelectedListing] = useState<MapListing | null>(null);
   const [loading, setLoading] = useState(true);
   const [userLocationFound, setUserLocationFound] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
   const { formatPrice, selectedCountry } = useCountry();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -122,6 +123,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
     // Center map on selected country on load and trigger geolocation
     map.current.on('load', () => {
       console.log('🎯 Map loaded, centering on country:', selectedCountry.name);
+      setMapLoaded(true); // Signal that map is ready for markers
       
       // Trigger automatic geolocation
       setTimeout(() => {
@@ -153,7 +155,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
 
   // Update clusters and markers when listings change
   useEffect(() => {
-    if (!map.current || !mapboxToken || !map.current.isStyleLoaded()) return;
+    if (!map.current || !mapboxToken || !mapLoaded) return;
 
     const mapInstance = map.current;
 
@@ -351,7 +353,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
         mapInstance.off('mouseleave', 'unclustered-point', handleCursorDefault);
       }
     };
-  }, [listings, mapboxToken, formatShortPrice]);
+  }, [listings, mapboxToken, mapLoaded, formatShortPrice]);
 
   // Zoom to searched city/neighborhood when cityCoords change
   useEffect(() => {
