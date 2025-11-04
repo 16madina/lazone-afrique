@@ -20,6 +20,7 @@ import { UserRatingDialog } from "@/components/UserRatingDialog";
 import ListingLocationMap from "@/components/ListingLocationMap";
 import VirtualTour360 from "@/components/VirtualTour360";
 import AppointmentBooking from "@/components/AppointmentBooking";
+import UserListingsMap from "@/components/UserListingsMap";
 
 interface ListingData {
   id: string;
@@ -806,6 +807,18 @@ const ListingDetail = () => {
               </p>
             </CardContent>
           </Card>
+
+          {/* User's Other Listings Map */}
+          {listing.user_id && (
+            <Card>
+              <CardContent className="p-8">
+                <UserListingsMap 
+                  userId={listing.user_id} 
+                  currentListingId={listing.id}
+                />
+              </CardContent>
+            </Card>
+          )}
         </div>
       </main>
 
