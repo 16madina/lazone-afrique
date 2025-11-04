@@ -119,15 +119,30 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
       console.warn('⚠️ Geolocation error:', e.message);
     });
 
-    // Center map on selected country on load
+    // Center map on selected country on load and trigger geolocation
     map.current.on('load', () => {
       console.log('🎯 Map loaded, centering on country:', selectedCountry.name);
+      
+      // Trigger automatic geolocation
+      setTimeout(() => {
+        if (geolocateControlRef.current) {
+          console.log('📍 Déclenchement de la géolocalisation automatique...');
+          geolocateControlRef.current.trigger();
+        }
+      }, 500);
+      
+      // Fallback: center on selected country if geolocation fails or is denied
       if (selectedCountry.coordinates && map.current) {
-        map.current.flyTo({
-          center: [selectedCountry.coordinates.lng, selectedCountry.coordinates.lat],
-          zoom: selectedCountry.coordinates.zoom || 6,
-          duration: 1500
-        });
+        setTimeout(() => {
+          if (!userLocationFound && map.current) {
+            console.log('🗺️ Utilisation du pays par défaut:', selectedCountry.name);
+            map.current.flyTo({
+              center: [selectedCountry.coordinates.lng, selectedCountry.coordinates.lat],
+              zoom: selectedCountry.coordinates.zoom || 6,
+              duration: 1500
+            });
+          }
+        }, 3000); // Wait 3s for geolocation to complete
       }
     });
 
