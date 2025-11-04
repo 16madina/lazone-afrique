@@ -284,7 +284,7 @@ const Map = () => {
                       <Filter className="h-4 w-4" />
                     </Button>
                   </SheetTrigger>
-                  <SheetContent side="left" className="w-full sm:max-w-md overflow-y-auto">
+                  <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
                     <SheetHeader>
                       <SheetTitle>Filtres de recherche</SheetTitle>
                     </SheetHeader>
