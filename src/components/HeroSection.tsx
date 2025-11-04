@@ -158,7 +158,7 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
   };
 
   return (
-    <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden animate-fade-in pt-20">
+    <section className="relative min-h-[50vh] flex items-center justify-center overflow-hidden animate-fade-in pt-8 pb-8">
       {/* Background Image with Overlay - Opacité augmentée pour meilleure lisibilité */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 hover:scale-105"
@@ -169,7 +169,7 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 text-center">
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-4xl mx-auto space-y-4">
           {/* Hero Logo - Centré avec ombre pour visibilité */}
           <div className="flex justify-center items-center">
             <div className="flex flex-col items-center max-w-4xl">
@@ -177,16 +177,16 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
                 <img 
                   src={mainLogo} 
                   alt="Logo principal"
-                  className="w-24 h-24 md:w-36 md:h-36 object-contain"
+                  className="w-20 h-20 md:w-28 md:h-28 object-contain"
                 />
                 <img 
                   src={lazoneTextLogo} 
                   alt="LaZone"
-                  className="w-48 h-24 md:w-72 md:h-36 object-contain mt-4 -ml-8"
+                  className="w-40 h-20 md:w-56 md:h-28 object-contain mt-3 -ml-6"
                 />
               </div>
-              <div className="text-center mt-4 bg-black/30 backdrop-blur-sm px-6 py-3 rounded-full">
-                <p className="text-lg md:text-2xl font-fredoka text-white font-semibold leading-tight drop-shadow-lg">
+              <div className="text-center mt-2 bg-black/30 backdrop-blur-sm px-4 py-2 rounded-full">
+                <p className="text-base md:text-xl font-fredoka text-white font-semibold leading-tight drop-shadow-lg">
                   Trouve ton chez toi dans ta Zone
                 </p>
               </div>
