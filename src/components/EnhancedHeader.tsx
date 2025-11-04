@@ -114,7 +114,7 @@ export const EnhancedHeader = () => {
         </nav>
 
         {/* Right Side Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {/* Country Selector on Index and Map pages */}
           <CountrySelector />
 
