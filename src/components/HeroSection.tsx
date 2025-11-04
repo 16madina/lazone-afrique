@@ -158,7 +158,7 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
   };
 
   return (
-    <section className="relative min-h-[50vh] flex items-center justify-center overflow-hidden animate-fade-in pt-8 pb-8">
+    <section className="relative min-h-[40vh] flex items-center justify-center overflow-hidden animate-fade-in pt-4 pb-6">
       {/* Background Image with Overlay - Opacité augmentée pour meilleure lisibilité */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-700 hover:scale-105"
@@ -169,7 +169,7 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 text-center">
-        <div className="max-w-4xl mx-auto space-y-4">
+        <div className="max-w-4xl mx-auto space-y-3">
           {/* Hero Logo - Centré avec ombre pour visibilité */}
           <div className="flex justify-center items-center">
             <div className="flex flex-col items-center max-w-4xl">
@@ -177,16 +177,16 @@ const HeroSection = ({ onSearch }: HeroSectionProps) => {
                 <img 
                   src={mainLogo} 
                   alt="Logo principal"
-                  className="w-20 h-20 md:w-28 md:h-28 object-contain"
+                  className="w-16 h-16 md:w-24 md:h-24 object-contain"
                 />
                 <img 
                   src={lazoneTextLogo} 
                   alt="LaZone"
-                  className="w-40 h-20 md:w-56 md:h-28 object-contain mt-3 -ml-6"
+                  className="w-32 h-16 md:w-48 md:h-24 object-contain mt-2 -ml-4"
                 />
               </div>
-              <div className="text-center mt-2 bg-black/30 backdrop-blur-sm px-4 py-2 rounded-full">
-                <p className="text-base md:text-xl font-fredoka text-white font-semibold leading-tight drop-shadow-lg">
+              <div className="text-center mt-1.5 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                <p className="text-sm md:text-lg font-fredoka text-white font-semibold leading-tight drop-shadow-lg">
                   Trouve ton chez toi dans ta Zone
                 </p>
               </div>
