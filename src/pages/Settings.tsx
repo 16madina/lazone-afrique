@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Settings as SettingsIcon, User, Bell, Lock, Globe, Eye, Save, Loader2 } from "lucide-react";
+import { useTheme } from "next-themes";
 import Header from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 export default function Settings() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({
     emailNotifications: true,
@@ -26,7 +28,6 @@ export default function Settings() {
     messageAlerts: true,
     language: "fr",
     currency: "FCFA",
-    theme: "system",
     profileVisibility: "public",
   });
 
@@ -326,10 +327,8 @@ export default function Settings() {
                 <div className="space-y-2">
                   <Label htmlFor="theme">Thème</Label>
                   <Select
-                    value={settings.theme}
-                    onValueChange={(value) =>
-                      setSettings((prev) => ({ ...prev, theme: value }))
-                    }
+                    value={theme}
+                    onValueChange={(value) => setTheme(value)}
                   >
                     <SelectTrigger id="theme">
                       <SelectValue placeholder="Choisir le thème" />

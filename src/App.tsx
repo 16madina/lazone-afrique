@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CountryProvider } from "@/contexts/CountryContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NativeInitializer } from "@/components/NativeInitializer";
+import { ThemeProvider } from "next-themes";
 
 // Import direct de toutes les pages (pas de lazy loading)
 import Index from "./pages/Index";
@@ -65,18 +66,20 @@ const AppContent = () => {
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <CountryProvider>
-        <AuthProvider>
-          <NativeInitializer />
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AppContent />
-            </BrowserRouter>
-          </TooltipProvider>
-        </AuthProvider>
-      </CountryProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <CountryProvider>
+          <AuthProvider>
+            <NativeInitializer />
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <AppContent />
+              </BrowserRouter>
+            </TooltipProvider>
+          </AuthProvider>
+        </CountryProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };
