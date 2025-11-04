@@ -155,7 +155,7 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
 
   // Update clusters and markers when listings change
   useEffect(() => {
-    if (!map.current || !mapboxToken || !mapLoaded) return;
+    if (!map.current || !mapboxToken || !mapLoaded || !map.current.isStyleLoaded()) return;
 
     const mapInstance = map.current;
 
@@ -186,6 +186,12 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
     };
 
     console.log(`📌 Creating clusters for ${geojsonData.features.length}/${listings.length} listings`);
+
+    // Ensure style is loaded before manipulating layers
+    if (!mapInstance.isStyleLoaded()) {
+      console.warn('⚠️ Style not loaded yet, waiting...');
+      return;
+    }
 
     // Remove existing source and layers if they exist
     if (mapInstance.getLayer('clusters')) mapInstance.removeLayer('clusters');
