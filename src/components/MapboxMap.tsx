@@ -18,7 +18,6 @@ interface MapboxMapProps {
 const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
   const geolocateControlRef = useRef<mapboxgl.GeolocateControl | null>(null);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [selectedListing, setSelectedListing] = useState<MapListing | null>(null);
@@ -137,80 +136,205 @@ const MapboxMap: React.FC<MapboxMapProps> = ({ listings, cityCoords }) => {
     };
   }, [mapboxToken, toast, selectedCountry]);
 
-  // Update markers when listings change
+  // Update clusters and markers when listings change
   useEffect(() => {
-    if (!map.current || !mapboxToken) return;
+    if (!map.current || !mapboxToken || !map.current.isStyleLoaded()) return;
 
-    // Remove existing markers
-    markersRef.current.forEach(marker => marker.remove());
-    markersRef.current = [];
+    const mapInstance = map.current;
 
-    // Debug: count valid listings
-    const validListings = listings.filter(l => l.lat && l.lng);
-    console.log(`📌 Creating markers for ${validListings.length}/${listings.length} listings with coordinates`);
+    // Convert listings to GeoJSON format
+    const geojsonData: GeoJSON.FeatureCollection<GeoJSON.Point> = {
+      type: 'FeatureCollection',
+      features: listings
+        .filter(l => l.lat && l.lng)
+        .map((listing) => ({
+          type: 'Feature',
+          geometry: {
+            type: 'Point',
+            coordinates: [listing.lng!, listing.lat!]
+          },
+          properties: {
+            id: listing.id,
+            title: listing.title,
+            price: listing.price,
+            priceFormatted: formatShortPrice(listing.price),
+            city: listing.city,
+            bedrooms: listing.bedrooms,
+            bathrooms: listing.bathrooms,
+            surface_area: listing.surface_area,
+            photos: listing.photos?.[0] || '/placeholder.svg',
+            is_sponsored: listing.is_sponsored || false
+          }
+        }))
+    };
 
-    // Add new markers
-    listings.forEach((listing) => {
-      if (!listing.lat || !listing.lng) {
-        console.warn(`⚠️ Listing "${listing.title}" missing coordinates:`, listing);
-        return;
-      }
+    console.log(`📌 Creating clusters for ${geojsonData.features.length}/${listings.length} listings`);
 
-      console.log(`📍 Adding marker for "${listing.title}" at [${listing.lng}, ${listing.lat}]`);
+    // Remove existing source and layers if they exist
+    if (mapInstance.getLayer('clusters')) mapInstance.removeLayer('clusters');
+    if (mapInstance.getLayer('cluster-count')) mapInstance.removeLayer('cluster-count');
+    if (mapInstance.getLayer('unclustered-point')) mapInstance.removeLayer('unclustered-point');
+    if (mapInstance.getLayer('unclustered-point-label')) mapInstance.removeLayer('unclustered-point-label');
+    if (mapInstance.getSource('listings')) mapInstance.removeSource('listings');
 
-      // Create price marker element - small compact bubble design
-      const el = document.createElement('div');
-      el.className = 'price-marker';
-      el.style.cssText = `
-        background: ${listing.is_sponsored ? 'linear-gradient(135deg, #f59e0b, #f97316)' : '#E11D48'};
-        color: white;
-        padding: 4px 8px;
-        border-radius: 12px;
-        font-weight: 700;
-        font-size: 11px;
-        cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        border: 2px solid white;
-        white-space: nowrap;
-        display: inline-block;
-        position: relative;
-        z-index: 10;
-      `;
-      el.textContent = formatShortPrice(listing.price);
-
-      // Hover effects
-      el.addEventListener('mouseenter', () => {
-        el.style.transform = 'scale(1.15)';
-        el.style.boxShadow = '0 3px 12px rgba(0, 0, 0, 0.4)';
-        el.style.zIndex = '1000';
-      });
-
-      el.addEventListener('mouseleave', () => {
-        el.style.transform = 'scale(1)';
-        el.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.3)';
-        el.style.zIndex = '10';
-      });
-
-      // Click handler - show listing card immediately without moving map
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        setSelectedListing(listing);
-      });
-
-      // Create marker
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat([listing.lng, listing.lat])
-        .addTo(map.current!);
-
-      markersRef.current.push(marker);
+    // Add source with clustering
+    mapInstance.addSource('listings', {
+      type: 'geojson',
+      data: geojsonData,
+      cluster: true,
+      clusterMaxZoom: 14, // Max zoom to cluster points
+      clusterRadius: 50 // Radius of each cluster in pixels
     });
 
-    console.log(`✅ Total markers created: ${markersRef.current.length}`);
+    // Layer 1: Clustered circles - styled by point count
+    mapInstance.addLayer({
+      id: 'clusters',
+      type: 'circle',
+      source: 'listings',
+      filter: ['has', 'point_count'],
+      paint: {
+        'circle-color': [
+          'step',
+          ['get', 'point_count'],
+          '#EAB308', // Yellow for 2-9 listings
+          10,
+          '#F97316', // Orange for 10-49 listings
+          50,
+          '#DC2626'  // Red for 50+ listings
+        ],
+        'circle-radius': [
+          'step',
+          ['get', 'point_count'],
+          20,  // Small radius for 2-9
+          10,
+          25,  // Medium radius for 10-49
+          50,
+          30   // Large radius for 50+
+        ],
+        'circle-stroke-width': 3,
+        'circle-stroke-color': '#ffffff'
+      }
+    });
 
-    // Automatic map movement disabled - pins stay in place
-    // User controls map movement via manual zoom/pan or geolocation button
-  }, [listings, mapboxToken, formatShortPrice, userLocationFound]);
+    // Layer 2: Cluster count labels
+    mapInstance.addLayer({
+      id: 'cluster-count',
+      type: 'symbol',
+      source: 'listings',
+      filter: ['has', 'point_count'],
+      layout: {
+        'text-field': '{point_count_abbreviated}',
+        'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+        'text-size': 14
+      },
+      paint: {
+        'text-color': '#ffffff'
+      }
+    });
+
+    // Layer 3: Unclustered individual points (price labels)
+    mapInstance.addLayer({
+      id: 'unclustered-point',
+      type: 'circle',
+      source: 'listings',
+      filter: ['!', ['has', 'point_count']],
+      paint: {
+        'circle-color': [
+          'case',
+          ['get', 'is_sponsored'],
+          '#f59e0b',
+          '#E11D48'
+        ],
+        'circle-radius': 12,
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#ffffff'
+      }
+    });
+
+    // Layer 4: Price labels for unclustered points
+    mapInstance.addLayer({
+      id: 'unclustered-point-label',
+      type: 'symbol',
+      source: 'listings',
+      filter: ['!', ['has', 'point_count']],
+      layout: {
+        'text-field': ['get', 'priceFormatted'],
+        'text-font': ['DIN Offc Pro Bold', 'Arial Unicode MS Bold'],
+        'text-size': 11,
+        'text-offset': [0, 0],
+        'text-anchor': 'center'
+      },
+      paint: {
+        'text-color': '#ffffff'
+      }
+    });
+
+    // Click handler for clusters - zoom in
+    const handleClusterClick = (e: mapboxgl.MapMouseEvent) => {
+      const features = mapInstance.queryRenderedFeatures(e.point, {
+        layers: ['clusters']
+      });
+
+      if (!features.length) return;
+
+      const clusterId = features[0].properties?.cluster_id;
+      const source = mapInstance.getSource('listings') as mapboxgl.GeoJSONSource;
+
+      source.getClusterExpansionZoom(clusterId, (err, zoom) => {
+        if (err || !features[0].geometry || features[0].geometry.type !== 'Point') return;
+
+        mapInstance.easeTo({
+          center: features[0].geometry.coordinates as [number, number],
+          zoom: zoom || (mapInstance.getZoom() + 2),
+          duration: 500
+        });
+      });
+    };
+
+    // Click handler for unclustered points - show listing card
+    const handlePointClick = (e: mapboxgl.MapMouseEvent) => {
+      if (!e.features || !e.features[0].properties) return;
+
+      const properties = e.features[0].properties;
+      const listing = listings.find(l => l.id === properties.id);
+      
+      if (listing) {
+        setSelectedListing(listing);
+      }
+    };
+
+    // Cursor handlers
+    const handleCursorPointer = () => {
+      mapInstance.getCanvas().style.cursor = 'pointer';
+    };
+    const handleCursorDefault = () => {
+      mapInstance.getCanvas().style.cursor = '';
+    };
+
+    // Attach event listeners
+    mapInstance.on('click', 'clusters', handleClusterClick);
+    mapInstance.on('click', 'unclustered-point', handlePointClick);
+    mapInstance.on('mouseenter', 'clusters', handleCursorPointer);
+    mapInstance.on('mouseleave', 'clusters', handleCursorDefault);
+    mapInstance.on('mouseenter', 'unclustered-point', handleCursorPointer);
+    mapInstance.on('mouseleave', 'unclustered-point', handleCursorDefault);
+
+    console.log('✅ Clustering configured successfully');
+
+    // Cleanup function
+    return () => {
+      if (mapInstance.getLayer('clusters')) {
+        mapInstance.off('click', 'clusters', handleClusterClick);
+        mapInstance.off('mouseenter', 'clusters', handleCursorPointer);
+        mapInstance.off('mouseleave', 'clusters', handleCursorDefault);
+      }
+      if (mapInstance.getLayer('unclustered-point')) {
+        mapInstance.off('click', 'unclustered-point', handlePointClick);
+        mapInstance.off('mouseenter', 'unclustered-point', handleCursorPointer);
+        mapInstance.off('mouseleave', 'unclustered-point', handleCursorDefault);
+      }
+    };
+  }, [listings, mapboxToken, formatShortPrice]);
 
   // Zoom to searched city/neighborhood when cityCoords change
   useEffect(() => {
