@@ -29,8 +29,14 @@ export const useCapacitor = () => {
               );
             }
             
-            // Hide splash screen
-            await SplashScreen.hide();
+            // iOS uses env(safe-area-inset-top) automatically
+            if (Capacitor.getPlatform() === 'ios') {
+              // On iOS, safe area is handled by CSS env() variables
+              console.log('iOS safe area handled via CSS env() variables');
+            }
+            
+            // Hide splash screen immediately with no fade
+            await SplashScreen.hide({ fadeOutDuration: 0 });
           } catch (error) {
             console.warn('Capacitor initialization error:', error);
           }

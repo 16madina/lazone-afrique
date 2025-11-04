@@ -321,12 +321,12 @@ const Index = () => {
   }, [sortBy]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden w-full max-w-[100vw]">
       <EnhancedHeader />
       <HeroSection onSearch={handleHeroSearch} />
       
       {/* Main Content */}
-      <main className="container mx-auto px-4 pt-20 pb-8 space-y-8">
+      <main className="container mx-auto px-4 pt-20 pb-8 space-y-8 overflow-x-hidden">
 
         {/* Filters & Controls */}
         <div className="space-y-4">
