@@ -254,10 +254,12 @@ const Messages = () => {
                       {/* Avatar */}
                       <div className="relative flex-shrink-0">
                         <Avatar className="w-14 h-14 ring-2 ring-background shadow-lg">
-                          <AvatarImage 
-                            src={getConversationAvatarUrl(conversation)} 
-                            alt={getConversationDisplayName(conversation)}
-                          />
+                          {conversation.participants.find((p: any) => p.user_id !== user?.id)?.profile?.avatar_url ? (
+                            <AvatarImage 
+                              src={conversation.participants.find((p: any) => p.user_id !== user?.id)?.profile?.avatar_url} 
+                              alt={getConversationDisplayName(conversation)}
+                            />
+                          ) : null}
                           <AvatarFallback className="bg-gradient-primary text-primary-foreground font-semibold">
                             {getConversationAvatar(conversation)}
                           </AvatarFallback>
@@ -336,10 +338,12 @@ const Messages = () => {
                   
                   <div className="relative">
                     <Avatar className="w-10 h-10">
-                      <AvatarImage 
-                        src={getConversationAvatarUrl(selectedConversation)} 
-                        alt={getConversationDisplayName(selectedConversation)}
-                      />
+                      {selectedConversation.participants.find((p: any) => p.user_id !== user?.id)?.profile?.avatar_url ? (
+                        <AvatarImage 
+                          src={selectedConversation.participants.find((p: any) => p.user_id !== user?.id)?.profile?.avatar_url} 
+                          alt={getConversationDisplayName(selectedConversation)}
+                        />
+                      ) : null}
                       <AvatarFallback className="bg-gradient-primary text-primary-foreground">
                         {getConversationAvatar(selectedConversation)}
                       </AvatarFallback>
@@ -422,12 +426,14 @@ const Messages = () => {
                     {!isMyMessage(msg.sender_id) && (
                       <div className="flex-shrink-0 mt-auto mb-1">
                         <Avatar className="w-8 h-8">
-                          <AvatarImage 
-                            src={msg.sender_profile?.avatar_url} 
-                            alt={msg.sender_profile?.full_name || 'Avatar'}
-                          />
+                          {msg.sender_profile?.avatar_url ? (
+                            <AvatarImage 
+                              src={msg.sender_profile.avatar_url} 
+                              alt={msg.sender_profile?.full_name || 'Avatar'}
+                            />
+                          ) : null}
                           <AvatarFallback className="bg-gradient-primary text-primary-foreground text-xs">
-                            {msg.sender_profile?.full_name?.substring(0, 2)?.toUpperCase() || 
+                            {msg.sender_profile?.full_name?.substring(0, 2)?.toUpperCase() ||
                              `${msg.sender_profile?.first_name?.[0] || ''}${msg.sender_profile?.last_name?.[0] || ''}`.toUpperCase() ||
                              'U'}
                           </AvatarFallback>
