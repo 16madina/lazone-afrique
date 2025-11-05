@@ -137,10 +137,23 @@ export const useRealTimeMessages = () => {
               const { data: profile } = await supabase.rpc('get_public_profile_safe', {
                 profile_user_id: p.user_id
               });
+              
+              const profileData = profile as any;
+              
+              // 🔍 DEBUG: Log détaillé pour la conversation "cave a cedez"
+              if (conv.listings?.title?.toLowerCase().includes('cave')) {
+                console.log('🔍 DEBUG - Conversation:', conv.listings?.title);
+                console.log('🔍 DEBUG - User ID:', p.user_id);
+                console.log('🔍 DEBUG - Profile reçu de get_public_profile_safe:', profileData);
+                console.log('🔍 DEBUG - Avatar URL:', profileData?.avatar_url);
+                console.log('🔍 DEBUG - Type de profile:', typeof profileData);
+                console.log('🔍 DEBUG - Full profile object:', JSON.stringify(profileData, null, 2));
+              }
+              
               return {
                 user_id: p.user_id,
                 last_read_at: p.last_read_at,
-                profile: profile
+                profile: profileData
               };
             })),
             latest_message: latestMessage,
