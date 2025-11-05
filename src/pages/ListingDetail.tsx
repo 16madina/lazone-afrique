@@ -312,7 +312,7 @@ const ListingDetail = () => {
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       
-      <main className="flex-1 p-6 pt-20">
+      <main className="flex-1 p-6 pt-20 pb-24">
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Navigation */}
           <Button 
