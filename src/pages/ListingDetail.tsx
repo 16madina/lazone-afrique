@@ -14,13 +14,12 @@ import { useRealTimeMessages } from "@/hooks/useRealTimeMessages";
 import { useSecureProfiles } from "@/hooks/useSecureProfiles";
 import { useCountry } from "@/contexts/CountryContext";
 import { useContactActions } from "@/hooks/useContactActions";
-import { ArrowLeft, MapPin, Calendar, Phone, MessageCircle, Play, Send, X, Star } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Phone, MessageCircle, Play, Send, X, Star, User } from "lucide-react";
 import { toast } from "sonner";
 import { UserRatingDialog } from "@/components/UserRatingDialog";
 import ListingLocationMap from "@/components/ListingLocationMap";
 import VirtualTour360 from "@/components/VirtualTour360";
 import AppointmentBooking from "@/components/AppointmentBooking";
-import UserListingsMap from "@/components/UserListingsMap";
 
 interface ListingData {
   id: string;
@@ -808,14 +807,26 @@ const ListingDetail = () => {
             </CardContent>
           </Card>
 
-          {/* User's Other Listings Map */}
-          {listing.user_id && (
+          {/* View Seller Profile Button */}
+          {listing.user_id && user?.id !== listing.user_id && (
             <Card>
               <CardContent className="p-8">
-                <UserListingsMap 
-                  userId={listing.user_id} 
-                  currentListingId={listing.id}
-                />
+                <div className="text-center space-y-4">
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2">Découvrez les autres annonces de ce vendeur</h3>
+                    <p className="text-muted-foreground">
+                      Consultez toutes les annonces de {ownerProfile?.full_name || 'ce vendeur'} sur une carte interactive
+                    </p>
+                  </div>
+                  <Button 
+                    size="lg"
+                    onClick={() => navigate(`/seller/${listing.user_id}`)}
+                    className="gap-2"
+                  >
+                    <User className="w-5 h-5" />
+                    Voir le profil du vendeur
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
