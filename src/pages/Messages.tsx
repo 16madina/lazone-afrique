@@ -254,12 +254,10 @@ const Messages = () => {
                       {/* Avatar */}
                       <div className="relative flex-shrink-0">
                         <Avatar className="w-14 h-14 ring-2 ring-background shadow-lg">
-                          {conversation.participants.find((p: any) => p.user_id !== user?.id)?.profile?.avatar_url ? (
-                            <AvatarImage 
-                              src={conversation.participants.find((p: any) => p.user_id !== user?.id)?.profile?.avatar_url} 
-                              alt={getConversationDisplayName(conversation)}
-                            />
-                          ) : null}
+                          <AvatarImage 
+                            src={conversation.participants.find((p: any) => p.user_id !== user?.id)?.profile?.avatar_url || ''} 
+                            alt={getConversationDisplayName(conversation)}
+                          />
                           <AvatarFallback className="bg-gradient-primary text-primary-foreground font-semibold">
                             {getConversationAvatar(conversation)}
                           </AvatarFallback>

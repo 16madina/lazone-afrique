@@ -140,30 +140,6 @@ export const useRealTimeMessages = () => {
               
               const profileData = profile as any;
               
-              // 🔍 DEBUG: Toast pour toutes les conversations avec Madins
-              if (profileData?.full_name?.toLowerCase().includes('madins')) {
-                const participant = {
-                  user_id: p.user_id,
-                  last_read_at: p.last_read_at,
-                  profile: profileData
-                };
-                
-                const debugInfo = JSON.stringify({
-                  "1) Participant complet": participant,
-                  "2) participant.profile": participant.profile,
-                  "3) participant.profile.avatar_url": participant.profile?.avatar_url,
-                  "4) Type de profile": typeof participant.profile,
-                  "5) Profile est null?": participant.profile === null,
-                  "6) Profile est undefined?": participant.profile === undefined
-                }, null, 2);
-                
-                toast({
-                  title: "🔍 Debug - Participant Madins Diallo",
-                  description: debugInfo,
-                  duration: 30000,
-                });
-              }
-              
               return {
                 user_id: p.user_id,
                 last_read_at: p.last_read_at,
