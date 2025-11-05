@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useSecureProfiles } from "@/hooks/useSecureProfiles";
 import { useUserStats } from "@/hooks/useUserStats";
@@ -35,6 +36,7 @@ const SellerProfile = () => {
   const [loading, setLoading] = useState(true);
   const [sellerProfile, setSellerProfile] = useState<any>(null);
   const [listings, setListings] = useState<SellerListing[]>([]);
+  const [ratings, setRatings] = useState<any[]>([]);
   
   const { getPublicProfile } = useSecureProfiles();
   const { stats, loading: statsLoading } = useUserStats(userId);
@@ -58,6 +60,23 @@ const SellerProfile = () => {
 
         if (error) throw error;
         setListings(data || []);
+
+        // Fetch seller ratings
+        const { data: ratingsData, error: ratingsError } = await supabase
+          .from('user_ratings')
+          .select(`
+            id,
+            rating,
+            comment,
+            created_at,
+            rater_user_id,
+            listing_id
+          `)
+          .eq('rated_user_id', userId)
+          .order('created_at', { ascending: false });
+
+        if (ratingsError) throw ratingsError;
+        setRatings(ratingsData || []);
       } catch (error) {
         console.error('Error fetching seller data:', error);
         toast.error("Erreur lors du chargement du profil vendeur");
@@ -109,7 +128,7 @@ const SellerProfile = () => {
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       
-      <main className="flex-1 p-6 pt-20">
+      <main className="flex-1 p-6 pt-20 pb-24">
         <div className="max-w-6xl mx-auto space-y-8">
           {/* Navigation */}
           <Button 
@@ -197,95 +216,144 @@ const SellerProfile = () => {
             </CardContent>
           </Card>
 
-          {/* Map Section */}
-          {listings.length > 0 && (
-            <div>
-              <UserListingsMap userId={userId!} />
-            </div>
-          )}
+          {/* Tabs for Listings and Reviews */}
+          <Tabs defaultValue="listings" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="listings">
+                Annonces ({listings.length})
+              </TabsTrigger>
+              <TabsTrigger value="reviews">
+                Avis ({ratings.length})
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Listings Grid */}
-          <div>
-            <h2 className="text-2xl font-bold mb-6">
-              Toutes les annonces ({listings.length})
-            </h2>
-            
-            {listings.length === 0 ? (
-              <Card>
-                <CardContent className="text-center py-12">
-                  <p className="text-muted-foreground">Ce vendeur n'a aucune annonce active pour le moment.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {listings.map((listing) => (
-                  <Card 
-                    key={listing.id}
-                    className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                    onClick={() => navigate(`/listing/${listing.id}`)}
-                  >
-                    <div className="relative">
-                      <img
-                        src={listing.image || (listing.photos && listing.photos[0]) || 'https://via.placeholder.com/400x300?text=Pas+d%27image'}
-                        alt={listing.title}
-                        className="w-full h-48 object-cover"
-                      />
-                      {listing.transaction_type && (
-                        <Badge className="absolute top-2 right-2">
-                          {listing.transaction_type === 'sale' ? 'Vente' :
-                           listing.transaction_type === 'rent' ? 'Location' :
-                           listing.transaction_type}
-                        </Badge>
-                      )}
-                    </div>
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold text-lg line-clamp-2 mb-2">{listing.title}</h3>
-                      
-                      <p className="text-2xl font-bold text-primary mb-3">
-                        {new Intl.NumberFormat('fr-FR').format(listing.price)} FCFA
-                      </p>
-                      
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-                        <MapPin className="w-4 h-4" />
-                        <span>{listing.city}</span>
+            {/* Listings Tab */}
+            <TabsContent value="listings" className="space-y-6 mt-6">
+              {/* Map Section */}
+              {listings.length > 0 && (
+                <div>
+                  <UserListingsMap userId={userId!} />
+                </div>
+              )}
+
+              {/* Listings Grid */}
+              {listings.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <p className="text-muted-foreground">Ce vendeur n'a aucune annonce active pour le moment.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {listings.map((listing) => (
+                    <Card 
+                      key={listing.id}
+                      className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                      onClick={() => navigate(`/listing/${listing.id}`)}
+                    >
+                      <div className="relative">
+                        <img
+                          src={listing.image || (listing.photos && listing.photos[0]) || 'https://via.placeholder.com/400x300?text=Pas+d%27image'}
+                          alt={listing.title}
+                          className="w-full h-48 object-cover"
+                        />
+                        {listing.transaction_type && (
+                          <Badge className="absolute top-2 right-2">
+                            {listing.transaction_type === 'sale' ? 'Vente' :
+                             listing.transaction_type === 'rent' ? 'Location' :
+                             listing.transaction_type}
+                          </Badge>
+                        )}
                       </div>
-
-                      {listing.property_type && (
-                        <Badge variant="secondary" className="mb-3">
-                          {listing.property_type === 'apartment' ? 'Appartement' :
-                           listing.property_type === 'house' ? 'Maison' :
-                           listing.property_type === 'villa' ? 'Villa' :
-                           listing.property_type === 'land' ? 'Terrain' :
-                           listing.property_type}
-                        </Badge>
-                      )}
-
-                      {(listing.bedrooms || listing.bathrooms || listing.surface_area) && (
-                        <div className="flex gap-4 text-sm">
-                          {listing.bedrooms && (
-                            <span className="flex items-center gap-1">
-                              <Home className="w-4 h-4" />
-                              {listing.bedrooms}
-                            </span>
-                          )}
-                          {listing.bathrooms && (
-                            <span className="flex items-center gap-1">
-                              🚿 {listing.bathrooms}
-                            </span>
-                          )}
-                          {listing.surface_area && (
-                            <span className="flex items-center gap-1">
-                              📐 {listing.surface_area}m²
-                            </span>
-                          )}
+                      <CardContent className="p-4">
+                        <h3 className="font-semibold text-lg line-clamp-2 mb-2">{listing.title}</h3>
+                        
+                        <p className="text-2xl font-bold text-primary mb-3">
+                          {new Intl.NumberFormat('fr-FR').format(listing.price)} FCFA
+                        </p>
+                        
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                          <MapPin className="w-4 h-4" />
+                          <span>{listing.city}</span>
                         </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
+
+                        {listing.property_type && (
+                          <Badge variant="secondary" className="mb-3">
+                            {listing.property_type === 'apartment' ? 'Appartement' :
+                             listing.property_type === 'house' ? 'Maison' :
+                             listing.property_type === 'villa' ? 'Villa' :
+                             listing.property_type === 'land' ? 'Terrain' :
+                             listing.property_type}
+                          </Badge>
+                        )}
+
+                        {(listing.bedrooms || listing.bathrooms || listing.surface_area) && (
+                          <div className="flex gap-4 text-sm">
+                            {listing.bedrooms && (
+                              <span className="flex items-center gap-1">
+                                <Home className="w-4 h-4" />
+                                {listing.bedrooms}
+                              </span>
+                            )}
+                            {listing.bathrooms && (
+                              <span className="flex items-center gap-1">
+                                🚿 {listing.bathrooms}
+                              </span>
+                            )}
+                            {listing.surface_area && (
+                              <span className="flex items-center gap-1">
+                                📐 {listing.surface_area}m²
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Reviews Tab */}
+            <TabsContent value="reviews" className="mt-6">
+              {ratings.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <p className="text-muted-foreground">Aucun avis pour le moment.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {ratings.map((rating) => (
+                    <Card key={rating.id}>
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-5 h-5 ${
+                                  i < rating.rating
+                                    ? 'fill-yellow-400 text-yellow-400'
+                                    : 'text-gray-300'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-sm text-muted-foreground">
+                            {new Date(rating.created_at).toLocaleDateString('fr-FR')}
+                          </span>
+                        </div>
+                        {rating.comment && (
+                          <p className="text-sm">{rating.comment}</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
 
