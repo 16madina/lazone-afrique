@@ -140,8 +140,8 @@ export const useRealTimeMessages = () => {
               
               const profileData = profile as any;
               
-              // 🔍 DEBUG: Toast pour la conversation "cave a cedez"
-              if (conv.listings?.title?.toLowerCase().includes('cave') && profileData?.full_name?.includes('Madins')) {
+              // 🔍 DEBUG: Toast pour toutes les conversations avec Madins
+              if (profileData?.full_name?.toLowerCase().includes('madins')) {
                 const participant = {
                   user_id: p.user_id,
                   last_read_at: p.last_read_at,
