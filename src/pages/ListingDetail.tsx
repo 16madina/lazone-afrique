@@ -184,7 +184,7 @@ const ListingDetail = () => {
       const conversationId = await createConversation(
         [listing.user_id], 
         listing.id, 
-        `À propos de: ${listing.title}`
+        listing.title
       );
 
       console.log('💬 Conversation created, ID:', conversationId);
