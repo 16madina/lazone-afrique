@@ -394,7 +394,6 @@ const Messages = () => {
                   <CardContent className="p-3">
                     <div className="flex items-center gap-2 text-sm">
                       <MessageCircle className="w-4 h-4 text-primary" />
-                      <span>Discussion à propos de: </span>
                       <Badge variant="outline">{selectedConversation.property.title}</Badge>
                     </div>
                   </CardContent>
