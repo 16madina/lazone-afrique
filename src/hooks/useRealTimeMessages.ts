@@ -68,7 +68,8 @@ export const useRealTimeMessages = () => {
             last_read_at
           ),
           listings!conversations_property_id_fkey (
-            title
+            title,
+            image
           )
         `)
         .eq('conversation_participants.user_id', user.id)
@@ -138,7 +139,15 @@ export const useRealTimeMessages = () => {
                 profile_user_id: p.user_id
               });
               
-              const profileData = profile as any;
+              // Parse profile if it's a JSON string
+              let profileData = profile as any;
+              if (typeof profileData === 'string') {
+                try {
+                  profileData = JSON.parse(profileData);
+                } catch (e) {
+                  console.error('Error parsing profile:', e);
+                }
+              }
               
               return {
                 user_id: p.user_id,
@@ -148,7 +157,10 @@ export const useRealTimeMessages = () => {
             })),
             latest_message: latestMessage,
             unread_count: unreadCount,
-            property: conv.listings ? { title: conv.listings.title } : undefined
+            property: conv.listings ? { 
+              title: conv.listings.title,
+              image: conv.listings.image 
+            } : undefined
           };
         })
       );
