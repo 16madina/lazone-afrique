@@ -140,14 +140,28 @@ export const useRealTimeMessages = () => {
               
               const profileData = profile as any;
               
-              // 🔍 DEBUG: Log détaillé pour la conversation "cave a cedez"
-              if (conv.listings?.title?.toLowerCase().includes('cave')) {
-                console.log('🔍 DEBUG - Conversation:', conv.listings?.title);
-                console.log('🔍 DEBUG - User ID:', p.user_id);
-                console.log('🔍 DEBUG - Profile reçu de get_public_profile_safe:', profileData);
-                console.log('🔍 DEBUG - Avatar URL:', profileData?.avatar_url);
-                console.log('🔍 DEBUG - Type de profile:', typeof profileData);
-                console.log('🔍 DEBUG - Full profile object:', JSON.stringify(profileData, null, 2));
+              // 🔍 DEBUG: Toast pour la conversation "cave a cedez"
+              if (conv.listings?.title?.toLowerCase().includes('cave') && profileData?.full_name?.includes('Madins')) {
+                const participant = {
+                  user_id: p.user_id,
+                  last_read_at: p.last_read_at,
+                  profile: profileData
+                };
+                
+                const debugInfo = JSON.stringify({
+                  "1) Participant complet": participant,
+                  "2) participant.profile": participant.profile,
+                  "3) participant.profile.avatar_url": participant.profile?.avatar_url,
+                  "4) Type de profile": typeof participant.profile,
+                  "5) Profile est null?": participant.profile === null,
+                  "6) Profile est undefined?": participant.profile === undefined
+                }, null, 2);
+                
+                toast({
+                  title: "🔍 Debug - Participant Madins Diallo",
+                  description: debugInfo,
+                  duration: 30000,
+                });
               }
               
               return {
