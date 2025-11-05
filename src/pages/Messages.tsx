@@ -80,7 +80,7 @@ const Messages = () => {
 
   // Get display name for conversation participant (not current user)
   const getConversationDisplayName = (conversation: any) => {
-    if (conversation.title) return conversation.title;
+    if (conversation.title) return conversation.title.replace(/^À propos de:\s*/i, "");
     
     const otherParticipant = conversation.participants.find((p: any) => p.user_id !== user?.id);
     if (otherParticipant?.profile) {
