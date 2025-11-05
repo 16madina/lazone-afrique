@@ -801,35 +801,24 @@ const ListingDetail = () => {
                   </DialogContent>
                 </Dialog>
               </div>
+              
+              {listing.user_id && user?.id !== listing.user_id && (
+                <Button 
+                  variant="secondary" 
+                  className="w-full mt-3"
+                  onClick={() => navigate(`/seller/${listing.user_id}`)}
+                >
+                  <User className="w-4 h-4 mr-2" />
+                  Voir les autres annonces du vendeur
+                </Button>
+              )}
+              
               <p className="text-sm text-muted-foreground mt-3">
                 Contactez directement le vendeur pour plus d'informations ou pour organiser une visite.
               </p>
             </CardContent>
           </Card>
 
-          {/* View Seller Profile Button */}
-          {listing.user_id && user?.id !== listing.user_id && (
-            <Card>
-              <CardContent className="p-8">
-                <div className="text-center space-y-4">
-                  <div>
-                    <h3 className="text-xl font-semibold mb-2">Découvrez les autres annonces de ce vendeur</h3>
-                    <p className="text-muted-foreground">
-                      Consultez toutes les annonces de {ownerProfile?.full_name || 'ce vendeur'} sur une carte interactive
-                    </p>
-                  </div>
-                  <Button 
-                    size="lg"
-                    onClick={() => navigate(`/seller/${listing.user_id}`)}
-                    className="gap-2"
-                  >
-                    <User className="w-5 h-5" />
-                    Voir le profil du vendeur
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </main>
 
