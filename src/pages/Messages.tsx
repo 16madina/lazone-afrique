@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import type { User } from "@supabase/supabase-js";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRealTimeMessages } from "@/hooks/useRealTimeMessages";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import Header from "@/components/Header";
 import BottomNavigation from "@/components/BottomNavigation";
 
 const Messages = () => {
-  const { user } = useAuth();
+  const { user }: { user: User | null } = useAuth();
   const {
     conversations,
     messages,
