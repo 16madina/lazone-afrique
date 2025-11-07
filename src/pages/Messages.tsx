@@ -59,8 +59,12 @@ const Messages = () => {
 
   // Get avatar initials for conversation
   const getConversationAvatar = (conversation: any) => {
+    console.log('🎭 Getting avatar for conversation:', conversation.id);
+    console.log('👥 Participants:', conversation.participants);
+    
     // Get the other participant (not the current user)
     const otherParticipant = conversation.participants.find((p: any) => p.user_id !== user?.id);
+    console.log('👤 Other participant:', otherParticipant);
 
     // Use participant's name for initials, not the conversation title
     if (otherParticipant?.profile) {
@@ -88,7 +92,9 @@ const Messages = () => {
 
   // Get conversation subtitle (participant name)
   const getConversationSubtitle = (conversation: any) => {
+    console.log('📝 Getting subtitle for conversation:', conversation.id);
     const otherParticipant = conversation.participants.find((p: any) => p.user_id !== user?.id);
+    console.log('👤 Subtitle participant:', otherParticipant);
     if (otherParticipant?.profile) {
       return (
         otherParticipant.profile.full_name ||

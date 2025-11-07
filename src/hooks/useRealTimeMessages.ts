@@ -135,24 +135,34 @@ export const useRealTimeMessages = () => {
             created_at: conv.created_at,
             updated_at: conv.updated_at,
             participants: await Promise.all(conv.conversation_participants.map(async (p: any) => {
-              const { data: profile } = await supabase.rpc('get_public_profile_safe', {
+              console.log('🔍 Fetching profile for user:', p.user_id);
+              
+              const { data: profile, error } = await supabase.rpc('get_public_profile_safe', {
                 profile_user_id: p.user_id
               });
               
-              // Parse profile if it's a JSON string
-              let profileData = profile as any;
+              console.log('📦 Raw profile data:', profile);
+              console.log('❌ Profile error:', error);
+              
+              // La RPC retourne directement un objet JSON, pas besoin de parser
+              let profileData = profile;
+              
+              // Si le résultat est une string JSON, parser
               if (typeof profileData === 'string') {
                 try {
                   profileData = JSON.parse(profileData);
+                  console.log('📝 Parsed profile data:', profileData);
                 } catch (e) {
-                  console.error('Error parsing profile:', e);
+                  console.error('❌ Error parsing profile:', e);
                 }
               }
+              
+              console.log('✅ Final profile data:', profileData);
               
               return {
                 user_id: p.user_id,
                 last_read_at: p.last_read_at,
-                profile: profileData
+                profile: profileData || {}
               };
             })),
             latest_message: latestMessage,
