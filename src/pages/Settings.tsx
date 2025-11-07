@@ -360,48 +360,55 @@ export default function Settings() {
             <div className="p-4 bg-destructive/10 rounded-lg">
               <h3 className="font-semibold text-destructive mb-2">Supprimer mon compte</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Une fois supprimé, votre compte sera désactivé pendant 30 jours. Après cette période, toutes vos données personnelles seront définitivement supprimées.
+                La suppression est définitive et immédiate. Toutes vos données seront effacées sans possibilité de récupération.
               </p>
               <ul className="text-sm text-muted-foreground space-y-1 mb-4 list-disc pl-5">
-                <li>Vos annonces seront dépubliées immédiatement</li>
-                <li>Vos messages resteront visibles pour les autres utilisateurs</li>
-                <li>Vous pouvez réactiver votre compte dans les 30 jours en vous reconnectant</li>
-                <li>Après 30 jours, la suppression sera définitive et irréversible</li>
+                <li>Toutes vos annonces seront supprimées</li>
+                <li>Tous vos messages seront supprimés</li>
+                <li>Votre profil et vos informations personnelles seront effacés</li>
+                <li>Cette action est irréversible et immédiate</li>
+                <li>Consultez notre <a href="/data-deletion" className="text-primary hover:underline">politique de suppression</a></li>
               </ul>
               <Button
                 variant="destructive"
                 onClick={async () => {
-                  if (confirm("⚠️ ATTENTION : Êtes-vous sûr de vouloir supprimer votre compte ?\n\nVotre compte sera désactivé pendant 30 jours avant suppression définitive.\n\nTapez 'SUPPRIMER' pour confirmer.")) {
-                    const confirmation = prompt("Tapez SUPPRIMER pour confirmer la suppression de votre compte");
+                  if (confirm("⚠️ ATTENTION : Êtes-vous sûr de vouloir supprimer votre compte ?\n\nCette action supprimera définitivement toutes vos données :\n- Toutes vos annonces\n- Tous vos messages\n- Votre profil et informations personnelles\n- Votre historique\n\nTapez 'SUPPRIMER' pour confirmer.")) {
+                    const confirmation = prompt("Tapez SUPPRIMER (en majuscules) pour confirmer la suppression définitive");
                     if (confirmation === "SUPPRIMER") {
+                      setLoading(true);
                       try {
-                        // Appel à l'edge function pour supprimer le compte
-                        const { error } = await supabase.auth.admin.deleteUser(user?.id || '');
+                        const { data, error } = await supabase.functions.invoke('delete-user-account', {
+                          body: { reason: 'Demande utilisateur depuis les paramètres' }
+                        });
                         
                         if (error) throw error;
                         
                         toast({
                           title: "Compte supprimé",
-                          description: "Votre compte a été désactivé. Vous avez 30 jours pour le réactiver.",
+                          description: "Votre compte et toutes vos données ont été supprimés définitivement.",
                         });
                         
-                        // Déconnexion
-                        await supabase.auth.signOut();
-                        window.location.href = "/";
+                        // Redirection après 2 secondes
+                        setTimeout(() => {
+                          window.location.href = "/";
+                        }, 2000);
                       } catch (error: any) {
+                        console.error('Erreur suppression:', error);
                         toast({
                           title: "Erreur",
-                          description: "Impossible de supprimer le compte. Contactez le support.",
+                          description: `Impossible de supprimer le compte: ${error.message}`,
                           variant: "destructive",
                         });
+                        setLoading(false);
                       }
                     }
                   }
                 }}
+                disabled={loading}
                 className="w-full"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2 mr-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                Supprimer définitivement mon compte
+                {loading ? 'Suppression...' : 'Supprimer définitivement mon compte'}
               </Button>
             </div>
           </CardContent>

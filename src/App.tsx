@@ -28,6 +28,8 @@ import DataDeletion from "./pages/DataDeletion";
 import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
 import SellerProfile from "./pages/SellerProfile";
+import { TermsOfService } from "./pages/TermsOfService";
+import { AppTrackingPrompt } from "./components/AppTrackingPrompt";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +61,7 @@ const AppContent = () => {
       <Route path="/contact" element={<Contact />} />
       <Route path="/faq" element={<FAQ />} />
       <Route path="/seller/:userId" element={<SellerProfile />} />
+      <Route path="/terms" element={<TermsOfService />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
@@ -72,6 +75,7 @@ const App = () => {
         <CountryProvider>
           <AuthProvider>
             <NativeInitializer />
+            <AppTrackingPrompt />
             <TooltipProvider>
               <Toaster />
               <Sonner />

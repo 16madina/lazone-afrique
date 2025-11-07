@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 
 interface UploadedMedia {
   id: string;
@@ -44,6 +46,46 @@ export const useMediaUpload = () => {
     setUploadedPhotos([]);
     setUploadedVideo(null);
   }, []);
+
+  const capturePhoto = async (): Promise<void> => {
+    if (!Capacitor.isNativePlatform()) {
+      toast({
+        title: "Fonction non disponible",
+        description: "La capture photo n'est disponible que sur mobile.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const image = await Camera.getPhoto({
+        quality: 90,
+        allowEditing: true,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera
+      });
+
+      if (!image.dataUrl) {
+        throw new Error('Impossible de capturer la photo');
+      }
+
+      // Convert DataUrl to Blob
+      const response = await fetch(image.dataUrl);
+      const blob = await response.blob();
+      const file = new File([blob], `photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+
+      await uploadPhoto(file);
+    } catch (error: any) {
+      console.error('Erreur capture photo:', error);
+      if (error.message !== 'User cancelled photos app') {
+        toast({
+          title: "Erreur de capture",
+          description: "Vérifiez les permissions de la caméra dans les paramètres de l'app.",
+          variant: "destructive"
+        });
+      }
+    }
+  };
 
   const uploadPhoto = async (file: File): Promise<void> => {
     if (uploadedPhotos.length >= 20) {
@@ -256,6 +298,7 @@ export const useMediaUpload = () => {
     uploadedVideo,
     uploading,
     uploadPhoto,
+    capturePhoto,
     uploadVideo,
     removePhoto,
     removeVideo,
