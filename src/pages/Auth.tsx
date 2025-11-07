@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCountry } from '@/contexts/CountryContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,8 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { Building2, User, Users, ArrowLeft } from 'lucide-react';
+import { Building2, User, Users, ArrowLeft, Shield, Database, UserX, Lock } from 'lucide-react';
 import PhoneInput from '@/components/PhoneInput';
 import { supabase } from '@/integrations/supabase/client';
 import LaZoneIcon from '@/assets/lazone-logo-icon.png';
@@ -46,6 +48,8 @@ const Auth = () => {
   });
 
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [showTermsDialog, setShowTermsDialog] = useState(false);
+  const [showPrivacyDialog, setShowPrivacyDialog] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -476,19 +480,28 @@ const Auth = () => {
                     id="terms" 
                     checked={acceptTerms}
                     onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
+                    className="mt-1"
                   />
                   <label
                     htmlFor="terms"
                     className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                   >
                     J'accepte les{' '}
-                    <Link to="/terms" className="text-primary hover:underline" target="_blank">
+                    <button
+                      type="button"
+                      onClick={() => setShowTermsDialog(true)}
+                      className="text-primary underline hover:text-primary/80"
+                    >
                       Conditions Générales d'Utilisation
-                    </Link>
+                    </button>
                     {' '}et la{' '}
-                    <Link to="/privacy-policy" className="text-primary hover:underline" target="_blank">
+                    <button
+                      type="button"
+                      onClick={() => setShowPrivacyDialog(true)}
+                      className="text-primary underline hover:text-primary/80"
+                    >
                       Politique de Confidentialité
-                    </Link>
+                    </button>
                     {' *'}
                   </label>
                 </div>
@@ -501,6 +514,183 @@ const Auth = () => {
           </Tabs>
         </CardContent>
         </Card>
+
+        {/* Terms Dialog */}
+        <Dialog open={showTermsDialog} onOpenChange={setShowTermsDialog}>
+          <DialogContent className="max-w-3xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle className="text-2xl">Conditions Générales d'Utilisation</DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="h-[60vh] pr-4">
+              <div className="space-y-6">
+                <section>
+                  <h3 className="font-semibold text-lg mb-2">1. Acceptation des conditions</h3>
+                  <p className="text-sm text-muted-foreground">
+                    En accédant et en utilisant LaZone Afrique, vous acceptez d'être lié par les présentes Conditions Générales d'Utilisation. 
+                    Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser notre service.
+                  </p>
+                </section>
+
+                <section>
+                  <h3 className="font-semibold text-lg mb-2">2. Description du service</h3>
+                  <p className="text-sm text-muted-foreground">
+                    LaZone Afrique est une plateforme de mise en relation pour l'immobilier en Afrique. Nous permettons aux utilisateurs 
+                    de publier des annonces immobilières et de rechercher des biens.
+                  </p>
+                </section>
+
+                <section>
+                  <h3 className="font-semibold text-lg mb-2">3. Compte utilisateur</h3>
+                  <p className="text-sm text-muted-foreground mb-2">Pour publier des annonces, vous devez créer un compte. Vous êtes responsable de :</p>
+                  <ul className="list-disc pl-6 space-y-1 text-sm text-muted-foreground">
+                    <li>La confidentialité de vos identifiants de connexion</li>
+                    <li>Toutes les activités effectuées depuis votre compte</li>
+                    <li>La véracité des informations fournies lors de l'inscription</li>
+                  </ul>
+                </section>
+
+                <section>
+                  <h3 className="font-semibold text-lg mb-2">4. Règles de contenu</h3>
+                  <p className="text-sm text-muted-foreground mb-2">Les utilisateurs s'engagent à ne pas publier de contenu qui :</p>
+                  <ul className="list-disc pl-6 space-y-1 text-sm text-muted-foreground">
+                    <li>Est faux, trompeur ou frauduleux</li>
+                    <li>Viole les droits d'autrui (propriété intellectuelle, vie privée, etc.)</li>
+                    <li>Est illégal, offensant, diffamatoire ou inapproprié</li>
+                    <li>Contient des virus, malwares ou code malveillant</li>
+                    <li>Constitue du spam ou du harcèlement</li>
+                  </ul>
+                </section>
+
+                <section>
+                  <h3 className="font-semibold text-lg mb-2">5. Modération et signalement</h3>
+                  <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg border border-blue-200 mb-3">
+                    <p className="font-semibold text-blue-900 dark:text-blue-100 text-sm mb-1">
+                      🕐 Engagement de modération sous 24 heures
+                    </p>
+                    <p className="text-xs text-blue-700 dark:text-blue-300">
+                      Nous nous engageons formellement à examiner et traiter tous les signalements dans un délai maximum de 24 heures.
+                    </p>
+                  </div>
+                  <ul className="list-disc pl-6 space-y-1 text-sm text-muted-foreground">
+                    <li>Signalement facile du contenu inapproprié</li>
+                    <li>Blocage d'utilisateurs</li>
+                    <li>Filtrage automatique des contenus problématiques</li>
+                    <li>Sanctions progressives selon la gravité</li>
+                  </ul>
+                </section>
+
+                <section>
+                  <h3 className="font-semibold text-lg mb-2">6. Limitation de responsabilité</h3>
+                  <p className="text-sm text-muted-foreground">
+                    LaZone Afrique ne garantit pas l'exactitude, la qualité ou la légalité des annonces publiées. 
+                    Nous ne sommes pas responsables des transactions entre utilisateurs.
+                  </p>
+                </section>
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
+
+        {/* Privacy Policy Dialog */}
+        <Dialog open={showPrivacyDialog} onOpenChange={setShowPrivacyDialog}>
+          <DialogContent className="max-w-3xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-2xl">
+                <Shield className="w-6 h-6" />
+                Politique de Confidentialité
+              </DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="h-[60vh] pr-4">
+              <div className="space-y-6">
+                <section>
+                  <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                    <Database className="w-5 h-5" />
+                    Collecte des Données
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    LaZone collecte et traite les données personnelles suivantes :
+                  </p>
+                  <ul className="list-disc pl-6 space-y-1 text-sm text-muted-foreground">
+                    <li><strong>Informations de compte :</strong> Nom, prénom, adresse email, numéro de téléphone</li>
+                    <li><strong>Informations de profil :</strong> Photo de profil, biographie</li>
+                    <li><strong>Annonces immobilières :</strong> Photos, descriptions, prix, localisation des biens</li>
+                    <li><strong>Messages :</strong> Communications entre utilisateurs</li>
+                    <li><strong>Données de navigation :</strong> Adresse IP, type de navigateur</li>
+                  </ul>
+                </section>
+
+                <section>
+                  <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                    <Lock className="w-5 h-5" />
+                    Utilisation des Données
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-2">Vos données personnelles sont utilisées pour :</p>
+                  <ul className="list-disc pl-6 space-y-1 text-sm text-muted-foreground">
+                    <li>Créer et gérer votre compte utilisateur</li>
+                    <li>Publier et gérer vos annonces immobilières</li>
+                    <li>Faciliter la communication entre acheteurs et vendeurs</li>
+                    <li>Améliorer nos services et l'expérience utilisateur</li>
+                    <li>Vous envoyer des notifications importantes</li>
+                    <li>Assurer la sécurité et prévenir la fraude</li>
+                  </ul>
+                </section>
+
+                <section>
+                  <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                    <Shield className="w-5 h-5" />
+                    Partage des Données
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Nous ne vendons jamais vos données personnelles. Vos informations peuvent être partagées uniquement :
+                  </p>
+                  <ul className="list-disc pl-6 space-y-1 text-sm text-muted-foreground">
+                    <li><strong>Avec d'autres utilisateurs :</strong> Vos annonces et informations de contact sont visibles</li>
+                    <li><strong>Prestataires de services :</strong> Hébergement, paiement, analyse (avec accord)</li>
+                    <li><strong>Obligations légales :</strong> Si requis par la loi</li>
+                  </ul>
+                </section>
+
+                <section>
+                  <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                    <Lock className="w-5 h-5" />
+                    Sécurité des Données
+                  </h3>
+                  <ul className="list-disc pl-6 space-y-1 text-sm text-muted-foreground">
+                    <li>Chiffrement SSL/TLS pour toutes les communications</li>
+                    <li>Authentification sécurisée et hachage des mots de passe</li>
+                    <li>Accès limité aux données personnelles</li>
+                    <li>Sauvegardes régulières</li>
+                    <li>Surveillance continue des activités suspectes</li>
+                  </ul>
+                </section>
+
+                <section>
+                  <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                    <UserX className="w-5 h-5" />
+                    Vos Droits
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-2">Vous disposez des droits suivants :</p>
+                  <ul className="list-disc pl-6 space-y-1 text-sm text-muted-foreground">
+                    <li><strong>Droit d'accès :</strong> Obtenir une copie de vos données</li>
+                    <li><strong>Droit de rectification :</strong> Corriger vos informations</li>
+                    <li><strong>Droit à l'effacement :</strong> Demander la suppression de vos données</li>
+                    <li><strong>Droit à la portabilité :</strong> Recevoir vos données dans un format structuré</li>
+                    <li><strong>Droit d'opposition :</strong> Refuser certains traitements</li>
+                  </ul>
+                </section>
+
+                <section>
+                  <h3 className="font-semibold text-lg mb-2">Conservation des Données</h3>
+                  <ul className="list-disc pl-6 space-y-1 text-sm text-muted-foreground">
+                    <li><strong>Compte actif :</strong> Tant que votre compte existe</li>
+                    <li><strong>Après suppression :</strong> 30 jours pour permettre une récupération</li>
+                    <li><strong>Données d'annonces :</strong> Archivées pendant 3 mois</li>
+                  </ul>
+                </section>
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
