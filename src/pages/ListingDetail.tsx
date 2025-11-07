@@ -20,6 +20,7 @@ import { UserRatingDialog } from "@/components/UserRatingDialog";
 import ListingLocationMap from "@/components/ListingLocationMap";
 import VirtualTour360 from "@/components/VirtualTour360";
 import AppointmentBooking from "@/components/AppointmentBooking";
+import { ReportDialog } from "@/components/ReportDialog";
 
 interface ListingData {
   id: string;
@@ -801,6 +802,18 @@ const ListingDetail = () => {
                   </DialogContent>
                 </Dialog>
               </div>
+              
+              {listing && (
+                <ReportDialog 
+                  type="listing" 
+                  targetId={listing.id}
+                  trigger={
+                    <Button variant="ghost" size="sm" className="w-full">
+                      Signaler cette annonce
+                    </Button>
+                  }
+                />
+              )}
               
               {listing.user_id && user?.id !== listing.user_id && (
                 <Button 

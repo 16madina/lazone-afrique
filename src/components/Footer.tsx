@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Mail, Phone, Shield, HelpCircle, Trash2, FileText } from "lucide-react";
+import { Mail, Phone, Shield, HelpCircle, Trash2, FileText, AlertTriangle } from "lucide-react";
 import lazoneTextLogo from "@/assets/lazone-text-logo.png";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 
@@ -30,9 +30,21 @@ const Footer = () => {
             </h3>
             <ul className="space-y-2 text-sm">
               <li>
+                <Link to="/terms" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+                  <FileText className="w-3 h-3" />
+                  Conditions d'utilisation
+                </Link>
+              </li>
+              <li>
                 <Link to="/privacy-policy" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
                   <FileText className="w-3 h-3" />
                   Politique de confidentialité
+                </Link>
+              </li>
+              <li>
+                <Link to="/moderation-policy" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+                  <AlertTriangle className="w-3 h-3" />
+                  Politique de modération
                 </Link>
               </li>
               <li>

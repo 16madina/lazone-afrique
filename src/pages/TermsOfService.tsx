@@ -88,15 +88,44 @@ export const TermsOfService = () => {
             <CardTitle>5. Modération et signalement</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 mb-4">
+              <p className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                🕐 Engagement de modération sous 24 heures
+              </p>
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                Nous nous engageons formellement à examiner et traiter tous les signalements dans un délai maximum de 24 heures. 
+                Les contenus violant nos règles sont supprimés immédiatement après vérification.
+              </p>
+            </div>
+            
             <p>
-              LaZone Afrique met en œuvre des systèmes de modération pour maintenir la qualité et la sécurité de la plateforme :
+              LaZone Afrique met en œuvre des systèmes de modération robustes pour maintenir la qualité et la sécurité de la plateforme :
             </p>
             <ul className="list-disc pl-6 space-y-2">
-              <li>Les utilisateurs peuvent signaler du contenu inapproprié</li>
-              <li>Les utilisateurs peuvent bloquer d'autres utilisateurs</li>
-              <li>Nous nous engageons à examiner et traiter les signalements sous 24 heures</li>
-              <li>Les comptes violant de manière répétée les règles peuvent être suspendus ou bannis</li>
+              <li>
+                <strong>Signalement facile :</strong> Les utilisateurs peuvent signaler du contenu inapproprié en un clic
+              </li>
+              <li>
+                <strong>Blocage d'utilisateurs :</strong> Bloquez les utilisateurs avec qui vous ne souhaitez plus interagir
+              </li>
+              <li>
+                <strong>Filtrage automatique :</strong> Détection proactive des contenus potentiellement problématiques
+              </li>
+              <li>
+                <strong>Traitement rapide :</strong> Tous les signalements sont traités sous 24 heures maximum
+              </li>
+              <li>
+                <strong>Sanctions progressives :</strong> Les comptes violant les règles font l'objet d'avertissements, 
+                suspensions temporaires ou bannissements permanents selon la gravité
+              </li>
             </ul>
+            
+            <p className="text-sm">
+              Pour plus de détails, consultez notre{' '}
+              <Link to="/moderation-policy" className="text-primary hover:underline font-medium">
+                Politique de Modération complète
+              </Link>.
+            </p>
           </CardContent>
         </Card>
 

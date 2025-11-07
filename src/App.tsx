@@ -30,6 +30,7 @@ import FAQ from "./pages/FAQ";
 import SellerProfile from "./pages/SellerProfile";
 import { TermsOfService } from "./pages/TermsOfService";
 import { AppTrackingPrompt } from "./components/AppTrackingPrompt";
+import { ModerationPolicy } from "./pages/ModerationPolicy";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -62,6 +63,7 @@ const AppContent = () => {
       <Route path="/faq" element={<FAQ />} />
       <Route path="/seller/:userId" element={<SellerProfile />} />
       <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/moderation-policy" element={<ModerationPolicy />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>

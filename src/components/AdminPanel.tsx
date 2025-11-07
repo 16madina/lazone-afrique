@@ -30,6 +30,7 @@ import {
   Settings
 } from 'lucide-react';
 import { ListingLimitsAdmin } from './admin/ListingLimitsAdmin';
+import { ContentModerationPanel } from './ContentModerationPanel';
 
 interface User {
   user_id: string;
@@ -394,9 +395,10 @@ const AdminPanel = () => {
       </div>
 
       <Tabs defaultValue="users" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="users">Utilisateurs</TabsTrigger>
           <TabsTrigger value="listings">Annonces</TabsTrigger>
+          <TabsTrigger value="moderation">Modération</TabsTrigger>
           <TabsTrigger value="sponsorship">Sponsoring</TabsTrigger>
           <TabsTrigger value="limits">Limites</TabsTrigger>
           <TabsTrigger value="settings">Paramètres</TabsTrigger>
@@ -586,6 +588,11 @@ const AdminPanel = () => {
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        {/* Content Moderation */}
+        <TabsContent value="moderation">
+          <ContentModerationPanel />
         </TabsContent>
 
         {/* Sponsorship Management */}
