@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCountry } from '@/contexts/CountryContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { Building2, User, Users, ArrowLeft } from 'lucide-react';
 import PhoneInput from '@/components/PhoneInput';
@@ -43,6 +44,8 @@ const Auth = () => {
     company_name: '',
     license_number: '',
   });
+
+  const [acceptTerms, setAcceptTerms] = useState(false);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -116,6 +119,15 @@ const Auth = () => {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!acceptTerms) {
+      toast({
+        title: "Conditions requises",
+        description: "Vous devez accepter les Conditions Générales et la Politique de Confidentialité pour vous inscrire.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (signupForm.password !== signupForm.confirmPassword) {
       toast({
@@ -459,7 +471,29 @@ const Auth = () => {
                   />
                 </div>
                 
-                <Button type="submit" className="w-full" disabled={isLoading}>
+                <div className="flex items-start space-x-2">
+                  <Checkbox 
+                    id="terms" 
+                    checked={acceptTerms}
+                    onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
+                  />
+                  <label
+                    htmlFor="terms"
+                    className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    J'accepte les{' '}
+                    <Link to="/terms" className="text-primary hover:underline" target="_blank">
+                      Conditions Générales d'Utilisation
+                    </Link>
+                    {' '}et la{' '}
+                    <Link to="/privacy-policy" className="text-primary hover:underline" target="_blank">
+                      Politique de Confidentialité
+                    </Link>
+                    {' *'}
+                  </label>
+                </div>
+                
+                <Button type="submit" className="w-full" disabled={isLoading || !acceptTerms}>
                   {isLoading ? 'Inscription...' : 'S\'inscrire'}
                 </Button>
               </form>
